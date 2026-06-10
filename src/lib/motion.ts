@@ -265,6 +265,64 @@ function initCountdown() {
   const t = setInterval(tick, 1000);
 }
 
+/* ---------- Scroll-velocity marquee (reactief skew) ---------- */
+function initMarqueeVelocity() {
+  if (reduce) return;
+  const items = gsap.utils.toArray<HTMLElement>('.vh-marquee-item');
+  if (!items.length) return;
+  let skew = 0;
+  let target = 0;
+  if (lenis) {
+    lenis.on('scroll', ({ velocity }: { velocity: number }) => {
+      target = Math.max(-10, Math.min(10, velocity * 0.5));
+    });
+  } else {
+    let last = window.scrollY;
+    window.addEventListener('scroll', () => {
+      const v = window.scrollY - last; last = window.scrollY;
+      target = Math.max(-10, Math.min(10, v * 0.3));
+    }, { passive: true });
+  }
+  function loop() {
+    skew += (target - skew) * 0.1;
+    target *= 0.9;
+    items.forEach((i) => { i.style.transform = `skewX(${skew}deg)`; });
+    requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+/* ---------- 3D tilt op productcards ---------- */
+function initTilt() {
+  if (reduce || !hasHover) return;
+  document.querySelectorAll<HTMLElement>('.vh-shop-card').forEach((card) => {
+    card.addEventListener('mousemove', (e) => {
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      card.style.transform = `perspective(1400px) rotateY(${px * 5}deg) rotateX(${-py * 5}deg) translateZ(8px)`;
+    });
+    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+  });
+}
+
+/* ---------- Hero title skew op scroll-velocity ---------- */
+function initHeroSkew() {
+  if (reduce) return;
+  const title = document.querySelector('.vh-hero-title') as HTMLElement | null;
+  if (!title || !lenis) return;
+  let cur = 0, tgt = 0;
+  lenis.on('scroll', ({ velocity }: { velocity: number }) => {
+    tgt = Math.max(-4, Math.min(4, velocity * 0.15));
+  });
+  function loop() {
+    cur += (tgt - cur) * 0.1; tgt *= 0.9;
+    title!.style.transform = `skewY(${cur * 0.3}deg)`;
+    requestAnimationFrame(loop);
+  }
+  loop();
+}
+
 function init() {
   initLenis();
   initLoader();
@@ -278,6 +336,9 @@ function init() {
   initLookbook();
   initCursor();
   initMagnetic();
+  initMarqueeVelocity();
+  initTilt();
+  initHeroSkew();
   // Refresh after fonts/images settle
   window.addEventListener('load', () => setTimeout(() => ScrollTrigger.refresh(), 200));
 }

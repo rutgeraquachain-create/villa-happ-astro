@@ -80,24 +80,40 @@ const navLinks = [
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px clamp(20px, 4vw, 56px);
+    padding: 20px clamp(20px, 4vw, 56px);
     transition: padding var(--vh-dur-base) var(--vh-ease-out),
                 background var(--vh-dur-base) ease,
                 backdrop-filter var(--vh-dur-base) ease,
                 color var(--vh-dur-base) ease,
                 box-shadow var(--vh-dur-base) ease;
-    color: var(--vh-ink);
+    /* Default: licht (over donkere hero) */
+    color: var(--vh-paper);
+  }
+
+  /* Scrim bovenaan zodat nav altijd leesbaar is over beeld */
+  .vh-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(28, 24, 19, 0.55), rgba(28, 24, 19, 0));
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity var(--vh-dur-base) ease;
+    z-index: -1;
   }
 
   .vh-header.is-scrolled {
     padding: 12px clamp(20px, 4vw, 56px);
-    background: rgba(247, 243, 236, 0.82);
+    background: rgba(244, 238, 227, 0.82);
     backdrop-filter: blur(16px) saturate(140%);
     -webkit-backdrop-filter: blur(16px) saturate(140%);
     color: var(--vh-ink);
     border-bottom: 1px solid var(--vh-ink-hairline);
   }
 
+  .vh-header.is-scrolled::before { opacity: 0; }
+
+  /* Logo: inverteer naar wit op donkere hero, terug naar normaal bij scroll */
   .vh-header-logo {
     display: inline-flex;
     align-items: center;
@@ -107,6 +123,12 @@ const navLinks = [
     width: 36px;
     height: 36px;
     object-fit: contain;
+    filter: brightness(0) invert(1);
+    transition: filter var(--vh-dur-base) ease;
+  }
+
+  .vh-header.is-scrolled .vh-header-logo img {
+    filter: none;
   }
 
   .vh-header-nav {

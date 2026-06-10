@@ -1,5 +1,5 @@
 ---
-// Cinematic hero met parallax media + entrance animatie
+// Cinematic hero — parallax media, viewfinder frame, roterend heritage-zegel
 ---
 <section class="vh-hero" id="vh-hero">
   <div class="vh-hero-media">
@@ -7,9 +7,30 @@
   </div>
   <div class="vh-hero-scrim"></div>
 
-  <div class="vh-hero-corner">
-    <span class="vh-mono">Est. 1960</span>
-    <span class="vh-mono">Tilburg · NL</span>
+  <!-- Viewfinder frame (cinematic) -->
+  <div class="vh-viewfinder" aria-hidden="true">
+    <span class="vf-corner vf-tl"></span>
+    <span class="vf-corner vf-tr"></span>
+    <span class="vf-corner vf-bl"></span>
+    <span class="vf-corner vf-br"></span>
+    <span class="vf-rec"><i></i>REC</span>
+    <span class="vf-coords">51.5555° N · 5.0913° E</span>
+    <span class="vf-frame">FRAME 001 / VILLA HAPP</span>
+  </div>
+
+  <!-- Roterend heritage-zegel -->
+  <div class="vh-seal" aria-hidden="true">
+    <svg viewBox="0 0 200 200">
+      <defs>
+        <path id="vh-seal-path" d="M100,100 m-74,0 a74,74 0 1,1 148,0 a74,74 0 1,1 -148,0" />
+      </defs>
+      <text>
+        <textPath href="#vh-seal-path" startOffset="0">
+          VILLA HAPP · EST. 1960 · TILBURG · HERITAGE LIFESTYLE ·&nbsp;
+        </textPath>
+      </text>
+    </svg>
+    <span class="vh-seal-mark">VH</span>
   </div>
 
   <div class="vh-hero-inner">
