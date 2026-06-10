@@ -1,6 +1,5 @@
 ---
 import { getActiveDrop } from '../../lib/commerce';
-
 const drop = await getActiveDrop();
 const fallback = {
   title: 'Sweater Stories',
@@ -15,25 +14,24 @@ const d: any = drop || fallback;
 const launchTs = d.launch_date ? Math.floor(new Date(d.launch_date).getTime() / 1000) : 0;
 const isLive = d.status === 'live';
 const isComing = d.status === 'coming-soon' && launchTs * 1000 > Date.now();
-const eyebrow = isLive ? 'Nu live' : (isComing ? 'Binnenkort' : 'Drop');
 ---
 <section class="vh-spotlight">
   <div class="vh-spotlight-inner">
     <div class="vh-spotlight-text vh-reveal">
-      <span class="vh-spotlight-eyebrow">{eyebrow} · Limited edition</span>
+      <p class="vh-spotlight-label vh-mono">05 — {isLive ? 'Nu live' : 'Binnenkort'} · Drop 001</p>
       <h2 class="vh-spotlight-title">{d.title}</h2>
       <p class="vh-spotlight-desc">{d.description}</p>
 
       <div class="vh-spotlight-meta">
         {d.total_pieces && (
-          <div class="vh-spotlight-meta-item">
-            <span class="vh-spotlight-meta-label">Oplage</span>
+          <div>
+            <span class="vh-spotlight-meta-label vh-mono">Oplage</span>
             <span class="vh-spotlight-meta-value">{d.total_pieces} stuks</span>
           </div>
         )}
         {launchTs > 0 && (
-          <div class="vh-spotlight-meta-item">
-            <span class="vh-spotlight-meta-label">{isLive ? 'Gelanceerd' : 'Lanceert'}</span>
+          <div>
+            <span class="vh-spotlight-meta-label vh-mono">{isLive ? 'Gelanceerd' : 'Lanceert'}</span>
             <span class="vh-spotlight-meta-value">{new Date(launchTs * 1000).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}</span>
           </div>
         )}
@@ -49,7 +47,7 @@ const eyebrow = isLive ? 'Nu live' : (isComing ? 'Binnenkort' : 'Drop');
       )}
 
       <div>
-        <a href={`/drops/${d.slug}`} class="vh-btn vh-btn--accent" data-magnetic>
+        <a href={`/drops/${d.slug}`} class="vh-btn vh-btn--primary" data-magnetic>
           <span>{isLive ? 'Shop deze drop' : 'Zet me op de lijst'}</span>
           <svg class="vh-btn-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -59,30 +57,8 @@ const eyebrow = isLive ? 'Nu live' : (isComing ? 'Binnenkort' : 'Drop');
     </div>
 
     <div class="vh-spotlight-media vh-reveal-img">
-      <span class="vh-spotlight-badge">Drop 001</span>
+      <span class="vh-spotlight-badge vh-mono">Drop 001</span>
       <img src={d.image_url} alt={d.title} width="900" height="1125" loading="lazy" />
     </div>
   </div>
 </section>
-
-<script>
-  const el = document.querySelector<HTMLElement>('[data-countdown]');
-  if (el) {
-    const target = parseInt(el.dataset.countdown || '0', 10) * 1000;
-    const d = el.querySelector('[data-cd-days]') as HTMLElement;
-    const h = el.querySelector('[data-cd-hours]') as HTMLElement;
-    const m = el.querySelector('[data-cd-minutes]') as HTMLElement;
-    const s = el.querySelector('[data-cd-seconds]') as HTMLElement;
-    const pad = (n: number) => String(n).padStart(2, '0');
-    function tick() {
-      const diff = target - Date.now();
-      if (diff <= 0) { el!.style.display = 'none'; clearInterval(t); return; }
-      d.textContent = pad(Math.floor(diff / 86400000));
-      h.textContent = pad(Math.floor((diff % 86400000) / 3600000));
-      m.textContent = pad(Math.floor((diff % 3600000) / 60000));
-      s.textContent = pad(Math.floor((diff % 60000) / 1000));
-    }
-    tick();
-    const t = setInterval(tick, 1000);
-  }
-</script>

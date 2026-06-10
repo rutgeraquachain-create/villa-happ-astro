@@ -2,8 +2,9 @@
    Villa Happ — Base / reset / typography baseline
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,500;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -46,21 +47,21 @@ input, textarea, select {
 
 ::selection { background: var(--vh-accent); color: var(--vh-white); }
 
-/* Editorial italic accent — wrap key words in <em class="vh-italic"> */
-.vh-italic {
+/* Editorial italic accent — Fraunces italic for emphasized words */
+.vh-italic,
+.vh-italic-accent {
 	font-family: var(--vh-font-serif);
 	font-style: italic;
 	font-weight: 400;
 	letter-spacing: -0.01em;
-	color: var(--vh-accent);
 }
 
-.vh-headline .vh-italic {
-	color: inherit;
-}
-
-.vh-scene[data-text="#F7F3EC"] .vh-italic {
-	color: var(--vh-accent);
+/* Mono micro-label (fctrylab energy) */
+.vh-mono {
+	font-family: var(--vh-font-mono);
+	font-size: 11px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
 }
 
 /* Typography baseline */

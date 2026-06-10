@@ -1,15 +1,11 @@
 ---
 import { getFeaturedProducts, formatPrice } from '../../lib/commerce';
-
 const dbProducts = await getFeaturedProducts(6);
-
-// Fallback editorial products (echte Hoodie afbeeldingen)
 const fallback = [
-  { slug: 'heritage-hoodie-grey', name: 'Heritage Hoodie', price_cents: 12900, image_url: '/img/products/hoodie-grey-front.png', hover_url: '/img/products/hoodie-grey-back.png', badge: 'Nieuw', meta: 'Heather Grey · Unisex' },
-  { slug: 'heritage-hoodie-blue', name: 'Heritage Hoodie', price_cents: 12900, image_url: '/img/products/hoodie-blue-front.png', hover_url: '/img/products/hoodie-blue-lifestyle.png', badge: null, meta: 'Tilburg Blue · Unisex' },
-  { slug: 'heritage-hoodie-lifestyle', name: 'Heritage Hoodie', price_cents: 12900, image_url: '/img/products/hoodie-grey-lifestyle.png', hover_url: '/img/products/hoodie-grey-new2.png', badge: 'Bestseller', meta: 'Heather Grey · Oversized' },
+  { slug: 'heritage-hoodie-grey', name: 'Heritage Hoodie', price_cents: 12900, image_url: '/img/products/hoodie-grey-front.png', hover_url: '/img/products/hoodie-grey-back.png', badge: 'Nieuw', meta: 'Heather Grey' },
+  { slug: 'heritage-hoodie-blue', name: 'Heritage Hoodie', price_cents: 12900, image_url: '/img/products/hoodie-blue-front.png', hover_url: '/img/products/hoodie-blue-lifestyle.png', badge: null, meta: 'Tilburg Blue' },
+  { slug: 'heritage-hoodie-unisex', name: 'Heritage Hoodie', price_cents: 12900, image_url: '/img/products/hoodie-grey-lifestyle.png', hover_url: '/img/products/hoodie-grey-new2.png', badge: 'Bestseller', meta: 'Oversized fit' },
 ];
-
 const products = dbProducts.length > 0
   ? dbProducts.map((p) => ({
       slug: p.slug, name: p.name, price_cents: p.price_cents,
@@ -24,8 +20,8 @@ const products = dbProducts.length > 0
   <div class="vh-shop-inner">
     <div class="vh-shop-header vh-reveal">
       <div>
-        <p class="vh-shop-eyebrow">De collectie</p>
-        <h2 class="vh-shop-title">Nu te dragen</h2>
+        <p class="vh-shop-label vh-mono">06 — De collectie</p>
+        <h2 class="vh-shop-title">Nu te <span class="vh-italic-accent">dragen</span></h2>
       </div>
       <a href="/shop" class="vh-shop-link">
         Bekijk alles
@@ -37,14 +33,10 @@ const products = dbProducts.length > 0
 
     <div class="vh-shop-grid">
       {products.map((p, i) => (
-        <a href={`/shop/${p.slug}`} class="vh-shop-card vh-reveal" style={`transition-delay: ${(i % 3) * 0.1}s;`}>
+        <a href={`/shop/${p.slug}`} class="vh-shop-card vh-reveal" style={`transition-delay:${(i % 3) * 0.1}s`}>
           <div class="vh-shop-card-media">
+            <span class="vh-shop-card-num">0{i + 1}</span>
             {p.badge && <span class="vh-shop-card-badge">{p.badge}</span>}
-            <button class="vh-shop-card-wishlist" type="button" aria-label="Voeg toe aan wishlist" data-wishlist={p.slug}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-            </button>
             <img src={p.image_url} alt={p.name} class="vh-shop-card-img is-primary" width="600" height="750" loading="lazy" />
             <img src={p.hover_url} alt="" class="vh-shop-card-img is-hover" width="600" height="750" loading="lazy" aria-hidden="true" />
             <button class="vh-shop-card-quick" type="button" data-quick-add={p.slug}>Snel toevoegen</button>

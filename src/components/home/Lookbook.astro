@@ -1,5 +1,4 @@
 ---
-// Asymmetric editorial collage
 const cells = [
   { img: '/img/products/hoodie-grey-lifestyle.png', caption: 'Heritage FW26', cls: 'vh-lookbook-cell--1' },
   { img: '/img/products/hoodie-blue-lifestyle.png', caption: 'Tilburg Blue', cls: 'vh-lookbook-cell--2' },
@@ -11,19 +10,18 @@ const cells = [
 <section class="vh-lookbook">
   <div class="vh-lookbook-inner">
     <div class="vh-lookbook-header vh-reveal">
-      <p class="vh-lookbook-eyebrow">Lookbook</p>
+      <p class="vh-lookbook-label vh-mono">07 — Lookbook</p>
       <h2 class="vh-lookbook-title">Gemaakt om <span class="vh-italic-accent">geleefd</span> te worden</h2>
       <p class="vh-lookbook-desc">
         Geen seizoenscollecties die je na een jaar weggooit. Tijdloze stukken,
         gemaakt van premium materialen, ontworpen om mee te gaan.
       </p>
     </div>
-
     <div class="vh-lookbook-grid">
-      {cells.map((cell) => (
-        <figure class={`vh-lookbook-cell ${cell.cls} vh-reveal-img`}>
-          <img src={cell.img} alt={cell.caption} loading="lazy" />
-          <figcaption class="vh-lookbook-caption">{cell.caption}</figcaption>
+      {cells.map((c) => (
+        <figure class={`vh-lookbook-cell ${c.cls}`}>
+          <img src={c.img} alt={c.caption} loading="lazy" />
+          <figcaption class="vh-lookbook-caption">{c.caption}</figcaption>
         </figure>
       ))}
     </div>

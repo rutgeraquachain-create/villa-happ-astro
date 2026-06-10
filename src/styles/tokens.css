@@ -5,15 +5,18 @@
 
 :root {
 	/* ---------- Brand kleuren ---------- */
-	--vh-ink: #1E1E1B;
-	--vh-ink-soft: rgba(30, 30, 27, 0.7);
-	--vh-ink-muted: rgba(30, 30, 27, 0.5);
-	--vh-ink-faint: rgba(30, 30, 27, 0.18);
-	--vh-ink-hairline: rgba(30, 30, 27, 0.08);
+	--vh-ink: #1C1813;          /* warm espresso-zwart (heritage) */
+	--vh-ink-soft: rgba(28, 24, 19, 0.68);
+	--vh-ink-muted: rgba(28, 24, 19, 0.48);
+	--vh-ink-faint: rgba(28, 24, 19, 0.16);
+	--vh-ink-hairline: rgba(28, 24, 19, 0.1);
 
-	--vh-paper: #F7F3EC;
-	--vh-paper-soft: #ECE6DA;
-	--vh-paper-deep: #D8CFBE;
+	--vh-paper: #F4EEE3;        /* warmer cream */
+	--vh-paper-soft: #EBE3D5;
+	--vh-paper-deep: #DBCFBC;
+
+	--vh-espresso: #2A2118;     /* rijke bruin-zwart voor donkere secties */
+	--vh-clay: #B8643C;         /* terracotta secundair */
 
 	--vh-white: #FFFFFF;
 	--vh-white-soft: #FAFAF8;
@@ -42,8 +45,8 @@
 
 	/* ---------- Typografie ---------- */
 	--vh-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-	--vh-font-serif: 'Plantin', 'Cormorant Garamond', Georgia, serif;
-	--vh-font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+	--vh-font-serif: 'Fraunces', 'Cormorant Garamond', Georgia, serif;
+	--vh-font-mono: 'Space Mono', 'SF Mono', Menlo, Consolas, monospace;
 
 	--vh-text-2xs: clamp(10px, 0.7vw, 11px);
 	--vh-text-xs: clamp(11px, 0.8vw, 12px);

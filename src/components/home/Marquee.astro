@@ -1,0 +1,9 @@
+---
+const items = ['Limited Edition', 'Sinds 1960', 'Made in Tilburg', 'Drie generaties', 'Premium materials', 'Genummerde oplage'];
+const loop = [...items, ...items];
+---
+<div class="vh-marquee" aria-hidden="true">
+  <div class="vh-marquee-track">
+    {loop.map((t) => <span class="vh-marquee-item">{t}</span>)}
+  </div>
+</div>

@@ -1,25 +1,29 @@
 ---
 import Base from '../layouts/Base.astro';
+import Loader from '../components/home/Loader.astro';
 import Hero from '../components/home/Hero.astro';
-import Statement from '../components/home/Statement.astro';
+import Marquee from '../components/home/Marquee.astro';
+import Manifesto from '../components/home/Manifesto.astro';
+import HeritageScroll from '../components/home/HeritageScroll.astro';
 import DropSpotlight from '../components/home/DropSpotlight.astro';
-import Heritage from '../components/home/Heritage.astro';
 import ShopGrid from '../components/home/ShopGrid.astro';
-import Brands from '../components/home/Brands.astro';
 import Lookbook from '../components/home/Lookbook.astro';
+import Brands from '../components/home/Brands.astro';
 import NewsletterCTA from '../components/home/NewsletterCTA.astro';
 
 import '../styles/home.css';
 ---
 
 <Base bodyClass="vh-home" title="Villa Happ — Heritage lifestyle, gemaakt voor nu">
+  <Loader />
   <Hero />
-  <Statement />
+  <Marquee />
+  <Manifesto />
+  <HeritageScroll />
   <DropSpotlight />
   <ShopGrid />
-  <Heritage />
-  <Brands />
   <Lookbook />
+  <Brands />
   <NewsletterCTA />
 </Base>
 
@@ -28,6 +32,6 @@ import '../styles/home.css';
 </script>
 
 <script>
-  import '../lib/reveal';
+  import '../lib/motion';
   import '../lib/cart';
 </script>

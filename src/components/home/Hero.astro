@@ -1,57 +1,40 @@
 ---
-// Editorial split hero — bold type links, full-bleed lifestyle foto rechts
+// Cinematic hero met parallax media + entrance animatie
 ---
 <section class="vh-hero" id="vh-hero">
-  <div class="vh-hero-text">
-    <span class="vh-hero-kicker">Sinds 1960 · Tilburg</span>
+  <div class="vh-hero-media">
+    <img src="/img/products/hoodie-grey-lifestyle.png" alt="Villa Happ Heritage Hoodie, gedragen in herfstbos" width="1920" height="1280" fetchpriority="high" />
+  </div>
+  <div class="vh-hero-scrim"></div>
 
+  <div class="vh-hero-corner">
+    <span class="vh-mono">Est. 1960</span>
+    <span class="vh-mono">Tilburg · NL</span>
+  </div>
+
+  <div class="vh-hero-inner">
     <h1 class="vh-hero-title">
-      <span class="vh-hero-title-line"><span class="vh-hero-title-word">Heritage,</span></span>
-      <span class="vh-hero-title-line"><span class="vh-hero-title-word vh-italic-accent">gedragen</span></span>
-      <span class="vh-hero-title-line"><span class="vh-hero-title-word">nu.</span></span>
+      <span class="vh-line"><span>Heritage,</span></span>
+      <span class="vh-line"><span class="vh-hero-em">gedragen</span></span>
+      <span class="vh-line"><span>nu.</span></span>
     </h1>
 
-    <p class="vh-hero-sub">
-      Een Nederlands lifestylelabel met 65 jaar verhaal. Limited edition drops,
-      gemaakt met dezelfde toewijding als waarmee het begon.
-    </p>
-
-    <div class="vh-hero-actions">
-      <a href="/shop" class="vh-btn vh-btn--primary" data-magnetic>
-        <span>Shop de collectie</span>
-        <svg class="vh-btn-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </a>
-      <a href="/drops" class="vh-btn vh-btn--ghost"><span>Bekijk drops</span></a>
-    </div>
-
-    <div class="vh-hero-stats">
-      <div class="vh-hero-stat">
-        <span class="vh-hero-stat-num" data-count="65">65</span>
-        <span class="vh-hero-stat-label">Jaar craft</span>
-      </div>
-      <div class="vh-hero-stat">
-        <span class="vh-hero-stat-num" data-count="80">80</span>
-        <span class="vh-hero-stat-label">Winkels in Europa</span>
-      </div>
-      <div class="vh-hero-stat">
-        <span class="vh-hero-stat-num" data-count="3">3</span>
-        <span class="vh-hero-stat-label">Generaties</span>
+    <div class="vh-hero-bottom">
+      <p class="vh-hero-sub">
+        Een Nederlands lifestylelabel met 65 jaar verhaal. Limited edition drops,
+        gemaakt met dezelfde toewijding als waarmee het begon.
+      </p>
+      <div class="vh-hero-actions">
+        <a href="/shop" class="vh-btn vh-btn--light" data-magnetic>
+          <span>Shop de collectie</span>
+          <svg class="vh-btn-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </a>
+        <a href="/drops" class="vh-btn vh-btn--ghost"><span>Bekijk drops</span></a>
       </div>
     </div>
   </div>
 
-  <div class="vh-hero-media">
-    <span class="vh-hero-tag">Drop 001 · Live binnenkort</span>
-    <img
-      src="/img/products/hoodie-grey-lifestyle.png"
-      alt="Villa Happ Heritage Hoodie, gedragen"
-      class="vh-hero-media-img"
-      width="1200" height="1500"
-      fetchpriority="high"
-    />
-  </div>
-
-  <span class="vh-hero-scroll">Scroll</span>
+  <div class="vh-hero-scroll-cue"><span>Scroll</span></div>
 </section>

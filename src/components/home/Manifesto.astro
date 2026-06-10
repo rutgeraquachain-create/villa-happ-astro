@@ -1,0 +1,18 @@
+---
+// Manifesto met word-by-word fill on scroll. Accent-woorden krijgen italic + oranje.
+const text = "Wij maken geen wegwerpmode. Wij maken stukken met een verhaal — gedragen door de generatie van toen, en die van nu.";
+const accentWords = new Set(['verhaal', 'generatie', 'nu.']);
+const words = text.split(' ');
+---
+<section class="vh-manifesto">
+  <div class="vh-manifesto-inner">
+    <p class="vh-manifesto-label vh-mono">01 — Manifest</p>
+    <p class="vh-manifesto-text">
+      {words.map((w) => {
+        const clean = w.replace(/[—.,]/g, '');
+        const isAccent = accentWords.has(w) || accentWords.has(clean);
+        return <span class={`vh-word${isAccent ? ' vh-word-accent' : ''}`}>{w} </span>;
+      })}
+    </p>
+  </div>
+</section>
