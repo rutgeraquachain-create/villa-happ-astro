@@ -589,79 +589,156 @@
 }
 
 /* ============================================================
-   DROP SPOTLIGHT — parallax magazine spread
+   CINE — Drop 001 takeover (beeld groeit naar fullscreen)
    ============================================================ */
-.vh-spotlight {
-	padding: clamp(100px, 16vh, 200px) var(--vh-gutter);
+.vh-cine {
+	position: relative;
+	height: 100vh;
 	background: var(--vh-paper);
 	overflow: hidden;
 }
-.vh-spotlight-inner {
-	max-width: var(--vh-max-width);
-	margin: 0 auto;
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: clamp(40px, 6vw, 100px);
+.vh-cine-stage {
+	position: absolute;
+	inset: 0;
+	display: flex;
 	align-items: center;
+	justify-content: center;
 }
-.vh-spotlight-label { color: var(--vh-accent); margin-bottom: 28px; display: flex; align-items: center; gap: 12px; }
-.vh-spotlight-label::before { content: ''; width: 32px; height: 1px; background: currentColor; }
-.vh-spotlight-title {
+.vh-cine-eyebrow {
+	position: absolute;
+	top: clamp(70px, 11vh, 120px);
+	left: 50%;
+	transform: translateX(-50%);
+	color: var(--vh-accent);
+	margin: 0;
+	z-index: 3;
+}
+.vh-cine-title {
+	position: absolute;
+	top: clamp(100px, 16vh, 170px);
+	left: 50%;
+	transform: translateX(-50%);
 	font-family: var(--vh-font-serif);
-	font-size: clamp(44px, 6vw, 100px);
-	line-height: 0.92;
+	font-size: clamp(36px, 5.5vw, 84px);
 	font-weight: 400;
 	letter-spacing: -0.03em;
-	margin: 0 0 28px;
+	white-space: nowrap;
+	margin: 0;
+	z-index: 1;
 }
-.vh-spotlight-desc {
-	font-size: clamp(15px, 1.2vw, 17px);
-	line-height: 1.7;
-	color: var(--vh-ink-soft);
-	max-width: 440px;
-	margin: 0 0 36px;
-}
-.vh-spotlight-meta {
-	display: flex; gap: 48px;
-	padding: 24px 0;
-	border-top: 1px solid var(--vh-ink-hairline);
-	border-bottom: 1px solid var(--vh-ink-hairline);
-	margin-bottom: 32px;
-}
-.vh-spotlight-meta-label { color: var(--vh-ink-muted); display: block; margin-bottom: 6px; }
-.vh-spotlight-meta-value { font-family: var(--vh-font-serif); font-size: 22px; }
-.vh-spotlight-countdown { display: flex; gap: 10px; margin-bottom: 36px; }
-.vh-cd-cell {
-	min-width: 60px; padding: 14px;
-	border: 1px solid var(--vh-ink-hairline);
-	border-radius: var(--vh-radius-sm);
-	text-align: center;
-}
-.vh-cd-num { font-family: var(--vh-font-serif); font-size: 26px; line-height: 1; }
-.vh-cd-label { font-family: var(--vh-font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--vh-ink-muted); margin-top: 6px; }
-.vh-spotlight-media {
+.vh-cine-media {
 	position: relative;
+	width: clamp(280px, 34vw, 440px);
 	aspect-ratio: 4/5;
-	border-radius: var(--vh-radius-md);
+	border-radius: 14px;
 	overflow: hidden;
-	background: var(--vh-paper-soft);
+	z-index: 2;
+	will-change: transform;
+	box-shadow: var(--vh-shadow-xl);
 }
-.vh-spotlight-media img {
-	width: 100%; height: 110%;
+.vh-cine-media img {
+	width: 100%;
+	height: 100%;
 	object-fit: cover;
+	transform: scale(1.18);
 	will-change: transform;
 }
-.vh-spotlight-badge {
-	position: absolute; top: 24px; left: 24px;
-	padding: 8px 14px;
-	background: var(--vh-ink); color: var(--vh-paper);
-	border-radius: var(--vh-radius-pill);
-	z-index: 2;
+.vh-cine-scrim {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(to top, rgba(28, 24, 19, 0.78) 0%, rgba(28, 24, 19, 0.12) 55%, rgba(28, 24, 19, 0.25) 100%);
+	opacity: 0;
 }
-@media (max-width: 900px) {
-	.vh-spotlight-inner { grid-template-columns: 1fr; gap: 40px; }
+.vh-cine-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 4;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	padding-bottom: clamp(56px, 10vh, 110px);
+	text-align: center;
+	color: var(--vh-paper);
+	opacity: 0;
+	pointer-events: none;
 }
+.vh-cine-overlay.is-on { pointer-events: auto; }
+.vh-cine-overlay p {
+	margin: 0 0 14px;
+	color: rgba(244, 238, 227, 0.75);
+}
+.vh-cine-overlay h3 {
+	font-family: var(--vh-font-serif);
+	font-size: clamp(28px, 4vw, 56px);
+	font-weight: 400;
+	line-height: 1.05;
+	letter-spacing: -0.025em;
+	margin: 0 0 28px;
+}
+/* Safe modes (geen JS, reduced motion, mobiel): statische sectie */
+.no-js .vh-cine, .vh-reduced .vh-cine, .vh-cine.is-static { height: auto; padding: 90px var(--vh-gutter); }
+.no-js .vh-cine-stage, .vh-reduced .vh-cine-stage, .vh-cine.is-static .vh-cine-stage { position: relative; flex-direction: column; gap: 24px; }
+.no-js .vh-cine-eyebrow, .vh-reduced .vh-cine-eyebrow, .vh-cine.is-static .vh-cine-eyebrow,
+.no-js .vh-cine-title, .vh-reduced .vh-cine-title, .vh-cine.is-static .vh-cine-title { position: relative; top: auto; left: auto; transform: none; }
+.no-js .vh-cine-title, .vh-reduced .vh-cine-title, .vh-cine.is-static .vh-cine-title { white-space: normal; text-align: center; }
+.no-js .vh-cine-media img, .vh-reduced .vh-cine-media img, .vh-cine.is-static .vh-cine-media img { transform: none; }
+.no-js .vh-cine-overlay, .vh-reduced .vh-cine-overlay, .vh-cine.is-static .vh-cine-overlay {
+	position: relative; opacity: 1; pointer-events: auto;
+	color: var(--vh-ink); padding: 24px 0 0;
+}
+.no-js .vh-cine-overlay p, .vh-reduced .vh-cine-overlay p, .vh-cine.is-static .vh-cine-overlay p { color: var(--vh-ink-muted); }
 
+/* ============================================================
+   DRIFT — tegengesteld scrollende beeldkolommen + kruisend woord
+   ============================================================ */
+.vh-drift {
+	position: relative;
+	padding: clamp(90px, 13vh, 160px) var(--vh-gutter);
+	background: var(--vh-paper-soft);
+	overflow: hidden;
+}
+.vh-drift-cols {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: clamp(18px, 3vw, 40px);
+	max-width: 980px;
+	margin: 0 auto;
+}
+.vh-drift-col { display: grid; gap: clamp(18px, 3vw, 40px); will-change: transform; }
+.vh-drift-col--late { margin-top: clamp(60px, 9vw, 130px); }
+.vh-drift-cell {
+	margin: 0;
+	border-radius: var(--vh-radius-md);
+	overflow: hidden;
+	background: var(--vh-paper);
+}
+.vh-drift-cell img {
+	width: 100%;
+	aspect-ratio: 4/5;
+	object-fit: cover;
+	display: block;
+}
+.vh-drift-word {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-family: var(--vh-font-serif);
+	font-style: italic;
+	font-size: clamp(64px, 12vw, 200px);
+	letter-spacing: -0.03em;
+	color: transparent;
+	-webkit-text-stroke: 1.2px var(--vh-accent);
+	white-space: nowrap;
+	z-index: 3;
+	pointer-events: none;
+	will-change: transform;
+}
+.vh-drift-word span { color: var(--vh-accent); -webkit-text-stroke: 0; }
+@media (max-width: 700px) {
+	.vh-drift-word { font-size: clamp(44px, 14vw, 80px); }
+}
 /* ============================================================
    SHOP GRID — numbered, hover-reveal
    ============================================================ */

@@ -186,17 +186,101 @@ function initHeritage() {
   });
 }
 
-/* ---------- Spotlight parallax ---------- */
-function initSpotlight() {
-  if (reduce) return;
-  const img = document.querySelector('.vh-spotlight-media img');
-  if (img) {
-    gsap.fromTo(img, { yPercent: -6 }, {
-      yPercent: 6,
-      ease: 'none',
-      scrollTrigger: { trigger: '.vh-spotlight', start: 'top bottom', end: 'bottom top', scrub: true },
-    });
+/* ---------- Cinematic takeover: cap groeit naar fullscreen ---------- */
+function initCinematic() {
+  const section = document.getElementById('vh-cine');
+  if (!section) return;
+  if (reduce || !isDesktop) {
+    section.classList.add('is-static');
+    return;
   }
+  const media = section.querySelector('[data-cine-media]') as HTMLElement | null;
+  const img = section.querySelector('[data-cine-img]') as HTMLElement | null;
+  const scrim = section.querySelector('[data-cine-scrim]') as HTMLElement | null;
+  const overlay = section.querySelector('[data-cine-overlay]') as HTMLElement | null;
+  const intro1 = section.querySelector('[data-cine-intro="1"]') as HTMLElement | null;
+  const intro2 = section.querySelector('[data-cine-intro="2"]') as HTMLElement | null;
+  if (!media || !img) return;
+
+  // Schaal die nodig is om het kaartje het hele scherm te laten vullen
+  const fullScale = () => {
+    const r = media.getBoundingClientRect();
+    const w = r.width / (gsap.getProperty(media, 'scaleX') as number || 1);
+    const h = r.height / (gsap.getProperty(media, 'scaleY') as number || 1);
+    return Math.max(window.innerWidth / w, window.innerHeight / h) * 1.02;
+  };
+
+  const tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: section,
+      pin: true,
+      scrub: 1,
+      end: '+=180%',
+      anticipatePin: 1,
+      invalidateOnRefresh: true,
+      onUpdate: (self) => {
+        overlay?.classList.toggle('is-on', self.progress > 0.8);
+      },
+    },
+  });
+
+  // Tekstlagen driften omhoog op verschillende snelheden (diepte)
+  if (intro1) tl.to(intro1, { yPercent: -340, opacity: 0, duration: 0.34, ease: 'power1.in' }, 0);
+  if (intro2) tl.to(intro2, { yPercent: -160, opacity: 0, duration: 0.42, ease: 'power1.in' }, 0);
+
+  // Het beeld neemt het scherm over; de foto erin zoomt tegengesteld
+  tl.to(media, { scale: fullScale, borderRadius: 0, duration: 0.62, ease: 'power2.inOut' }, 0.10)
+    .fromTo(img, { scale: 1.18 }, { scale: 1, duration: 0.62, ease: 'power2.inOut' }, 0.10);
+
+  if (scrim) tl.to(scrim, { opacity: 1, duration: 0.22 }, 0.56);
+  if (overlay) {
+    tl.to(overlay, { opacity: 1, duration: 0.2 }, 0.72)
+      .fromTo(overlay.children, { y: 44 }, { y: 0, duration: 0.26, stagger: 0.05, ease: 'power2.out' }, 0.72);
+  }
+}
+
+/* ---------- Drift: kolommen tegengesteld, woord kruist ---------- */
+function initDrift() {
+  if (reduce) return;
+  const section = document.querySelector('.vh-drift');
+  if (!section) return;
+  const colA = section.querySelector('[data-drift="a"]');
+  const colB = section.querySelector('[data-drift="b"]');
+  const word = section.querySelector('[data-drift-word]') as HTMLElement | null;
+  const st = { trigger: section, start: 'top bottom', end: 'bottom top', scrub: true, invalidateOnRefresh: true } as const;
+
+  if (colA) gsap.fromTo(colA,
+    { y: () => window.innerHeight * 0.12 },
+    { y: () => -window.innerHeight * 0.20, ease: 'none', scrollTrigger: { ...st } });
+  if (colB) gsap.fromTo(colB,
+    { y: () => -window.innerHeight * 0.16 },
+    { y: () => window.innerHeight * 0.14, ease: 'none', scrollTrigger: { ...st } });
+  if (word) {
+    gsap.set(word, { xPercent: -50, yPercent: -50 });
+    gsap.fromTo(word,
+      { x: () => window.innerWidth * 0.12 },
+      { x: () => -window.innerWidth * 0.12, ease: 'none', scrollTrigger: { ...st } });
+  }
+}
+
+/* ---------- Hero muis-diepte: lagen reageren op de cursor ---------- */
+function initHeroMouse() {
+  if (reduce || !isDesktop || !hasHover) return;
+  const hero = document.getElementById('vh-hero');
+  if (!hero) return;
+  const img = hero.querySelector('.vh-hero-media img') as HTMLElement | null;
+  const inner = hero.querySelector('.vh-hero-inner') as HTMLElement | null;
+  if (!img) return;
+
+  const imgX = gsap.quickTo(img, 'x', { duration: 0.9, ease: 'power3.out' });
+  const innerX = inner ? gsap.quickTo(inner, 'x', { duration: 1.2, ease: 'power3.out' }) : null;
+
+  hero.addEventListener('mousemove', (e) => {
+    const nx = (e.clientX / window.innerWidth) * 2 - 1; // -1 .. 1
+    imgX(nx * -16);
+    innerX?.(nx * 8);
+  });
+  hero.addEventListener('mouseleave', () => { imgX(0); innerX?.(0); });
 }
 
 /* ---------- Kinetic wordmark horizontal scroll ---------- */
@@ -358,7 +442,7 @@ function initCursor() {
   render();
 
   const label = cursor.querySelector('.vh-cursor-label') as HTMLElement;
-  const hoverTargets = document.querySelectorAll<HTMLElement>('a, button, .vh-shop-card-media, .vh-spotlight-media, .vh-film, [data-cursor]');
+  const hoverTargets = document.querySelectorAll<HTMLElement>('a, button, .vh-shop-card-media, .vh-film, [data-cursor]');
   hoverTargets.forEach((el) => {
     el.addEventListener('mouseenter', () => {
       label.textContent = el.dataset.cursor || 'View';
@@ -472,7 +556,9 @@ function init() {
   initHeroCinema();
   initManifesto();
   initHeritage();
-  initSpotlight();
+  initCinematic();
+  initDrift();
+  initHeroMouse();
   initYearMask();
   initKinetic();
   initFilmstrip();

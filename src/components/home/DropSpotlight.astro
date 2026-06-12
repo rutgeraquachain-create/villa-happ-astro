@@ -1,66 +1,44 @@
 ---
+// Drop 001 — cinematic takeover (Apple-stijl):
+// de echte cap-foto groeit van kaart naar fullscreen terwijl je scrolt,
+// tekstlagen bewegen met verschillende snelheden (parallax-diepte).
 import { getActiveDrop } from '../../lib/commerce';
+
 const drop = await getActiveDrop();
-const fallback = {
+const d: any = drop || {
   title: 'Villa Happ Back-Cap',
-  description: 'Het allereerste product van het nieuwe hoofdstuk: een oplage van precies 500 genummerde stuks, elk met een uniek code-label en certificaat van echtheid. Als deze 500 op zijn, komen ze niet terug.',
-  image_url: '/img/products/hoodie-logo-detail.webp',
-  total_pieces: 500,
-  status: 'live',
-  launch_date: null,
+  image_url: '/img/products/back-cap-front.webp',
   slug: 'villa-happ-back-cap',
 };
-const d: any = drop || fallback;
 const dropHref = drop ? `/drops/${d.slug}` : `/shop/${d.slug}`;
-const launchTs = d.launch_date ? Math.floor(new Date(d.launch_date).getTime() / 1000) : 0;
-const isLive = d.status === 'live';
-const isComing = d.status === 'coming-soon' && launchTs * 1000 > Date.now();
+const image = d.image_url || '/img/products/back-cap-front.webp';
 ---
-<section class="vh-spotlight">
-  <div class="vh-spotlight-inner">
-    <div class="vh-spotlight-text vh-reveal">
-      <p class="vh-spotlight-label vh-mono">03 / {isLive ? 'Nu live' : 'Binnenkort'} · Drop 001</p>
-      <h2 class="vh-spotlight-title">{d.title}</h2>
-      <p class="vh-spotlight-desc">{d.description}</p>
+<section class="vh-cine" id="vh-cine">
+  <div class="vh-cine-stage">
 
-      <div class="vh-spotlight-meta">
-        {d.total_pieces && (
-          <div>
-            <span class="vh-spotlight-meta-label vh-mono">Oplage</span>
-            <span class="vh-spotlight-meta-value">{d.total_pieces} stuks</span>
-          </div>
-        )}
-        {launchTs > 0 && (
-          <div>
-            <span class="vh-spotlight-meta-label vh-mono">{isLive ? 'Gelanceerd' : 'Lanceert'}</span>
-            <span class="vh-spotlight-meta-value">{new Date(launchTs * 1000).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}</span>
-          </div>
-        )}
-      </div>
+    <!-- Intro-lagen (parallax naar boven uit beeld) -->
+    <p class="vh-cine-eyebrow vh-mono" data-cine-intro="1">03 / Drop 001 · Nu live</p>
+    <h2 class="vh-cine-title" data-cine-intro="2">
+      Villa Happ <span class="vh-italic-accent">Back-Cap</span>
+    </h2>
 
-      {isComing && (
-        <div class="vh-spotlight-countdown" data-countdown={launchTs}>
-          <div class="vh-cd-cell"><div class="vh-cd-num" data-cd-days>00</div><div class="vh-cd-label">dagen</div></div>
-          <div class="vh-cd-cell"><div class="vh-cd-num" data-cd-hours>00</div><div class="vh-cd-label">uur</div></div>
-          <div class="vh-cd-cell"><div class="vh-cd-num" data-cd-minutes>00</div><div class="vh-cd-label">min</div></div>
-          <div class="vh-cd-cell"><div class="vh-cd-num" data-cd-seconds>00</div><div class="vh-cd-label">sec</div></div>
-        </div>
-      )}
-
-      <div>
-        <a href={dropHref} class="vh-btn vh-btn--primary" data-magnetic>
-          <span>{isLive ? 'Shop deze drop' : 'Zet me op de lijst'}</span>
-          <svg class="vh-btn-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </a>
-      </div>
+    <!-- Het beeld dat het scherm overneemt -->
+    <div class="vh-cine-media" data-cine-media>
+      <img src={image} alt={d.title} width="900" height="1125" loading="lazy" data-cine-img />
+      <div class="vh-cine-scrim" data-cine-scrim></div>
     </div>
 
-    <div class="vh-spotlight-media vh-reveal-img" data-cursor="Bekijk">
-      <span class="vh-spotlight-badge vh-mono">Drop 001</span>
-      <span class="vh-sticker vh-sticker--solid" style="--rot: 6deg; bottom: 20px; right: 20px;">Limited ✦ 500</span>
-      <img src={d.image_url} alt={d.title} width="900" height="1125" loading="lazy" />
+    <!-- Overlay (verschijnt op fullscreen) -->
+    <div class="vh-cine-overlay" data-cine-overlay>
+      <p class="vh-mono">Oplage 500 · Genummerd · Certificaat van echtheid</p>
+      <h3>Als deze 500 op zijn,<br />komen ze niet terug.</h3>
+      <a href={dropHref} class="vh-btn vh-btn--light" data-magnetic>
+        <span>Shop Drop 001</span>
+        <svg class="vh-btn-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </a>
     </div>
+
   </div>
 </section>

@@ -1,0 +1,31 @@
+---
+// Twee beeldkolommen die tegengesteld driften op scroll,
+// met een groot italic woord dat er op een derde snelheid doorheen kruist.
+const colA = [
+  '/img/products/back-cap-front.webp',
+  '/img/products/hoodie-grey-lifestyle.webp',
+  '/img/products/hoodie-blue-front.webp',
+  '/img/heritage/origin-babyparadijs.webp',
+];
+const colB = [
+  '/img/products/hoodie-blue-lifestyle.webp',
+  '/img/products/back-cap-side.webp',
+  '/img/products/hoodie-grey-back.webp',
+  '/img/products/back-cap-angle.webp',
+];
+---
+<section class="vh-drift" aria-label="Archiefbeelden">
+  <div class="vh-drift-word" data-drift-word aria-hidden="true">Stap <span>voor</span> stap</div>
+  <div class="vh-drift-cols">
+    <div class="vh-drift-col" data-drift="a">
+      {colA.map((img) => (
+        <figure class="vh-drift-cell"><img src={img} alt="" loading="lazy" /></figure>
+      ))}
+    </div>
+    <div class="vh-drift-col vh-drift-col--late" data-drift="b">
+      {colB.map((img) => (
+        <figure class="vh-drift-cell"><img src={img} alt="" loading="lazy" /></figure>
+      ))}
+    </div>
+  </div>
+</section>

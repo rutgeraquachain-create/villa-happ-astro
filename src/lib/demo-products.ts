@@ -112,7 +112,9 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
       'Ontworpen in Tilburg',
     ],
     images: [
-      '/img/products/hoodie-logo-detail.webp',
+      '/img/products/back-cap-front.webp',
+      '/img/products/back-cap-side.webp',
+      '/img/products/back-cap-angle.webp',
     ],
     // model: '/models/back-cap.glb',  // weer aanzetten zodra er een scan-kwaliteit model is
     badge: 'Limited · 500',
