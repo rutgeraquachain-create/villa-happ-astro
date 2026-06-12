@@ -23,16 +23,14 @@
 
 .no-js .vh-manifesto-text .vh-word { color: var(--vh-ink) !important; }
 
-/* Heritage: stack verticaal als er geen horizontal-scroll JS draait */
-.no-js .vh-heritage-track,
-.vh-reduced .vh-heritage-track {
+/* Heritage zonder JS: stack verticaal (alle breedtes) */
+.no-js .vh-heritage-track {
 	flex-direction: column !important;
 	width: 100% !important;
 	height: auto !important;
 	transform: none !important;
 }
-.no-js .vh-heritage-panel,
-.vh-reduced .vh-heritage-panel {
+.no-js .vh-heritage-panel {
 	width: 100% !important;
 	height: auto !important;
 	min-height: 90vh;
@@ -40,10 +38,29 @@
 	padding: 80px clamp(24px, 6vw, 80px) !important;
 	gap: 32px;
 }
-.no-js .vh-heritage-media,
-.vh-reduced .vh-heritage-media { height: 50vh; }
-.no-js .vh-heritage-progress,
-.vh-reduced .vh-heritage-progress { display: none; }
+.no-js .vh-heritage-media { height: 50vh; }
+.no-js .vh-heritage-progress { display: none; }
+/* Reduced motion: alleen op desktop verticaal stapelen (geen pin-scrub).
+   Op mobiel blijft de swipe-carousel: swipen is gebruikersgestuurd,
+   dat valt niet onder opgelegde beweging. */
+@media (min-width: 901px) {
+	.vh-reduced .vh-heritage-track {
+		flex-direction: column !important;
+		width: 100% !important;
+		height: auto !important;
+		transform: none !important;
+	}
+	.vh-reduced .vh-heritage-panel {
+		width: 100% !important;
+		height: auto !important;
+		min-height: 90vh;
+		grid-template-columns: 1fr !important;
+		padding: 80px clamp(24px, 6vw, 80px) !important;
+		gap: 32px;
+	}
+	.vh-reduced .vh-heritage-media { height: 50vh; }
+	.vh-reduced .vh-heritage-progress { display: none; }
+}
 
 /* Hero polaroid chrome alleen via JS-scrub zichtbaar */
 .no-js .vh-hero-chrome,
@@ -653,7 +670,7 @@
 	.no-js .vh-heritage-year,
 	.no-js .vh-heritage-step-title { opacity: 1; transform: none; }
 	.vh-heritage-progress { display: block; bottom: 48px; left: 7vw; right: 7vw; }
-	.vh-reduced .vh-heritage-progress, .no-js .vh-heritage-progress { display: none; }
+	.no-js .vh-heritage-progress { display: none; }
 }
 /* Breekpunt-utilities voor wisselende microcopy */
 .vh-show-mobile { display: none; }

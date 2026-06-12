@@ -164,10 +164,7 @@ function initManifesto() {
   const text = document.querySelector('.vh-manifesto-text');
   if (!text) return;
   const words = text.querySelectorAll('.vh-word');
-  if (reduce) {
-    words.forEach((w) => w.classList.add('is-lit'));
-    return;
-  }
+  // Bewust geen reduce-guard: woord-vulling is puur kleur, geen beweging.
   ScrollTrigger.create({
     trigger: text,
     start: 'top 75%',
@@ -496,7 +493,7 @@ function initCounters() {
       if (!entry.isIntersecting) return;
       const el = entry.target as HTMLElement;
       const target = parseInt(el.dataset.count || '0', 10);
-      if (reduce) { el.textContent = String(target); obs.unobserve(el); return; }
+      // Tellers tikken ook onder reduced motion: waardeverandering, geen beweging.
       let start: number | null = null;
       const step = (ts: number) => {
         if (start === null) start = ts;
