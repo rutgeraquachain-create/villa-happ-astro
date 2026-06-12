@@ -2,9 +2,9 @@
 import { getFeaturedProducts, formatPrice } from '../../lib/commerce';
 const dbProducts = await getFeaturedProducts(6);
 const fallback = [
-  { slug: 'heritage-hoodie-grey', name: 'Heritage Hoodie', price_cents: 12900, image_url: '/img/products/hoodie-grey-front.webp', hover_url: '/img/products/hoodie-grey-back.webp', badge: 'Nieuw', meta: 'Heather Grey' },
-  { slug: 'heritage-hoodie-blue', name: 'Heritage Hoodie', price_cents: 12900, image_url: '/img/products/hoodie-blue-front.webp', hover_url: '/img/products/hoodie-blue-lifestyle.webp', badge: null, meta: 'Tilburg Blue' },
-  { slug: 'heritage-hoodie-unisex', name: 'Heritage Hoodie', price_cents: 12900, image_url: '/img/products/hoodie-grey-lifestyle.webp', hover_url: '/img/products/hoodie-grey-new2.webp', badge: 'Bestseller', meta: 'Oversized fit' },
+  { slug: 'organic-cotton-hoodie-olijfgroen', name: 'Organic Cotton Hoodie', price_cents: 5995, image_url: '/img/products/hoodie-grey-front.webp', hover_url: '/img/products/hoodie-grey-back.webp', badge: 'Sale', meta: 'Olijfgroen · Unisex' },
+  { slug: 'organic-cotton-hoodie-navy', name: 'Organic Cotton Hoodie', price_cents: 5995, image_url: '/img/products/hoodie-blue-front.webp', hover_url: '/img/products/hoodie-blue-lifestyle.webp', badge: 'Sale', meta: 'Navy · Unisex' },
+  { slug: 'villa-happ-back-cap', name: 'Villa Happ Back-Cap', price_cents: 2195, image_url: '/img/products/hoodie-logo-detail.webp', hover_url: '/img/products/hoodie-grey-lifestyle.webp', badge: 'Limited · 500', meta: 'Drop 001 · One size' },
 ];
 const products = dbProducts.length > 0
   ? dbProducts.map((p) => ({

@@ -2,15 +2,16 @@
 import { getActiveDrop } from '../../lib/commerce';
 const drop = await getActiveDrop();
 const fallback = {
-  title: 'Sweater Stories',
-  description: 'De eerste limited edition van de derde generatie. Een collectie hoodies in heritage colorways. Oplage 500 stuks per kleur, elk genummerd en geleverd met certificaat van echtheid.',
-  image_url: '/img/products/hoodie-blue-lifestyle.webp',
+  title: 'Villa Happ Back-Cap',
+  description: 'Het allereerste product van het nieuwe hoofdstuk: een oplage van precies 500 genummerde stuks, elk met een uniek code-label en certificaat van echtheid. Als deze 500 op zijn, komen ze niet terug.',
+  image_url: '/img/products/hoodie-logo-detail.webp',
   total_pieces: 500,
-  status: 'coming-soon',
-  launch_date: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString(),
-  slug: 'sweater-stories',
+  status: 'live',
+  launch_date: null,
+  slug: 'villa-happ-back-cap',
 };
 const d: any = drop || fallback;
+const dropHref = drop ? `/drops/${d.slug}` : `/shop/${d.slug}`;
 const launchTs = d.launch_date ? Math.floor(new Date(d.launch_date).getTime() / 1000) : 0;
 const isLive = d.status === 'live';
 const isComing = d.status === 'coming-soon' && launchTs * 1000 > Date.now();
@@ -47,7 +48,7 @@ const isComing = d.status === 'coming-soon' && launchTs * 1000 > Date.now();
       )}
 
       <div>
-        <a href={`/drops/${d.slug}`} class="vh-btn vh-btn--primary" data-magnetic>
+        <a href={dropHref} class="vh-btn vh-btn--primary" data-magnetic>
           <span>{isLive ? 'Shop deze drop' : 'Zet me op de lijst'}</span>
           <svg class="vh-btn-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
