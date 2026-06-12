@@ -17,6 +17,9 @@ import Lenis from 'lenis';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Mobiel: URL-balk verschijnt/verdwijnt tijdens scroll; zonder dit springen pins
+ScrollTrigger.config({ ignoreMobileResize: true });
+
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isDesktop = window.matchMedia('(min-width: 901px)').matches;
 const hasHover = window.matchMedia('(hover: hover)').matches;
@@ -85,17 +88,49 @@ function initHeroCinema() {
   const chrome = hero.querySelector('.vh-hero-chrome') as HTMLElement | null;
   const scrim = hero.querySelector('.vh-hero-scrim') as HTMLElement | null;
 
-  if (!isDesktop || !media || !stage) {
-    // Mobiel: alleen subtiele parallax
-    if (img) {
-      gsap.fromTo(img, { yPercent: 0 }, {
-        yPercent: -8,
-        ease: 'none',
-        scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true },
-      });
-    }
+  if (!media || !img) return;
+
+  if (!isDesktop) {
+    // Mobiel: eigen pinned cinema. Titelregels schuiven door hun masker weg,
+    // de foto klikt in een afgeronde archiefkaart, achtergrond wordt papier.
+    gsap.set(media, { clipPath: 'inset(0% 0% 0% 0% round 0px)' });
+    const lines = hero.querySelectorAll<HTMLElement>('.vh-hero-title .vh-line > span');
+    const bottom = hero.querySelector<HTMLElement>('.vh-hero-bottom');
+
+    // De entree-animatie draait op CSS-transities; zodra de scrub begint
+    // moeten die uit, anders vertragen ze elke scrubframe (mushy gevoel).
+    let entranceCleared = false;
+    const clearEntrance = () => {
+      if (entranceCleared) return;
+      entranceCleared = true;
+      lines.forEach((s) => { s.style.transition = 'none'; });
+      if (bottom) bottom.style.transition = 'none';
+    };
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: hero,
+        pin: true,
+        scrub: 0.8,
+        end: '+=110%',
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => { if (self.progress > 0.02) clearEntrance(); },
+      },
+    });
+
+    tl.to(img, { yPercent: -6, scale: 1.08, ease: 'none', duration: 1 }, 0);
+    if (lines.length) tl.to(lines, { yPercent: -130, duration: 0.3, stagger: 0.05, ease: 'power1.in' }, 0);
+    tl.to('.vh-hero-bottom', { opacity: 0, y: -30, pointerEvents: 'none', duration: 0.22, ease: 'power1.in' }, 0)
+      .to(['.vh-viewfinder', '.vh-hero-scroll-cue', '.vh-hero-corner'], { opacity: 0, duration: 0.16 }, 0.05)
+      .to(media, { clipPath: 'inset(11% 7% 27% 7% round 18px)', duration: 0.5, ease: 'power2.inOut' }, 0.3);
+    if (scrim) tl.to(scrim, { opacity: 0.2, duration: 0.4 }, 0.3);
+    tl.to(hero, { backgroundColor: '#F4EEE3', duration: 0.35, ease: 'none' }, 0.38);
+    if (chrome) tl.fromTo(chrome, { opacity: 0 }, { opacity: 1, duration: 0.18 }, 0.62);
     return;
   }
+
+  if (!stage) return;
 
   gsap.set(media, { clipPath: 'inset(0% 0% 0% 0% round 0px)' });
 
@@ -111,7 +146,7 @@ function initHeroCinema() {
   });
 
   tl.to(img, { yPercent: -8, ease: 'none', duration: 1 }, 0)
-    .to('.vh-hero-inner', { opacity: 0, y: -60, duration: 0.22, ease: 'power1.in' }, 0)
+    .to('.vh-hero-inner', { opacity: 0, y: -60, pointerEvents: 'none', duration: 0.22, ease: 'power1.in' }, 0)
     .to(['.vh-viewfinder', '.vh-seal', '.vh-hero-scroll-cue'], { opacity: 0, duration: 0.15 }, 0.04)
     .to(media, {
       clipPath: 'inset(15% 31% 23% 31% round 14px)',
@@ -186,11 +221,71 @@ function initHeritage() {
   });
 }
 
+/* ---------- Heritage mobiel: swipebare story-carousel ---------- */
+function initHeritageMobile() {
+  if (isDesktop) return;
+  const track = document.querySelector<HTMLElement>('.vh-heritage-track');
+  const progress = document.querySelector<HTMLElement>('.vh-heritage-progress span');
+  if (!track) return;
+  const panels = Array.from(track.querySelectorAll<HTMLElement>('.vh-heritage-panel'));
+
+  // Panel in beeld -> jaartal en titel komen tot leven (CSS doet de animatie)
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => en.target.classList.toggle('is-active', en.isIntersecting));
+  }, { root: track, threshold: 0.55 });
+  panels.forEach((p) => io.observe(p));
+
+  // Voortgangsbalk + parallax in de beelden tijdens het swipen
+  let raf = 0;
+  const update = () => {
+    raf = 0;
+    const max = track.scrollWidth - track.clientWidth;
+    if (progress && max > 0) progress.style.width = (track.scrollLeft / max) * 100 + '%';
+    if (reduce) return;
+    const vw = window.innerWidth;
+    panels.forEach((p) => {
+      const img = p.querySelector<HTMLElement>('.vh-heritage-media img');
+      if (!img) return;
+      const r = p.getBoundingClientRect();
+      const off = (r.left + r.width / 2 - vw / 2) / vw; // -1 .. 1 t.o.v. schermmidden
+      img.style.transform = `translateX(${(off * -26).toFixed(1)}px) scale(1.12)`;
+    });
+  };
+  track.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+  update();
+}
+
+/* ---------- Gyroscoop-diepte: kantel de telefoon, lagen bewegen mee ---------- */
+function initGyro() {
+  if (isDesktop || reduce || !('DeviceOrientationEvent' in window)) return;
+  // iOS vraagt een permissieprompt voor deze events; die tonen we bewust niet.
+  // Zonder toestemming vuurt de listener simpelweg nooit (graceful no-op).
+  const targets = [
+    document.querySelector<HTMLElement>('.vh-hero-media img'),
+    document.querySelector<HTMLElement>('[data-cine-img]'),
+  ].filter(Boolean) as HTMLElement[];
+  if (!targets.length) return;
+
+  const movers = targets.map((t) => ({
+    x: gsap.quickTo(t, 'x', { duration: 0.6, ease: 'power2.out' }),
+    y: gsap.quickTo(t, 'y', { duration: 0.6, ease: 'power2.out' }),
+  }));
+
+  let base: { b: number; g: number } | null = null;
+  window.addEventListener('deviceorientation', (e) => {
+    if (e.gamma == null || e.beta == null) return;
+    if (!base) base = { b: e.beta, g: e.gamma }; // hoe je 'm vasthoudt = neutraal
+    const dx = Math.max(-1, Math.min(1, (e.gamma - base.g) / 28));
+    const dy = Math.max(-1, Math.min(1, (e.beta - base.b) / 28));
+    movers.forEach((m) => { m.x(dx * 14); m.y(dy * 10); });
+  }, { passive: true });
+}
+
 /* ---------- Cinematic takeover: cap groeit naar fullscreen ---------- */
 function initCinematic() {
   const section = document.getElementById('vh-cine');
   if (!section) return;
-  if (reduce || !isDesktop) {
+  if (reduce) {
     section.classList.add('is-static');
     return;
   }
@@ -215,7 +310,7 @@ function initCinematic() {
       trigger: section,
       pin: true,
       scrub: 1,
-      end: '+=180%',
+      end: isDesktop ? '+=180%' : '+=150%',
       anticipatePin: 1,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
@@ -225,8 +320,8 @@ function initCinematic() {
   });
 
   // Tekstlagen driften omhoog op verschillende snelheden (diepte)
-  if (intro1) tl.to(intro1, { yPercent: -340, opacity: 0, duration: 0.34, ease: 'power1.in' }, 0);
-  if (intro2) tl.to(intro2, { yPercent: -160, opacity: 0, duration: 0.42, ease: 'power1.in' }, 0);
+  if (intro1) tl.to(intro1, { yPercent: isDesktop ? -340 : -220, opacity: 0, duration: 0.34, ease: 'power1.in' }, 0);
+  if (intro2) tl.to(intro2, { yPercent: isDesktop ? -160 : -110, opacity: 0, duration: 0.42, ease: 'power1.in' }, 0);
 
   // Het beeld neemt het scherm over; de foto erin zoomt tegengesteld
   tl.to(media, { scale: fullScale, borderRadius: 0, duration: 0.62, ease: 'power2.inOut' }, 0.10)
@@ -556,9 +651,11 @@ function init() {
   initHeroCinema();
   initManifesto();
   initHeritage();
+  initHeritageMobile();
   initCinematic();
   initDrift();
   initHeroMouse();
+  initGyro();
   initYearMask();
   initKinetic();
   initFilmstrip();

@@ -242,7 +242,18 @@
 	color: var(--vh-ink);
 }
 @media (max-width: 900px) {
-	.vh-hero-chrome { display: none; }
+	/* svh: geen pin-sprongen als de URL-balk verschijnt/verdwijnt */
+	.vh-hero { height: 100svh; min-height: 560px; }
+	/* Chrome wordt op mobiel een los archiefonderschrift onder de kaart */
+	.vh-hero-chrome {
+		top: auto; left: 8%; right: 8%; bottom: 8%;
+		background: transparent;
+		box-shadow: none;
+		padding-bottom: 0;
+		gap: 6px;
+	}
+	.vh-hero-chrome-cap { color: var(--vh-ink-muted); }
+	.vh-hero-chrome-note { color: var(--vh-ink); font-size: 17px; }
 	.vh-hero-media img { height: 112%; }
 }
 .vh-hero-inner {
@@ -568,24 +579,87 @@
 	display: block; height: 100%; width: 0;
 	background: var(--vh-accent);
 }
-/* Mobile: stack heritage vertically instead of horizontal scroll */
+/* Mobiel: swipebare story-carousel (scroll-snap), elk hoofdstuk een kaart */
 @media (max-width: 900px) {
+	.vh-heritage { padding: 56px 0 96px; }
 	.vh-heritage-track {
-		flex-direction: column;
-		width: 100%;
 		height: auto;
+		width: 100%;
 		transform: none !important;
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		-webkit-overflow-scrolling: touch;
+		gap: 14px;
+		padding: 0 7vw 8px;
+		scrollbar-width: none;
+		touch-action: pan-x pan-y;
 	}
+	.vh-heritage-track::-webkit-scrollbar { display: none; }
 	.vh-heritage-panel {
-		width: 100%;
+		width: 82vw;
 		height: auto;
-		min-height: 90vh;
+		min-height: 0;
+		scroll-snap-align: center;
 		grid-template-columns: 1fr;
-		padding: 80px 24px;
-		gap: 32px;
+		gap: 0;
+		padding: 0;
+		border: 1px solid rgba(244, 238, 227, 0.12);
+		border-radius: 20px;
+		overflow: hidden;
+		background: rgba(244, 238, 227, 0.04);
 	}
-	.vh-heritage-media { height: 50vh; }
-	.vh-heritage-progress { display: none; }
+	.vh-heritage-panel--intro {
+		border: 0;
+		background: transparent;
+		padding: 24px 5vw;
+		min-height: 46vh;
+		place-items: center;
+		text-align: center;
+	}
+	.vh-heritage-media {
+		order: -1;
+		height: 36vh;
+		border-radius: 0;
+		background: rgba(244, 238, 227, 0.06);
+	}
+	.vh-heritage-media img { will-change: transform; transform: scale(1.12); }
+	.vh-heritage-media--placeholder { height: 26vh; }
+	.vh-heritage-text-col { padding: 0 20px 26px; }
+	/* Jaartal valt over de onderrand van de foto heen */
+	.vh-heritage-year {
+		order: -1;
+		position: relative;
+		z-index: 2;
+		font-size: clamp(56px, 17vw, 88px);
+		margin: -0.52em 0 6px;
+		text-shadow: 0 2px 18px rgba(28, 24, 19, 0.45);
+	}
+	.vh-heritage-text-col { display: flex; flex-direction: column; }
+	.vh-heritage-step-num { margin-bottom: 10px; }
+	.vh-heritage-step-text { font-size: 14.5px; }
+	/* Entree-animatie zodra een kaart in beeld snapt */
+	.vh-heritage-year,
+	.vh-heritage-step-title {
+		opacity: 0;
+		transform: translateY(22px);
+		transition: opacity 0.7s var(--vh-ease-out), transform 0.7s var(--vh-ease-out);
+	}
+	.vh-heritage-step-title { transition-delay: 0.08s; }
+	.vh-heritage-panel.is-active .vh-heritage-year,
+	.vh-heritage-panel.is-active .vh-heritage-step-title,
+	.vh-heritage-panel--intro .vh-heritage-intro-title,
+	.vh-reduced .vh-heritage-year,
+	.vh-reduced .vh-heritage-step-title,
+	.no-js .vh-heritage-year,
+	.no-js .vh-heritage-step-title { opacity: 1; transform: none; }
+	.vh-heritage-progress { display: block; bottom: 48px; left: 7vw; right: 7vw; }
+	.vh-reduced .vh-heritage-progress, .no-js .vh-heritage-progress { display: none; }
+}
+/* Breekpunt-utilities voor wisselende microcopy */
+.vh-show-mobile { display: none; }
+@media (max-width: 900px) {
+	.vh-show-mobile { display: inline; }
+	.vh-show-desktop { display: none; }
 }
 
 /* ============================================================
@@ -688,6 +762,40 @@
 	color: var(--vh-ink); padding: 24px 0 0;
 }
 .no-js .vh-cine-overlay p, .vh-reduced .vh-cine-overlay p, .vh-cine.is-static .vh-cine-overlay p { color: var(--vh-ink-muted); }
+
+/* Mobiel: takeover blijft aan, met passende typografie en svh-hoogte */
+@media (max-width: 900px) {
+	.vh-cine { height: 100svh; }
+	.vh-cine-eyebrow { top: clamp(52px, 9svh, 92px); }
+	.vh-cine-title {
+		white-space: normal;
+		text-align: center;
+		width: 92vw;
+		top: clamp(84px, 14svh, 150px);
+		font-size: clamp(32px, 9.5vw, 54px);
+	}
+	.vh-cine-media { width: clamp(200px, 58vw, 320px); }
+	.vh-cine-overlay {
+		padding-left: 6vw;
+		padding-right: 6vw;
+		padding-bottom: clamp(40px, 9svh, 84px);
+	}
+	.vh-cine-overlay h3 { font-size: clamp(23px, 6.8vw, 34px); }
+}
+
+/* ============================================================
+   TOUCH-FYSICA — alles wat je aanraakt veert zachtjes in
+   ============================================================ */
+@media (hover: none) {
+	.vh-btn { transition: transform 0.18s var(--vh-ease-out); }
+	.vh-btn:active { transform: scale(0.96); }
+	.vh-shop-card-media { transition: transform 0.18s var(--vh-ease-out); }
+	.vh-shop-card:active .vh-shop-card-media { transform: scale(0.975); }
+	.vh-drift-cell { transition: transform 0.18s var(--vh-ease-out); }
+	.vh-drift-cell:active { transform: scale(0.97); }
+	.vh-heritage-panel { transition: transform 0.2s var(--vh-ease-out); }
+	.vh-heritage-panel:active { transform: scale(0.985); }
+}
 
 /* ============================================================
    DRIFT — tegengesteld scrollende beeldkolommen + kruisend woord
