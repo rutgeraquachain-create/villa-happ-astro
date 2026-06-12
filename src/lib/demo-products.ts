@@ -114,7 +114,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
     images: [
       '/img/products/hoodie-logo-detail.webp',
     ],
-    model: '/models/back-cap.glb',
+    // model: '/models/back-cap.glb',  // weer aanzetten zodra er een scan-kwaliteit model is
     badge: 'Limited · 500',
     meta: 'Drop 001 · One size',
     variants: [
