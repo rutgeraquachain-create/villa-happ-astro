@@ -27,6 +27,8 @@ export interface CatalogProduct {
   description: string;
   details: string[];
   images: string[];
+  /** Pad naar een GLB-bestand voor de 360°-viewer op de PDP */
+  model?: string;
   badge?: string;
   meta: string;
   variants: CatalogVariant[];
@@ -112,6 +114,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
     images: [
       '/img/products/hoodie-logo-detail.webp',
     ],
+    model: '/models/back-cap.glb',
     badge: 'Limited · 500',
     meta: 'Drop 001 · One size',
     variants: [

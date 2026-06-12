@@ -41,14 +41,41 @@ const pdpData = {
 
         <!-- Gallery -->
         <div class="vh-pdp-gallery">
-          <div class="vh-pdp-main">
+          <div class={`vh-pdp-main${product.model ? ' show-3d' : ''}`} id="vh-pdp-main">
             <span class="vh-pdp-frame-tag">Archief · {product.variants[0]?.sku?.split('-').slice(0, 2).join('-') || 'VH'}</span>
             <img src={product.images[0]} alt={`${product.name} ${product.color}`} id="vh-pdp-mainimg" width="900" height="1125" fetchpriority="high" />
+            {product.model && (
+              <>
+                {/* @ts-ignore — custom element */}
+                <model-viewer
+                  src={product.model}
+                  alt={`${product.name} in 360 graden`}
+                  camera-controls
+                  auto-rotate
+                  auto-rotate-delay="1200"
+                  rotation-per-second="22deg"
+                  shadow-intensity="0.7"
+                  exposure="1.1"
+                  environment-image="neutral"
+                  camera-orbit="28deg 76deg 108%"
+                  min-camera-orbit="auto 50deg 80%"
+                  max-camera-orbit="auto 110deg 160%"
+                  interaction-prompt="none"
+                  touch-action="pan-y"
+                ></model-viewer>
+                <span class="vh-pdp-3d-hint vh-mono">360° · Sleep om te draaien</span>
+              </>
+            )}
           </div>
-          {product.images.length > 1 && (
+          {(product.images.length > 1 || product.model) && (
             <div class="vh-pdp-thumbs" id="vh-pdp-thumbs">
+              {product.model && (
+                <button type="button" class="vh-pdp-thumb vh-pdp-thumb--3d is-active" data-3d aria-label="360 graden weergave">
+                  <span class="vh-mono">360°</span>
+                </button>
+              )}
               {product.images.map((img, i) => (
-                <button type="button" class={`vh-pdp-thumb${i === 0 ? ' is-active' : ''}`} data-img={img} aria-label={`Foto ${i + 1}`}>
+                <button type="button" class={`vh-pdp-thumb${i === 0 && !product.model ? ' is-active' : ''}`} data-img={img} aria-label={`Foto ${i + 1}`}>
                   <img src={img} alt="" width="72" height="90" loading="lazy" />
                 </button>
               ))}
@@ -152,6 +179,10 @@ const pdpData = {
   </div>
 
   <script type="application/json" id="vh-pdp-data" set:html={JSON.stringify(pdpData)}></script>
+
+  {product.model && (
+    <script is:inline type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+  )}
 </Base>
 
 <script>
@@ -159,12 +190,18 @@ const pdpData = {
 
   const data = JSON.parse(document.getElementById('vh-pdp-data')!.textContent!);
 
-  /* Gallery thumbs */
+  /* Gallery thumbs: foto's wisselen, 360°-knop schakelt de 3D-viewer in */
   const mainImg = document.getElementById('vh-pdp-mainimg') as HTMLImageElement;
+  const mainBox = document.getElementById('vh-pdp-main')!;
   document.querySelectorAll<HTMLButtonElement>('.vh-pdp-thumb').forEach((thumb) => {
     thumb.addEventListener('click', () => {
       document.querySelectorAll('.vh-pdp-thumb').forEach((t) => t.classList.remove('is-active'));
       thumb.classList.add('is-active');
+      if (thumb.hasAttribute('data-3d')) {
+        mainBox.classList.add('show-3d');
+        return;
+      }
+      mainBox.classList.remove('show-3d');
       mainImg.style.opacity = '0';
       setTimeout(() => {
         mainImg.src = thumb.dataset.img!;
