@@ -1,11 +1,7 @@
 ---
-// Manifesto met word-by-word fill on scroll + inline foto's in de zin (fctrylab-stijl)
+// Manifesto met word-by-word fill on scroll (kleur, geen beweging)
 const text = "Twee keer gevallen. Drie keer opgestaan. Wij maken stukken met een verhaal, gedragen door de generatie van toen, en die van nu.";
 const accentWords = new Set(['opgestaan.', 'verhaal', 'generatie', 'nu.']);
-const inlineAfter: Record<string, string> = {
-  'verhaal,': '/img/products/hoodie-logo-detail.webp',
-  'generatie': '/img/heritage/origin-babyparadijs.webp',
-};
 const words = text.split(' ');
 ---
 <section class="vh-manifesto">
@@ -15,16 +11,7 @@ const words = text.split(' ');
       {words.map((w) => {
         const clean = w.replace(/[.,]/g, '');
         const isAccent = accentWords.has(w) || accentWords.has(clean);
-        const inlineImg = inlineAfter[w];
-        return (
-          <>
-            <span class={`vh-word${isAccent ? ' vh-word-accent' : ''}`}>{w} </span>
-            {inlineImg && (
-              <span class="vh-inline-img"><img src={inlineImg} alt="" loading="lazy" /></span>
-            )}
-            {inlineImg && ' '}
-          </>
-        );
+        return <span class={`vh-word${isAccent ? ' vh-word-accent' : ''}`}>{w} </span>;
       })}
     </p>
   </div>

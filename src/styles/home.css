@@ -1185,20 +1185,6 @@
 	font-style: normal;
 }
 
-/* Inline foto's in het manifest */
-.vh-inline-img {
-	display: inline-block;
-	width: 1.55em;
-	height: 0.72em;
-	border-radius: var(--vh-radius-pill);
-	overflow: hidden;
-	vertical-align: -6%;
-	margin: 0 0.08em;
-	transition: width 0.5s var(--vh-ease-out);
-}
-.vh-inline-img img { width: 100%; height: 100%; object-fit: cover; }
-.vh-inline-img:hover { width: 2.8em; }
-
 /* ============================================================
    KINETIC WORDMARK — oversized, scroll-driven horizontal
    ============================================================ */
