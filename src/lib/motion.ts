@@ -355,6 +355,48 @@ function initDrift() {
   }
 }
 
+/* ---------- Campagnemoment: monumentale reveal + trage parallax ---------- */
+function initCampaign() {
+  const section = document.getElementById('vh-campaign');
+  if (!section) return;
+
+  // Reveal van de monumentale regels via IntersectionObserver: gegarandeerd,
+  // los van de scroll-engine. De CSS doet de maskeranimatie.
+  if (reduce) {
+    section.classList.add('is-revealed');
+  } else {
+    const reveal = () => section.classList.add('is-revealed');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { reveal(); io.disconnect(); }
+      });
+    }, { threshold: 0.25 });
+    io.observe(section);
+    // Failsafe: als de IO ooit faalt, mag de kernregel nooit onzichtbaar blijven.
+    // Zodra de sectie binnen bereik scrolt, onthullen we sowieso.
+    const onScroll = () => {
+      const r = section.getBoundingClientRect();
+      if (r.top < window.innerHeight * 0.85 && r.bottom > 0) {
+        reveal();
+        window.removeEventListener('scroll', onScroll);
+        io.disconnect();
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  // Trage parallax-drift op het beeld (visueel; faalt het, dan staat het stil)
+  const media = section.querySelector('[data-campaign-media]') as HTMLElement | null;
+  if (!reduce && media) {
+    gsap.fromTo(media, { yPercent: -5 }, {
+      yPercent: 5,
+      ease: 'none',
+      scrollTrigger: { trigger: section, start: 'top bottom', end: 'bottom top', scrub: true },
+    });
+  }
+}
+
 /* ---------- Hero muis-diepte: lagen reageren op de cursor ---------- */
 function initHeroMouse() {
   if (reduce || !isDesktop || !hasHover) return;
@@ -657,6 +699,7 @@ function init() {
   safe('manifesto', initManifesto);
   safe('heritage', initHeritage);
   safe('heritageMobile', initHeritageMobile);
+  safe('campaign', initCampaign);
   safe('cinematic', initCinematic);
   safe('drift', initDrift);
   safe('heroMouse', initHeroMouse);
