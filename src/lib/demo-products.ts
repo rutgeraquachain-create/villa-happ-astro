@@ -31,6 +31,8 @@ export interface CatalogProduct {
   model?: string;
   badge?: string;
   meta: string;
+  /** Totale genummerde oplage (bv. 500). Voedt de echte schaarste-balk op de PDP. */
+  edition?: number;
   variants: CatalogVariant[];
 }
 
@@ -119,6 +121,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
     // model: '/models/back-cap.glb',  // weer aanzetten zodra er een scan-kwaliteit model is
     badge: 'Limited · 500',
     meta: 'Drop 001 · One size',
+    edition: 500,
     variants: [
       { id: 'demo-cap-os', size: 'One size', stock: 48, sku: 'VH-CAP-001' },
     ],
