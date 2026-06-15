@@ -1,0 +1,53 @@
+---
+export const prerender = true;
+
+import Base from '../layouts/Base.astro';
+import '../styles/shop.css';
+
+const steps = [
+  { n: '01', t: 'Meld je retour', d: 'Reageer op je bevestigingsmail met je bestelnummer en wat je wilt terugsturen.' },
+  { n: '02', t: 'Pak het in', d: 'Stop het stuk ongedragen terug in de verpakking, met de labels er nog aan.' },
+  { n: '03', t: 'Stuur het terug', d: 'Plak het retourlabel op het pakket en lever het in bij een PostNL-punt.' },
+  { n: '04', t: 'Geld terug', d: 'Zodra we je retour hebben ontvangen en gecontroleerd, betalen we binnen 14 dagen terug.' },
+];
+---
+<Base title="Retourneren · Villa Happ" description="Niet goed? Retourneren bij Villa Happ kan kosteloos binnen 30 dagen. Zo werkt het, stap voor stap.">
+  <section class="vh-page">
+    <div class="vh-page-inner">
+      <header class="vh-page-head">
+        <p class="vh-page-label vh-mono">Hulp & service</p>
+        <h1 class="vh-page-title">Retour&shy;neren</h1>
+        <p class="vh-page-sub">Niet helemaal wat je hoopte? Geen zorgen. Je hebt 30 dagen bedenktijd en retourneren is gratis binnen Nederland.</p>
+      </header>
+
+      <div class="vh-trust">
+        <ol class="vh-trust-steps">
+          {steps.map((s) => (
+            <li>
+              <span class="vh-trust-step-n vh-mono">{s.n}</span>
+              <div>
+                <h3>{s.t}</h3>
+                <p>{s.d}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div class="vh-trust-group">
+          <h2 class="vh-trust-group-title">Voorwaarden</h2>
+          <ul class="vh-prose-list">
+            <li>Stukken zijn ongedragen, ongewassen en voorzien van de originele labels.</li>
+            <li>Je meldt je retour binnen 30 dagen na ontvangst.</li>
+            <li>Retourneren binnen Nederland is gratis. Vanuit België en Duitsland zijn de retourkosten voor eigen rekening.</li>
+            <li>Het aankoopbedrag wordt terugbetaald via dezelfde betaalmethode.</li>
+          </ul>
+        </div>
+
+        <div class="vh-trust-group">
+          <h2 class="vh-trust-group-title">Een andere maat nodig?</h2>
+          <p class="vh-prose">Ruilen doe je het snelst door je stuk te retourneren en de juiste maat opnieuw te bestellen. Zo is de gewenste maat meteen voor je gereserveerd. Vragen? <a href="/contact">We helpen je graag.</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>

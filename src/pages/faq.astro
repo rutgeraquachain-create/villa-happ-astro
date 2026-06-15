@@ -1,0 +1,78 @@
+---
+export const prerender = true;
+
+import Base from '../layouts/Base.astro';
+import '../styles/shop.css';
+
+const groups = [
+  {
+    title: 'Bestellen & betalen',
+    items: [
+      { q: 'Welke betaalmethoden kan ik gebruiken?', a: 'Je betaalt veilig via Mollie met iDEAL, Bancontact of creditcard (Mastercard en Visa).' },
+      { q: 'Is online betalen veilig?', a: 'Ja. Alle betalingen lopen versleuteld via Mollie. Wij slaan zelf geen betaalgegevens op.' },
+      { q: 'Kan ik mijn bestelling nog wijzigen?', a: 'Zolang je bestelling nog niet is verzonden, passen we hem graag aan. Reageer zo snel mogelijk op je bevestigingsmail.' },
+    ],
+  },
+  {
+    title: 'Verzending',
+    items: [
+      { q: 'Wat kost verzending?', a: 'Binnen Nederland € 4,95, en gratis vanaf € 75. Naar België € 6,95 en naar Duitsland € 8,95.' },
+      { q: 'Hoe snel is mijn bestelling in huis?', a: 'Voor 16:00 besteld, dezelfde werkdag verzonden via PostNL. Binnen Nederland is je pakket meestal de volgende werkdag in huis, inclusief track en trace.' },
+      { q: 'Naar welke landen versturen jullie?', a: 'Op dit moment bezorgen we in Nederland, België en Duitsland.' },
+    ],
+  },
+  {
+    title: 'Retour & ruilen',
+    items: [
+      { q: 'Kan ik mijn bestelling retourneren?', a: 'Ja, je hebt 30 dagen bedenktijd. Retourneren is gratis binnen Nederland.' },
+      { q: 'Hoe retourneer ik?', a: 'Meld je retour via een reactie op je bevestigingsmail. Je ontvangt een retourlabel en stuurt het pakket terug. Na ontvangst betalen we binnen 14 dagen terug.' },
+      { q: 'Kan ik een andere maat ruilen?', a: 'Retourneer het stuk en plaats een nieuwe bestelling in de juiste maat. Zo is de gewenste maat het snelst bij je.' },
+    ],
+  },
+  {
+    title: 'Product & maat',
+    items: [
+      { q: 'Hoe vallen de maten?', a: 'Onze stukken zijn unisex en vallen ruim. Twijfel je tussen twee maten, kies dan de kleinere. Op elke productpagina vind je een maatgids.' },
+      { q: 'Is dit een origineel Villa Happ stuk?', a: 'Ja. Onze stukken worden in beperkte, genummerde oplages gemaakt. Limited editions komen met een certificaat van echtheid.' },
+      { q: 'Hoe onderhoud ik mijn stuk?', a: 'Was binnenstebuiten op 30 graden en laat aan de lucht drogen. Niet in de droger, dan gaan de kleur en pasvorm het langst mee.' },
+    ],
+  },
+];
+
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: groups.flatMap((g) => g.items).map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+---
+<Base title="Veelgestelde vragen · Villa Happ" description="Antwoorden op de meestgestelde vragen over bestellen, verzending, retourneren en de stukken van Villa Happ.">
+  <section class="vh-page">
+    <div class="vh-page-inner">
+      <header class="vh-page-head">
+        <p class="vh-page-label vh-mono">Hulp & service</p>
+        <h1 class="vh-page-title">Veelgestelde <span class="vh-italic-accent">vragen</span></h1>
+        <p class="vh-page-sub">Niet gevonden wat je zoekt? <a href="/contact">Neem contact op</a>, we helpen je graag verder.</p>
+      </header>
+
+      <div class="vh-trust">
+        {groups.map((g) => (
+          <div class="vh-trust-group">
+            <h2 class="vh-trust-group-title">{g.title}</h2>
+            {g.items.map((f) => (
+              <details class="vh-acc">
+                <summary>{f.q}</summary>
+                <div class="vh-acc-body">{f.a}</div>
+              </details>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <script type="application/ld+json" set:html={JSON.stringify(faqLd)} is:inline></script>
+</Base>

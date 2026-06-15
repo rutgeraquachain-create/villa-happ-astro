@@ -6,7 +6,7 @@ export const prerender = true;
 const SITE = 'https://villa-happ-astro.vercel.app';
 
 // Indexeerbare routes (transactiepagina's bewust weggelaten)
-const staticRoutes = ['', 'shop', 'story', 'drops', 'brands', 'journal'];
+const staticRoutes = ['', 'shop', 'story', 'drops', 'brands', 'journal', 'faq', 'verzending', 'retourneren', 'contact'];
 
 export const GET: APIRoute = async () => {
   const catalog = await getCatalog();

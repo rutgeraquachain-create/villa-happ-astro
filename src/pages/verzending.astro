@@ -1,0 +1,49 @@
+---
+export const prerender = true;
+
+import Base from '../layouts/Base.astro';
+import '../styles/shop.css';
+
+const rates = [
+  { land: 'Nederland', kosten: '€ 4,95', gratis: 'Gratis vanaf € 75', tijd: 'Meestal volgende werkdag' },
+  { land: 'België', kosten: '€ 6,95', gratis: 'Gratis vanaf € 75', tijd: '2 tot 3 werkdagen' },
+  { land: 'Duitsland', kosten: '€ 8,95', gratis: 'Gratis vanaf € 75', tijd: '2 tot 4 werkdagen' },
+];
+---
+<Base title="Verzending · Villa Happ" description="Alles over de verzending van Villa Happ: kosten per land, levertijden, en track en trace via PostNL.">
+  <section class="vh-page">
+    <div class="vh-page-inner">
+      <header class="vh-page-head">
+        <p class="vh-page-label vh-mono">Hulp & service</p>
+        <h1 class="vh-page-title">Verzending</h1>
+        <p class="vh-page-sub">Zorgvuldig ingepakt, snel onderweg. Hier lees je precies wat je kunt verwachten.</p>
+      </header>
+
+      <div class="vh-trust">
+        <table class="vh-trust-table">
+          <thead><tr><th>Land</th><th>Kosten</th><th>Gratis vanaf</th><th>Levertijd</th></tr></thead>
+          <tbody>
+            {rates.map((r) => (
+              <tr><td>{r.land}</td><td>{r.kosten}</td><td>{r.gratis}</td><td>{r.tijd}</td></tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div class="vh-trust-group">
+          <h2 class="vh-trust-group-title">Levertijd</h2>
+          <p class="vh-prose">Bestel je voor 16:00 op een werkdag, dan gaat je pakket dezelfde dag nog op de bus via PostNL. Binnen Nederland is het meestal de volgende werkdag in huis. Je ontvangt altijd een track en trace zodra je bestelling is verzonden, zodat je precies weet wanneer je 'm kunt verwachten.</p>
+        </div>
+
+        <div class="vh-trust-group">
+          <h2 class="vh-trust-group-title">Verpakking</h2>
+          <p class="vh-prose">We verpakken elk stuk met zorg en zo min mogelijk materiaal. Genummerde en limited edition stukken worden geleverd met hun certificaat van echtheid.</p>
+        </div>
+
+        <div class="vh-trust-group">
+          <h2 class="vh-trust-group-title">Iets misgegaan?</h2>
+          <p class="vh-prose">Is je pakket beschadigd of niet aangekomen? <a href="/contact">Laat het ons weten</a> en we lossen het samen op. Meer antwoorden vind je in de <a href="/faq">veelgestelde vragen</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,108 @@
+---
+export const prerender = true;
+
+import Base from '../layouts/Base.astro';
+import '../styles/shop.css';
+---
+<Base title="Contact · Villa Happ" description="Vragen over je bestelling, een stuk of het merk? Neem contact op met Villa Happ. We reageren binnen 1 tot 2 werkdagen.">
+  <section class="vh-page">
+    <div class="vh-page-inner">
+      <header class="vh-page-head">
+        <p class="vh-page-label vh-mono">Hulp & service</p>
+        <h1 class="vh-page-title">Neem <span class="vh-italic-accent">contact</span> op</h1>
+        <p class="vh-page-sub">Een vraag over je bestelling, een stuk, of gewoon het verhaal? We horen graag van je en reageren doorgaans binnen 1 tot 2 werkdagen.</p>
+      </header>
+
+      <div class="vh-contact">
+        <form class="vh-form vh-contact-form" id="vh-contact-form" novalidate>
+          <div class="vh-form-row">
+            <div class="vh-field">
+              <label for="ct-name">Je naam</label>
+              <input id="ct-name" name="name" autocomplete="name" required />
+            </div>
+            <div class="vh-field">
+              <label for="ct-email">E-mailadres</label>
+              <input id="ct-email" name="email" type="email" autocomplete="email" required />
+            </div>
+          </div>
+          <div class="vh-field">
+            <label for="ct-subject">Onderwerp</label>
+            <select id="ct-subject" name="subject">
+              <option value="Bestelling">Vraag over mijn bestelling</option>
+              <option value="Product">Vraag over een stuk</option>
+              <option value="Retour">Retour of ruilen</option>
+              <option value="Overig">Iets anders</option>
+            </select>
+          </div>
+          <div class="vh-field">
+            <label for="ct-message">Je bericht</label>
+            <textarea id="ct-message" name="message" rows="5" required></textarea>
+          </div>
+          <button type="submit" class="vh-btn vh-btn--accent" id="vh-contact-send">
+            <span id="vh-contact-send-label">Verstuur bericht</span>
+            <svg class="vh-btn-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <p class="vh-contact-note vh-mono">Demo: berichten worden nog niet verzonden tot de mailbox gekoppeld is.</p>
+        </form>
+
+        <div class="vh-contact-done" id="vh-contact-done" hidden>
+          <p class="vh-contact-done-mark">✦</p>
+          <h2>Bedankt, <span class="vh-italic-accent">we hebben je bericht</span>.</h2>
+          <p>We nemen binnen 1 tot 2 werkdagen contact met je op via het opgegeven e-mailadres.</p>
+          <a href="/shop" class="vh-btn vh-btn--ghost"><span>Verder kijken</span></a>
+        </div>
+
+        <aside class="vh-contact-aside">
+          <div class="vh-trust-group">
+            <h2 class="vh-trust-group-title">Over je bestelling</h2>
+            <p class="vh-prose">Heb je een vraag over een lopende bestelling? Reageer op je bevestigingsmail met je bestelnummer, dan pakken we het direct op.</p>
+          </div>
+          <div class="vh-trust-group">
+            <h2 class="vh-trust-group-title">Snel een antwoord</h2>
+            <p class="vh-prose">Veel vragen over maten, verzending en retour beantwoorden we al in de <a href="/faq">veelgestelde vragen</a>.</p>
+          </div>
+          <div class="vh-trust-group">
+            <h2 class="vh-trust-group-title">Het huis</h2>
+            <p class="vh-prose">Villa Happ<br />Heritage lifestyle, sinds 1960<br />Tilburg, Nederland</p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const form = document.getElementById('vh-contact-form') as HTMLFormElement;
+  const done = document.getElementById('vh-contact-done')!;
+
+  const reqInputs = Array.from(form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[required]'));
+  function fieldMsg(input: Element): HTMLElement {
+    let m = input.parentElement!.querySelector('.vh-field-msg') as HTMLElement | null;
+    if (!m) { m = document.createElement('small'); m.className = 'vh-field-msg'; input.parentElement!.appendChild(m); }
+    return m;
+  }
+  function validate(input: HTMLInputElement | HTMLTextAreaElement): boolean {
+    const v = input.value.trim();
+    let ok = !!v;
+    if (ok && (input as HTMLInputElement).type === 'email') ok = /.+@.+\..+/.test(v);
+    input.classList.toggle('is-invalid', !ok);
+    input.classList.toggle('is-valid', ok);
+    fieldMsg(input).textContent = ok ? '' : ((input as HTMLInputElement).type === 'email' ? 'Vul een geldig e-mailadres in' : 'Dit veld is verplicht');
+    return ok;
+  }
+  reqInputs.forEach((input) => {
+    input.addEventListener('blur', () => validate(input));
+    input.addEventListener('input', () => { if (input.classList.contains('is-invalid')) validate(input); });
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    let valid = true;
+    reqInputs.forEach((input) => { if (!validate(input)) valid = false; });
+    if (!valid) { form.querySelector<HTMLElement>('.is-invalid')?.focus(); return; }
+    // Demo: geen backend; toon de bevestiging.
+    form.hidden = true;
+    done.removeAttribute('hidden');
+    done.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+</script>

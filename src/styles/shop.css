@@ -85,6 +85,58 @@
 @media (max-width: 900px) { .vh-listing { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 540px) { .vh-listing { grid-template-columns: 1fr; } }
 
+/* ============================================================
+   TRUST-PAGINA'S — FAQ, verzending, retour, contact
+   ============================================================ */
+.vh-trust { max-width: 760px; }
+.vh-trust-group { margin-bottom: clamp(36px, 5vw, 56px); }
+.vh-trust-group-title {
+	font-family: var(--vh-font-serif);
+	font-size: clamp(20px, 2.4vw, 28px);
+	font-weight: 400; margin: 0 0 14px;
+}
+.vh-prose { font-size: 15px; line-height: 1.75; color: var(--vh-ink-soft); margin: 0; max-width: 62ch; }
+.vh-prose a, .vh-page-sub a, .vh-trust a { color: var(--vh-accent); text-decoration: underline; text-underline-offset: 3px; }
+.vh-prose-list { font-size: 15px; line-height: 1.75; color: var(--vh-ink-soft); margin: 0; padding-left: 20px; }
+.vh-prose-list li { margin-bottom: 8px; }
+
+/* Verzendtabel */
+.vh-trust-table { width: 100%; border-collapse: collapse; margin-bottom: clamp(36px, 5vw, 56px); }
+.vh-trust-table th, .vh-trust-table td {
+	text-align: left; padding: 14px 10px;
+	border-bottom: 1px solid var(--vh-ink-hairline); font-size: 14px;
+}
+.vh-trust-table th {
+	font-family: var(--vh-font-mono); font-size: 10px;
+	letter-spacing: 0.1em; text-transform: uppercase; color: var(--vh-ink-muted);
+}
+.vh-trust-table td:first-child { font-weight: 500; }
+@media (max-width: 560px) {
+	.vh-trust-table th:nth-child(3), .vh-trust-table td:nth-child(3) { display: none; }
+}
+
+/* Retour-stappen */
+.vh-trust-steps { list-style: none; margin: 0 0 clamp(36px, 5vw, 56px); padding: 0; display: grid; gap: 4px; }
+.vh-trust-steps li {
+	display: grid; grid-template-columns: 48px 1fr; gap: 18px; align-items: start;
+	padding: 22px 0; border-bottom: 1px solid var(--vh-ink-hairline);
+}
+.vh-trust-step-n { color: var(--vh-accent); font-size: 13px; padding-top: 4px; }
+.vh-trust-steps h3 { font-family: var(--vh-font-serif); font-size: 19px; font-weight: 400; margin: 0 0 6px; }
+.vh-trust-steps p { font-size: 14.5px; line-height: 1.65; color: var(--vh-ink-soft); margin: 0; }
+
+/* Contact */
+.vh-contact { display: grid; grid-template-columns: 1.3fr 0.9fr; gap: clamp(32px, 6vw, 80px); align-items: start; }
+.vh-contact-form { max-width: 100%; }
+.vh-contact-form .vh-btn { margin-top: 6px; }
+.vh-contact-note { color: var(--vh-ink-muted); margin: 12px 0 0; }
+.vh-contact-aside { display: grid; gap: 30px; padding-top: 6px; }
+.vh-contact-done { padding: 20px 0; }
+.vh-contact-done-mark { color: var(--vh-accent); font-size: 26px; margin: 0 0 12px; }
+.vh-contact-done h2 { font-family: var(--vh-font-serif); font-size: clamp(24px, 3vw, 34px); font-weight: 400; margin: 0 0 12px; }
+.vh-contact-done p { font-size: 15px; line-height: 1.7; color: var(--vh-ink-soft); margin: 0 0 22px; max-width: 46ch; }
+@media (max-width: 800px) { .vh-contact { grid-template-columns: 1fr; } }
+
 /* Bevestigingspagina (peak-end) */
 .vh-success {
 	min-height: 86vh;
