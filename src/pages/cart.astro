@@ -2,7 +2,12 @@
 export const prerender = true;
 
 import Base from '../layouts/Base.astro';
+import { getCatalog } from '../lib/catalog';
 import '../styles/shop.css';
+
+const catalog = await getCatalog();
+const noteBySlug: Record<string, string> = {};
+catalog.forEach((p) => { if (p.note) noteBySlug[p.slug] = p.note; });
 ---
 <Base title="Winkelmandje · Villa Happ" noindex={true}>
   <section class="vh-page">
@@ -33,6 +38,8 @@ import '../styles/shop.css';
         <a href="/shop" class="vh-btn vh-btn--primary"><span>Ontdek de collectie</span></a>
       </div>
 
+      <script type="application/json" id="vh-cart-notes" set:html={JSON.stringify(noteBySlug)}></script>
+
     </div>
   </section>
 </Base>
@@ -44,6 +51,8 @@ import '../styles/shop.css';
   const empty = document.getElementById('vh-cart-empty')!;
   const lines = document.getElementById('vh-cart-lines')!;
   const eur = (c: number) => '€ ' + (c / 100).toFixed(2).replace('.', ',');
+  let noteBySlug: Record<string, string> = {};
+  try { noteBySlug = JSON.parse(document.getElementById('vh-cart-notes')!.textContent!); } catch {}
 
   function render() {
     const items = getCart();
@@ -57,6 +66,7 @@ import '../styles/shop.css';
         <div>
           <p class="vh-line-name">${i.name}</p>
           <p class="vh-line-variant">${i.variant_label || ''}</p>
+          ${noteBySlug[i.slug] ? `<p class="vh-line-note">${noteBySlug[i.slug]}</p>` : ''}
           <span class="vh-drawer-qty">
             <button type="button" data-dec aria-label="Minder">−</button>
             <b>${i.quantity}</b>

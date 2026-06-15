@@ -20,6 +20,10 @@ const upsell = catalog
   })
   .filter((p) => p.image)
   .sort((a, b) => a.price_cents - b.price_cents);
+
+// Warm sfeerzinnetje per product (slug -> note) voor de mandjeregels
+const noteBySlug: Record<string, string> = {};
+catalog.forEach((p) => { if (p.note) noteBySlug[p.slug] = p.note; });
 ---
 <div class="vh-drawer" id="vh-drawer" aria-hidden="true">
   <button type="button" class="vh-drawer-overlay" data-drawer-close aria-label="Sluit winkelmandje"></button>
@@ -43,10 +47,11 @@ const upsell = catalog
 </div>
 
 <script type="application/json" id="vh-upsell-data" set:html={JSON.stringify(upsell)}></script>
+<script type="application/json" id="vh-notes-data" set:html={JSON.stringify(noteBySlug)}></script>
 
 <div class="vh-toast vh-mono" id="vh-toast" role="status" aria-live="polite"></div>
 
-<style>
+<style is:global>
   .vh-drawer { position: fixed; inset: 0; z-index: 8000; visibility: hidden; pointer-events: none; }
   .vh-drawer.is-open { visibility: visible; pointer-events: auto; }
 
@@ -130,11 +135,16 @@ const upsell = catalog
     border-radius: var(--vh-radius-sm);
     background: var(--vh-paper-soft);
   }
-  .vh-drawer-item-name { font-size: 14px; font-weight: 500; margin: 0 0 2px; }
+  .vh-drawer-item-name { font-family: var(--vh-font-serif); font-size: 16px; font-weight: 400; margin: 0 0 3px; }
   .vh-drawer-item-variant {
     font-family: var(--vh-font-mono); font-size: 10px;
     letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--vh-ink-muted); margin: 0 0 10px;
+    color: var(--vh-ink-muted); margin: 0 0 6px;
+  }
+  .vh-drawer-item-note {
+    font-family: var(--vh-font-serif); font-style: italic;
+    font-size: 12.5px; line-height: 1.4; color: var(--vh-clay);
+    margin: 0 0 10px;
   }
   .vh-drawer-qty {
     display: inline-flex; align-items: center; gap: 0;
@@ -234,6 +244,8 @@ const upsell = catalog
   type Upsell = { slug: string; name: string; image: string; price_cents: number; color: string; variant: { id: string; size: string } | null };
   let upsellData: Upsell[] = [];
   try { upsellData = JSON.parse(document.getElementById('vh-upsell-data')!.textContent!); } catch {}
+  let noteBySlug: Record<string, string> = {};
+  try { noteBySlug = JSON.parse(document.getElementById('vh-notes-data')!.textContent!); } catch {}
 
   const eur = (c: number) => '€ ' + (c / 100).toFixed(2).replace('.', ',');
   let lastFocus: HTMLElement | null = null;
@@ -279,6 +291,7 @@ const upsell = catalog
         <div>
           <p class="vh-drawer-item-name">${i.name}</p>
           <p class="vh-drawer-item-variant">${i.variant_label || ''}</p>
+          ${noteBySlug[i.slug] ? `<p class="vh-drawer-item-note">${noteBySlug[i.slug]}</p>` : ''}
           <span class="vh-drawer-qty">
             <button type="button" data-dec aria-label="Minder">−</button>
             <b>${i.quantity}</b>

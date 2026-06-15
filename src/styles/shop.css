@@ -684,11 +684,16 @@
 	width: 88px; height: 110px; object-fit: cover;
 	border-radius: var(--vh-radius-sm); background: var(--vh-paper-soft);
 }
-.vh-line-name { font-size: 15px; font-weight: 500; margin: 0 0 3px; }
+.vh-line-name { font-family: var(--vh-font-serif); font-size: 17px; font-weight: 400; margin: 0 0 4px; }
 .vh-line-variant {
 	font-family: var(--vh-font-mono); font-size: 10px;
 	letter-spacing: 0.08em; text-transform: uppercase;
-	color: var(--vh-ink-muted); margin: 0 0 12px;
+	color: var(--vh-ink-muted); margin: 0 0 6px;
+}
+.vh-line-note {
+	font-family: var(--vh-font-serif); font-style: italic;
+	font-size: 13px; line-height: 1.4; color: var(--vh-clay);
+	margin: 0 0 12px;
 }
 .vh-line-price { font-family: var(--vh-font-serif); font-size: 17px; margin: 0; text-align: right; }
 .vh-line-remove {

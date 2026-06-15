@@ -33,6 +33,8 @@ export interface CatalogProduct {
   meta: string;
   /** Totale genummerde oplage (bv. 500). Voedt de echte schaarste-balk op de PDP. */
   edition?: number;
+  /** Kort, warm sfeerzinnetje. Verschijnt o.a. in het mandje (Fraunces-italic). */
+  note?: string;
   variants: CatalogVariant[];
 }
 
@@ -60,6 +62,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
     ],
     badge: 'Sale',
     meta: 'Olijfgroen · Unisex',
+    note: 'Biologisch katoen, embleem geborduurd in Tilburg.',
     variants: [
       { id: 'demo-olijf-s', size: 'S', stock: 2, sku: 'VH-OCH-OL-S' },
       { id: 'demo-olijf-m', size: 'M', stock: 11, sku: 'VH-OCH-OL-M' },
@@ -89,6 +92,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
     ],
     badge: 'Sale',
     meta: 'Navy · Unisex',
+    note: 'Biologisch katoen, embleem geborduurd in Tilburg.',
     variants: [
       { id: 'demo-navy-s', size: 'S', stock: 10, sku: 'VH-OCH-NV-S' },
       { id: 'demo-navy-m', size: 'M', stock: 12, sku: 'VH-OCH-NV-M' },
@@ -122,6 +126,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
     badge: 'Limited · 500',
     meta: 'Drop 001 · One size',
     edition: 500,
+    note: 'Genummerd, één van vijfhonderd. Komt niet terug.',
     variants: [
       { id: 'demo-cap-os', size: 'One size', stock: 48, sku: 'VH-CAP-001' },
     ],
@@ -144,6 +149,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
       '/img/brand/villa-happ-logo.webp',
     ],
     meta: 'Sokken · 2 maten',
+    note: 'De sokken waarmee de comeback begon.',
     variants: [
       { id: 'demo-sok-3641', size: '36/41', stock: 25, sku: 'VH-SOK-3641' },
       { id: 'demo-sok-4246', size: '42/46', stock: 25, sku: 'VH-SOK-4246' },
@@ -169,6 +175,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
     ],
     badge: 'Voordeel',
     meta: '5-pack · 2 maten',
+    note: 'Vijf paar, voor elke stap een nieuwe.',
     variants: [
       { id: 'demo-sok5-3641', size: '36/41', stock: 18, sku: 'VH-SOK5-3641' },
       { id: 'demo-sok5-4246', size: '42/46', stock: 18, sku: 'VH-SOK5-4246' },
