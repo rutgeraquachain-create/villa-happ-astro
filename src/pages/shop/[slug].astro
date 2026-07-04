@@ -144,6 +144,7 @@ const pdpData = {
   image: product.images[0],
   variants: product.variants,
   model: product.model || null,
+  image_full: optimizedSrc(product.images[0], 1920),
 };
 ---
 <Base title={`${product.name} ${product.color} · Villa Happ`} description={product.short_desc} ogImage={product.images[0]}>
@@ -204,7 +205,7 @@ const pdpData = {
                 </button>
               )}
               {product.images.map((img, i) => (
-                <button type="button" class={`vh-pdp-thumb${i === 0 && !product.model ? ' is-active' : ''}`} data-img={optimizedSrc(img, 1080)} aria-label={`Foto ${i + 1}`}>
+                <button type="button" class={`vh-pdp-thumb${i === 0 && !product.model ? ' is-active' : ''}`} data-img={optimizedSrc(img, 1080)} data-full={optimizedSrc(img, 1920)} aria-label={`Foto ${i + 1}`}>
                   <Pic src={img} alt="" width={72} height={90} widths={[160]} sizes="72px" loading="lazy" />
                 </button>
               ))}
@@ -244,10 +245,12 @@ const pdpData = {
             <span>Maat</span>
             <button type="button" class="vh-pdp-sizeguide-btn" id="vh-pdp-sizeguide-open">Maatgids ↗</button>
           </div>
-          <div class="vh-pdp-sizes" id="vh-pdp-sizes">
+          <div class="vh-pdp-sizes" id="vh-pdp-sizes" role="radiogroup" aria-label="Kies je maat">
             {product.variants.map((v) => (
               <button
                 type="button"
+                role="radio"
+                aria-checked="false"
                 class={`vh-size${v.stock === 0 ? ' is-out' : ''}`}
                 data-variant={v.id}
                 data-size={v.size}
@@ -416,6 +419,15 @@ const pdpData = {
     </div>
   </div>
 
+  <!-- Lightbox: hoofdbeeld op groot formaat, klik om in te zoomen -->
+  <div class="vh-lightbox" id="vh-lightbox" hidden>
+    <button type="button" class="vh-lightbox-close" id="vh-lightbox-close" aria-label="Sluiten">✕</button>
+    <div class="vh-lightbox-stage" id="vh-lightbox-stage" role="dialog" aria-modal="true" aria-label={`${product.name} op groot formaat`}>
+      <img id="vh-lightbox-img" src="" alt={`${product.name} ${product.color}, groot formaat`} />
+    </div>
+    <p class="vh-lightbox-hint vh-mono">Klik op de foto om in te zoomen · Esc om te sluiten</p>
+  </div>
+
   <!-- Sticky mobile add-to-cart -->
   <div class="vh-pdp-sticky" id="vh-pdp-sticky">
     <b>{formatPrice(product.price_cents)}</b>
@@ -423,6 +435,66 @@ const pdpData = {
       <span>{soldOut ? 'Uitverkocht' : 'In winkelmandje'}</span>
     </button>
   </div>
+
+  <style>
+    .vh-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 9500;
+      background: rgba(20, 19, 17, 0.94);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .vh-lightbox[hidden] { display: none; }
+    .vh-lightbox-stage {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .vh-lightbox-stage img {
+      max-width: min(92vw, 1100px);
+      max-height: 88vh;
+      object-fit: contain;
+      cursor: zoom-in;
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .vh-lightbox-stage img.is-zoomed {
+      transform: scale(2.2);
+      cursor: zoom-out;
+    }
+    .vh-lightbox-close {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      z-index: 2;
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      border: 1px solid rgba(247, 243, 236, 0.35);
+      background: transparent;
+      color: #f7f3ec;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .vh-lightbox-close:hover { background: rgba(247, 243, 236, 0.12); }
+    .vh-lightbox-hint {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(247, 243, 236, 0.65);
+      font-size: 11px;
+      pointer-events: none;
+    }
+    @media (max-width: 700px) {
+      .vh-lightbox-hint { display: none; }
+    }
+  </style>
 
   <script type="application/json" id="vh-pdp-data" set:html={JSON.stringify(pdpData)}></script>
 
@@ -448,6 +520,7 @@ const pdpData = {
   /* Gallery thumbs: foto's wisselen, 360°-knop schakelt de 3D-viewer in */
   const mainImg = document.getElementById('vh-pdp-mainimg') as HTMLImageElement;
   const mainBox = document.getElementById('vh-pdp-main')!;
+  let currentFull: string = data.image_full;
   document.querySelectorAll<HTMLButtonElement>('.vh-pdp-thumb').forEach((thumb) => {
     thumb.addEventListener('click', () => {
       document.querySelectorAll('.vh-pdp-thumb').forEach((t) => t.classList.remove('is-active'));
@@ -457,6 +530,7 @@ const pdpData = {
         return;
       }
       mainBox.classList.remove('show-3d');
+      if (thumb.dataset.full) currentFull = thumb.dataset.full;
       mainImg.style.opacity = '0';
       setTimeout(() => {
         // srcset weg: anders blijft de browser het oude responsive beeld kiezen
@@ -466,6 +540,48 @@ const pdpData = {
       }, 180);
     });
   });
+
+  /* Lightbox: hoofdbeeld groot bekijken + inzoomen op klikpunt */
+  (function lightbox() {
+    const box = document.getElementById('vh-lightbox')!;
+    const img = document.getElementById('vh-lightbox-img') as HTMLImageElement;
+    const stage = document.getElementById('vh-lightbox-stage')!;
+    const closeBtn = document.getElementById('vh-lightbox-close')!;
+    let lastFocus: HTMLElement | null = null;
+
+    const open = () => {
+      lastFocus = document.activeElement as HTMLElement;
+      img.src = currentFull;
+      img.classList.remove('is-zoomed');
+      box.removeAttribute('hidden');
+      document.body.style.overflow = 'hidden';
+      (closeBtn as HTMLElement).focus();
+    };
+    const close = () => {
+      box.setAttribute('hidden', '');
+      document.body.style.overflow = '';
+      lastFocus?.focus();
+    };
+
+    mainImg.style.cursor = 'zoom-in';
+    mainImg.addEventListener('click', () => {
+      if (mainBox.classList.contains('show-3d')) return;
+      open();
+    });
+    closeBtn.addEventListener('click', close);
+    stage.addEventListener('click', (e) => {
+      if (e.target !== img) { close(); return; }
+      // Zoom in of uit op het aangeklikte punt
+      const zoomed = img.classList.toggle('is-zoomed');
+      if (zoomed) {
+        const r = img.getBoundingClientRect();
+        img.style.transformOrigin = `${(((e as MouseEvent).clientX - r.left) / r.width) * 100}% ${(((e as MouseEvent).clientY - r.top) / r.height) * 100}%`;
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !box.hasAttribute('hidden')) close();
+    });
+  })();
 
   /* Maatselectie + back-in-stock */
   let selected: { id: string; size: string; stock: number } | null = null;
@@ -479,8 +595,12 @@ const pdpData = {
   document.querySelectorAll<HTMLButtonElement>('.vh-size').forEach((btn) => {
     btn.addEventListener('click', () => {
       const isOut = btn.classList.contains('is-out');
-      document.querySelectorAll('.vh-size').forEach((b) => b.classList.remove('is-active'));
+      document.querySelectorAll('.vh-size').forEach((b) => {
+        b.classList.remove('is-active');
+        b.setAttribute('aria-checked', 'false');
+      });
       btn.classList.add('is-active');
+      btn.setAttribute('aria-checked', 'true');
 
       if (isOut) {
         // Uitverkochte maat: bied een voorraadmelding aan i.p.v. toevoegen
@@ -499,6 +619,20 @@ const pdpData = {
       addLabel.textContent = 'In winkelmandje';
       stockMsg.textContent = selected.stock <= 3 ? `Nog ${selected.stock} op voorraad in deze maat` : '';
     });
+  });
+
+  /* Pijltjestoetsen binnen de maat-radiogroup (verwacht gedrag bij role=radio) */
+  const sizeGroup = document.getElementById('vh-pdp-sizes');
+  sizeGroup?.addEventListener('keydown', (e) => {
+    if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(e.key)) return;
+    const btns = Array.from(sizeGroup.querySelectorAll<HTMLButtonElement>('.vh-size'));
+    const idx = btns.indexOf(document.activeElement as HTMLButtonElement);
+    if (idx === -1) return;
+    e.preventDefault();
+    const dir = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1;
+    const next = btns[(idx + dir + btns.length) % btns.length];
+    next.focus();
+    next.click();
   });
 
   function add(e?: Event) {
@@ -613,16 +747,38 @@ const pdpData = {
     box.removeAttribute('hidden');
   })();
 
-  /* Maatgids modal */
+  /* Maatgids modal (met focus trap: Tab blijft binnen de dialoog) */
   (function sizeGuide() {
     const modal = document.getElementById('vh-sizeguide');
     const openBtn = document.getElementById('vh-pdp-sizeguide-open');
     if (!modal || !openBtn) return;
-    const open = () => { modal.removeAttribute('hidden'); document.body.style.overflow = 'hidden'; };
-    const close = () => { modal.setAttribute('hidden', ''); document.body.style.overflow = ''; };
+    let lastFocus: HTMLElement | null = null;
+    const focusables = () =>
+      Array.from(modal.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+        .filter((el) => el.offsetParent !== null);
+    const open = () => {
+      lastFocus = document.activeElement as HTMLElement;
+      modal.removeAttribute('hidden');
+      document.body.style.overflow = 'hidden';
+      focusables()[0]?.focus();
+    };
+    const close = () => {
+      modal.setAttribute('hidden', '');
+      document.body.style.overflow = '';
+      lastFocus?.focus();
+    };
     openBtn.addEventListener('click', open);
     modal.querySelectorAll('[data-sizeguide-close]').forEach((el) => el.addEventListener('click', close));
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hasAttribute('hidden')) close(); });
+    modal.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const els = focusables();
+      if (!els.length) return;
+      const first = els[0];
+      const last = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
   })();
 
   /* Reviews (sociaal bewijs): eerlijke lege staat, echte input, lokaal bewaard */

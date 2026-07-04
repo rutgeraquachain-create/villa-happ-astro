@@ -8,6 +8,16 @@ import { formatPrice } from '../../lib/commerce';
 import '../../styles/shop.css';
 
 const products = await getCatalog();
+
+// Categorie afleiden voor de filterchips (demo-data heeft geen categorieveld)
+function categoryOf(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes('hoodie')) return 'Hoodies';
+  if (n.includes('cap')) return 'Caps';
+  if (n.includes('sok')) return 'Sokken';
+  return 'Overig';
+}
+const categories = [...new Set(products.map((p) => categoryOf(p.name)))];
 ---
 <Base title="Shop · Villa Happ" description="De Villa Happ collectie: heritage hoodies en limited editions, genummerd en gemaakt met 65 jaar vakmanschap.">
   <section class="vh-page">
@@ -19,9 +29,33 @@ const products = await getCatalog();
         <p class="vh-page-sub">{products.length} stuks. Genummerde oplages, geen overproductie. Als het op is, is het op.</p>
       </header>
 
-      <div class="vh-listing">
+      <div class="vh-shop-toolbar">
+        <div class="vh-shop-filters" role="group" aria-label="Filter op categorie">
+          <button type="button" class="vh-chip is-active" data-cat-filter="alle">Alle</button>
+          {categories.map((c) => (
+            <button type="button" class="vh-chip" data-cat-filter={c}>{c}</button>
+          ))}
+        </div>
+        <div class="vh-shop-tools">
+          <input type="search" id="vh-shop-search" placeholder="Zoek in de collectie" aria-label="Zoek in de collectie" autocomplete="off" />
+          <select id="vh-shop-sort" aria-label="Sorteer producten">
+            <option value="new">Nieuwste eerst</option>
+            <option value="price-asc">Prijs: laag naar hoog</option>
+            <option value="price-desc">Prijs: hoog naar laag</option>
+          </select>
+        </div>
+      </div>
+      <p class="vh-shop-count vh-mono" id="vh-shop-count" aria-live="polite"></p>
+
+      <div class="vh-listing" id="vh-shop-listing">
         {products.map((p, i) => (
-          <article class="vh-card">
+          <article
+            class="vh-card"
+            data-index={i}
+            data-price={p.price_cents}
+            data-cat={categoryOf(p.name)}
+            data-search={`${p.name} ${p.color} ${p.meta}`.toLowerCase()}
+          >
             <div class="vh-card-media">
               <span class="vh-card-num">0{i + 1}</span>
               {p.compare_at_cents
@@ -45,6 +79,11 @@ const products = await getCatalog();
             <p class="vh-card-meta">{p.meta}</p>
           </article>
         ))}
+      </div>
+
+      <div class="vh-empty" id="vh-shop-empty" hidden>
+        <p>Niets gevonden dat hierbij past. Probeer een andere zoekterm of filter.</p>
+        <button type="button" class="vh-btn vh-btn--ghost" id="vh-shop-reset"><span>Toon alles</span></button>
       </div>
 
       <div class="vh-shop-intro">
@@ -96,4 +135,104 @@ const products = await getCatalog();
       window.dispatchEvent(new CustomEvent('vh:toast', { detail: on ? 'Bewaard op je verlanglijst ✦' : 'Verwijderd van verlanglijst' }));
     });
   });
+
+  /* Filter, sortering en zoeken (client-side; catalogus is klein en al geladen) */
+  (function shopTools() {
+    const listing = document.getElementById('vh-shop-listing');
+    const countEl = document.getElementById('vh-shop-count');
+    const emptyEl = document.getElementById('vh-shop-empty');
+    const searchEl = document.getElementById('vh-shop-search') as HTMLInputElement | null;
+    const sortEl = document.getElementById('vh-shop-sort') as HTMLSelectElement | null;
+    const resetBtn = document.getElementById('vh-shop-reset');
+    if (!listing || !countEl || !emptyEl || !searchEl || !sortEl) return;
+
+    const cards = Array.from(listing.querySelectorAll<HTMLElement>('.vh-card'));
+    const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-cat-filter]'));
+    let cat = 'alle';
+
+    function apply() {
+      const term = searchEl!.value.trim().toLowerCase();
+      const sort = sortEl!.value;
+
+      const sorted = cards.slice().sort((a, b) => {
+        if (sort === 'price-asc') return Number(a.dataset.price) - Number(b.dataset.price);
+        if (sort === 'price-desc') return Number(b.dataset.price) - Number(a.dataset.price);
+        return Number(a.dataset.index) - Number(b.dataset.index);
+      });
+      sorted.forEach((card) => listing!.appendChild(card));
+
+      let visible = 0;
+      cards.forEach((card) => {
+        const okCat = cat === 'alle' || card.dataset.cat === cat;
+        const okTerm = !term || (card.dataset.search || '').includes(term);
+        const show = okCat && okTerm;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      countEl!.textContent = `${visible} ${visible === 1 ? 'stuk' : 'stuks'}`;
+      emptyEl!.hidden = visible > 0;
+    }
+
+    chips.forEach((chip) => chip.addEventListener('click', () => {
+      cat = chip.dataset.catFilter!;
+      chips.forEach((c) => c.classList.toggle('is-active', c === chip));
+      apply();
+    }));
+    searchEl.addEventListener('input', apply);
+    sortEl.addEventListener('change', apply);
+    resetBtn?.addEventListener('click', () => {
+      cat = 'alle';
+      searchEl!.value = '';
+      sortEl!.value = 'new';
+      chips.forEach((c) => c.classList.toggle('is-active', c.dataset.catFilter === 'alle'));
+      apply();
+    });
+
+    apply();
+  })();
 </script>
+
+<style>
+  .vh-shop-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 0 0 10px;
+  }
+  .vh-shop-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+  .vh-chip {
+    font-family: var(--vh-font-mono);
+    font-size: 12px;
+    padding: 8px 14px;
+    border: 1px solid var(--vh-line, rgba(30, 30, 27, 0.18));
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .vh-chip:hover { border-color: currentColor; }
+  .vh-chip.is-active { background: var(--vh-ink, #1e1e1b); color: var(--vh-paper, #f7f3ec); border-color: var(--vh-ink, #1e1e1b); }
+  .vh-shop-tools { display: flex; gap: 10px; align-items: center; }
+  .vh-shop-tools input[type='search'],
+  .vh-shop-tools select {
+    font-family: var(--vh-font-mono);
+    font-size: 12px;
+    padding: 9px 12px;
+    border: 1px solid var(--vh-line, rgba(30, 30, 27, 0.18));
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+  }
+  .vh-shop-tools input[type='search'] { min-width: 190px; }
+  .vh-shop-tools input[type='search']:focus,
+  .vh-shop-tools select:focus { outline: 2px solid var(--vh-ink, #1e1e1b); outline-offset: 1px; }
+  .vh-shop-count { margin: 0 0 18px; opacity: 0.6; font-size: 12px; }
+  @media (max-width: 700px) {
+    .vh-shop-toolbar { flex-direction: column; align-items: stretch; }
+    .vh-shop-tools { flex-wrap: wrap; }
+    .vh-shop-tools input[type='search'] { flex: 1; min-width: 0; }
+  }
+</style>

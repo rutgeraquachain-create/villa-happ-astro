@@ -198,6 +198,65 @@ import '../../styles/shop.css';
   });
   updateSteps();
 
+  /* Formulier bewaren in sessionStorage: refresh, terug-knop of een
+     geannuleerde betaling wist niets (frictiereductie) */
+  const FORM_KEY = 'vh_checkout_form_v1';
+  const formFields = ['email', 'first_name', 'last_name', 'street', 'house_number', 'postal_code', 'city', 'country'];
+  const fieldEl = (name: string) => form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`);
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(FORM_KEY) || '{}');
+    formFields.forEach((name) => {
+      const el = fieldEl(name);
+      if (el && saved[name] && !el.value) el.value = saved[name];
+    });
+    updateSteps();
+    renderSummary();
+  } catch {}
+  form.addEventListener('input', () => {
+    const data: Record<string, string> = {};
+    formFields.forEach((name) => {
+      const el = fieldEl(name);
+      if (el) data[name] = el.value;
+    });
+    try { sessionStorage.setItem(FORM_KEY, JSON.stringify(data)); } catch {}
+  });
+
+  /* Postcode-autofill via PDOK Locatieserver (gratis, geen key; alleen NL):
+     postcode + huisnummer ingevuld = straat en plaats vanzelf goed */
+  const pcEl = fieldEl('postal_code') as HTMLInputElement;
+  const nrEl = fieldEl('house_number') as HTMLInputElement;
+  const streetEl = fieldEl('street') as HTMLInputElement;
+  const cityEl = fieldEl('city') as HTMLInputElement;
+  let lastLookup = '';
+  async function autofillAddress() {
+    if (countrySel.value !== 'NL') return;
+    const pc = pcEl.value.replace(/\s+/g, '').toUpperCase();
+    const nr = parseInt(nrEl.value, 10);
+    if (!/^[1-9][0-9]{3}[A-Z]{2}$/.test(pc) || !nr) return;
+    const key = `${pc}-${nr}`;
+    if (key === lastLookup) return;
+    lastLookup = key;
+    try {
+      const q = `postcode:${pc} and huisnummer:${nr}`;
+      const res = await fetch(`https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=${encodeURIComponent(q)}&fq=type:adres&rows=1`);
+      if (!res.ok) return;
+      const json = await res.json();
+      const doc = json?.response?.docs?.[0];
+      if (!doc?.straatnaam || !doc?.woonplaatsnaam) return;
+      streetEl.value = doc.straatnaam;
+      cityEl.value = doc.woonplaatsnaam;
+      [streetEl, cityEl].forEach((el) => {
+        el.classList.remove('is-invalid');
+        el.classList.add('is-valid');
+        fieldMsg(el).textContent = '';
+      });
+      form.dispatchEvent(new Event('input'));
+      updateSteps();
+    } catch { /* stil: handmatig invullen blijft gewoon werken */ }
+  }
+  pcEl.addEventListener('blur', autofillAddress);
+  nrEl.addEventListener('blur', autofillAddress);
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     errNote.classList.remove('is-visible');
