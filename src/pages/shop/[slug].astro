@@ -742,8 +742,10 @@ const pdpData = {
   }
 
   /* Live voorraad: de geprerenderde aantallen verversen bij bezoek.
-     Zonder database (503) blijven de gebakken demo-waarden gewoon staan. */
-  (async function liveStock() {
+     Zonder database (503) blijven de gebakken demo-waarden gewoon staan.
+     Benoemde functie i.p.v. IIFE: TypeScript's control-flow-analyse loopt
+     door een IIFE heen en zou `selected` hier tot never versmallen. */
+  async function refreshLiveStock() {
     try {
       const res = await fetch(`/api/stock?slug=${encodeURIComponent(data.slug)}`);
       if (!res.ok) return;
@@ -800,7 +802,8 @@ const pdpData = {
         }
       }
     } catch { /* netwerkfout: gebakken waarden blijven staan */ }
-  })();
+  }
+  refreshLiveStock();
 
   /* Bezorgdatum (onzekerheidsreductie): voor 16:00 = volgende werkdag verzonden */
   (function deliveryEstimate() {
