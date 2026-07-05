@@ -145,6 +145,7 @@ const pdpData = {
   variants: product.variants,
   model: product.model || null,
   image_full: optimizedSrc(product.images[0], 1920),
+  edition: product.edition || null,
 };
 ---
 <Base title={`${product.name} ${product.color} · Villa Happ`} description={product.short_desc} ogImage={product.images[0]}>
@@ -739,6 +740,67 @@ const pdpData = {
     }, { threshold: 0 });
     obs.observe(addBtn);
   }
+
+  /* Live voorraad: de geprerenderde aantallen verversen bij bezoek.
+     Zonder database (503) blijven de gebakken demo-waarden gewoon staan. */
+  (async function liveStock() {
+    try {
+      const res = await fetch(`/api/stock?slug=${encodeURIComponent(data.slug)}`);
+      if (!res.ok) return;
+      const json = await res.json();
+      const stockById: Record<string, number> = {};
+      (json.variants || []).forEach((v: { id: string; stock: number }) => { stockById[v.id] = v.stock; });
+      if (!Object.keys(stockById).length) return;
+
+      let total = 0;
+      document.querySelectorAll<HTMLButtonElement>('.vh-size').forEach((btn) => {
+        const id = btn.dataset.variant!;
+        if (!(id in stockById)) return;
+        const stock = stockById[id];
+        total += stock;
+        btn.dataset.stock = String(stock);
+        btn.classList.toggle('is-out', stock === 0);
+      });
+
+      // Geselecteerde maat opnieuw valideren tegen de actuele stand
+      if (selected && selected.id in stockById) {
+        const cur = stockById[selected.id];
+        if (cur === 0) {
+          // Alsnog uitverkocht: dezelfde flow als een klik op een uitverkochte maat
+          document.querySelector<HTMLButtonElement>(`.vh-size[data-variant="${selected.id}"]`)?.click();
+        } else {
+          selected.stock = cur;
+          stockMsg.textContent = cur <= 3 ? `Nog ${cur} op voorraad in deze maat` : '';
+        }
+      }
+
+      // Schaarste-balk bijwerken (alleen bij een genummerde oplage)
+      if (data.edition) {
+        const sold = Math.max(0, data.edition - total);
+        const pct = Math.min(100, Math.round((sold / data.edition) * 100));
+        const headCount = document.querySelector('.vh-pdp-scarcity-head b');
+        const bar = document.querySelector<HTMLElement>('.vh-pdp-scarcity-bar span');
+        const barBox = document.querySelector('.vh-pdp-scarcity-bar');
+        const note = document.querySelector('.vh-pdp-scarcity-note');
+        if (headCount) headCount.textContent = String(total);
+        if (bar) bar.style.width = `${pct}%`;
+        barBox?.setAttribute('aria-valuenow', String(pct));
+        if (note) note.textContent = `${sold} al verkocht. Als deze ${data.edition} op zijn, komen ze niet terug.`;
+      }
+
+      // Volledig uitverkocht geraakt sinds de build
+      if (total === 0) {
+        selected = null;
+        addBtn.disabled = true;
+        addLabel.textContent = 'Uitverkocht';
+        if (stickyBtn) {
+          stickyBtn.disabled = true;
+          const lbl = stickyBtn.querySelector('span');
+          if (lbl) lbl.textContent = 'Uitverkocht';
+        }
+      }
+    } catch { /* netwerkfout: gebakken waarden blijven staan */ }
+  })();
 
   /* Bezorgdatum (onzekerheidsreductie): voor 16:00 = volgende werkdag verzonden */
   (function deliveryEstimate() {

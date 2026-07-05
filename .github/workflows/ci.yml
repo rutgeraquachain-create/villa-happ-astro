@@ -1,0 +1,76 @@
+# Villa Happ — fail-fast CI-poort
+#
+# Principes (canon "CI audit-poort"):
+# 1. Spiegel de app-predikaten: de build faalt hard als een geconfigureerde
+#    Supabase kapot is (fail-loud in catalog.ts); hier bouwen we bewust
+#    zonder keys = expliciet demo-pad, en controleren dat de output klopt.
+# 2. Frozen install (npm ci), nooit een lockfile-update die stil doorgaat.
+# 3. De build moet echt iets opleveren: output-bestanden bestaan en zijn niet leeg.
+# 4. Secret-scan is blokkerend.
+# 5. Geen schijn-groen: elke stap die niets kan bewijzen, faalt.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Secret-scan (blokkerend)
+        run: |
+          set -e
+          echo "— geen .env-bestanden in git —"
+          if git ls-files | grep -E '(^|/)\.env(\.[A-Za-z0-9_.-]+)?$' | grep -v '\.env\.example$'; then
+            echo "::error::Er staat een .env-bestand in git."
+            exit 1
+          fi
+          echo "— geen secret-patronen in de broncode —"
+          if git grep -InE '\b(re_[0-9A-Za-z]{16,}|live_[0-9A-Za-z]{20,}|test_[0-9A-Za-z]{25,}|eyJhbGciOiJI[0-9A-Za-z_-]{20,})' -- ':!package-lock.json' ':!.github/workflows/ci.yml'; then
+            echo "::error::Mogelijk secret in de broncode gevonden."
+            exit 1
+          fi
+          echo "Secret-scan schoon."
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Frozen install
+        run: npm ci
+
+      - name: Typecheck (astro check)
+        run: npx astro check
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build (demo-pad, zonder keys)
+        run: npm run build
+
+      - name: Output-controle (de build moet echt iets opleveren)
+        run: |
+          set -e
+          check() { test -s "$1" || { echo "::error::Ontbreekt of leeg: $1"; exit 1; }; }
+          check .vercel/output/static/index.html
+          check .vercel/output/static/shop/index.html
+          check .vercel/output/static/sitemap.xml
+          check .vercel/output/static/robots.txt
+          check .vercel/output/config.json
+          # Minstens één productpagina en één journal-artikel geprerenderd
+          find .vercel/output/static/shop -mindepth 2 -name index.html | grep -q . \
+            || { echo "::error::Geen geprerenderde productpagina's gevonden."; exit 1; }
+          find .vercel/output/static/journal -mindepth 2 -name index.html | grep -q . \
+            || { echo "::error::Geen geprerenderde journal-artikelen gevonden."; exit 1; }
+          # Zonder keys hoort de preview-guard actief te zijn: robots volledig dicht
+          grep -qE '^Disallow: /\s*$' .vercel/output/static/robots.txt \
+            || { echo "::error::robots.txt zou op de demo/preview volledig dicht moeten staan."; exit 1; }
+          # De serverless functie moet gebundeld zijn
+          test -d .vercel/output/functions || { echo "::error::Serverless output ontbreekt."; exit 1; }
+          echo "Output-controle geslaagd."

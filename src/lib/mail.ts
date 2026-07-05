@@ -71,19 +71,90 @@ export async function sendOrderConfirmation(order: OrderForMail): Promise<boolea
     return false;
   }
   const { subject, html } = renderOrderConfirmation(order);
+  return sendViaResend(order.customer_email, subject, html);
+}
+
+async function sendViaResend(to: string, subject: string, html: string): Promise<boolean> {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${RESEND_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ from: MAIL_FROM, to: [order.customer_email], subject, html }),
+    body: JSON.stringify({ from: MAIL_FROM, to: [to], subject, html }),
   });
   if (!res.ok) {
     console.error('[mail] Resend gaf status', res.status, await res.text().catch(() => ''));
     return false;
   }
   return true;
+}
+
+/* ---------- Back-in-stock ---------- */
+
+export function renderBackInStock(productName: string, size: string, productUrl: string): { subject: string; html: string } {
+  const sizeLabel = size && size !== 'One size' ? ` in maat ${escapeHtml(size)}` : '';
+  const html = `
+  <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#F7F3EC;padding:32px;color:#2B2620;">
+    <p style="font-style:italic;font-size:22px;margin:0 0 4px;">Villa Happ</p>
+    <h1 style="font-size:26px;margin:0 0 16px;">Hij is er weer.</h1>
+    <p style="margin:0 0 24px;line-height:1.6;">Je vroeg ons je te mailen zodra <b>${escapeHtml(productName)}</b>${sizeLabel} terug op voorraad is. Dat moment is nu. Let op: het gaat om een genummerde oplage, dus op is echt op.</p>
+    <p style="margin:0 0 24px;">
+      <a href="${productUrl}" style="display:inline-block;background:#2B2620;color:#F7F3EC;padding:14px 26px;text-decoration:none;">Bekijk het stuk</a>
+    </p>
+    <p style="margin:0;font-size:13px;color:#8A8072;line-height:1.6;">Je ontvangt deze mail eenmalig omdat je een voorraadmelding aanvroeg. Was je hem al vergeten? Dan is dit je teken.</p>
+  </div>`;
+  return { subject: `Terug op voorraad: ${productName}${size && size !== 'One size' ? ` (maat ${size})` : ''}`, html };
+}
+
+export async function sendBackInStock(to: string, productName: string, size: string, productUrl: string): Promise<boolean> {
+  if (!isMailConfigured()) {
+    console.info('[mail] RESEND_API_KEY niet gezet; back-in-stock-mail overgeslagen voor', to);
+    return false;
+  }
+  const { subject, html } = renderBackInStock(productName, size, productUrl);
+  return sendViaResend(to, subject, html);
+}
+
+/* ---------- Verzendbevestiging ---------- */
+
+export interface ShipmentForMail {
+  order_number: string;
+  customer_email: string;
+  customer_name?: string;
+  tracking_number: string;
+  tracking_carrier?: string;
+  shipping_address?: { postal_code?: string; country?: string };
+}
+
+export function renderShippingConfirmation(order: ShipmentForMail): { subject: string; html: string } {
+  const firstName = (order.customer_name || '').split(' ')[0] || 'daar';
+  const postcode = (order.shipping_address?.postal_code || '').replace(/\s+/g, '').toUpperCase();
+  const country = order.shipping_address?.country || 'NL';
+  const carrier = order.tracking_carrier || 'PostNL';
+  // Track & trace-link alleen als we hem betrouwbaar kunnen bouwen (PostNL-formaat)
+  const trackUrl = carrier === 'PostNL' && postcode
+    ? `https://jouw.postnl.nl/track-and-trace/${encodeURIComponent(order.tracking_number)}-${country}-${postcode}`
+    : null;
+
+  const html = `
+  <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#F7F3EC;padding:32px;color:#2B2620;">
+    <p style="font-style:italic;font-size:22px;margin:0 0 4px;">Villa Happ</p>
+    <h1 style="font-size:26px;margin:0 0 16px;">Je bestelling is onderweg, ${escapeHtml(firstName)}.</h1>
+    <p style="margin:0 0 24px;line-height:1.6;">Bestelling <b>${escapeHtml(order.order_number)}</b> is ingepakt en overgedragen aan ${escapeHtml(carrier)}. Je volgt het pakket met code <b>${escapeHtml(order.tracking_number)}</b>.</p>
+    ${trackUrl ? `<p style="margin:0 0 24px;"><a href="${trackUrl}" style="display:inline-block;background:#2B2620;color:#F7F3EC;padding:14px 26px;text-decoration:none;">Volg je pakket</a></p>` : ''}
+    <p style="margin:0;font-size:13px;color:#8A8072;line-height:1.6;">Vragen over je bestelling? Antwoord op deze mail. Retourneren kan kosteloos binnen 30 dagen.</p>
+  </div>`;
+  return { subject: `Je Villa Happ bestelling ${order.order_number} is onderweg`, html };
+}
+
+export async function sendShippingConfirmation(order: ShipmentForMail): Promise<boolean> {
+  if (!isMailConfigured()) {
+    console.info('[mail] RESEND_API_KEY niet gezet; verzendbevestiging overgeslagen voor', order.order_number);
+    return false;
+  }
+  const { subject, html } = renderShippingConfirmation(order);
+  return sendViaResend(order.customer_email, subject, html);
 }
 
 function escapeHtml(s: string): string {
