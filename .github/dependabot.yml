@@ -1,0 +1,35 @@
+# Villa Happ — automatische dependency-updates
+#
+# Wekelijks (maandag 06:00 NL) checkt Dependabot alle npm-dependencies:
+# - minor- en patch-updates komen gebundeld in één PR (groep hieronder)
+#   en mergen automatisch zodra de fail-fast CI groen is (zie de
+#   automerge-job in workflows/ci.yml);
+# - major-updates komen als losse PR en blijven open voor een mens.
+#
+# Let op: dit bestand reist mee naar de deploy-remote (rutgeraquachain);
+# de automerge-job is daar bewust inactief (owner-check op GVDvet), dus
+# PR's op die repo blijven gewoon open staan en zijn onschadelijk.
+
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Amsterdam"
+    groups:
+      minor-en-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"

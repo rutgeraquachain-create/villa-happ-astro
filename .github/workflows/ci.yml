@@ -74,3 +74,33 @@ jobs:
           # De serverless functie moet gebundeld zijn
           test -d .vercel/output/functions || { echo "::error::Serverless output ontbreekt."; exit 1; }
           echo "Output-controle geslaagd."
+
+  # Dependabot-PR's met minor/patch-updates mergen automatisch, maar
+  # ALLEEN nadat de verify-job hierboven groen is (needs). Zonder branch
+  # protection is dat de poort: een rode CI = deze job draait nooit.
+  # Majors blijven altijd open voor een mens. De owner-check houdt de
+  # job inactief op de deploy-remote (rutgeraquachain-create).
+  automerge:
+    name: Auto-merge dependabot (patch/minor)
+    needs: verify
+    if: >
+      github.event_name == 'pull_request' &&
+      github.actor == 'dependabot[bot]' &&
+      github.repository_owner == 'GVDvet'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Update-metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Merge (geen major)
+        if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        run: gh pr merge --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
