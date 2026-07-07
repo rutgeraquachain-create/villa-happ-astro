@@ -25,6 +25,10 @@
 	--vh-accent: #FE6B01;
 	--vh-accent-soft: #ff8533;
 	--vh-accent-deep: #d55a01;
+	/* Gebrand oranje voor kleine accenttekst op licht: haalt WCAG AA
+	   (4,8:1 op --vh-paper) waar het felle #FE6B01 op ~2,5:1 blijft steken.
+	   Gebruik dit voor mono-labels/eyebrows; #FE6B01 blijft voor vlakken. */
+	--vh-accent-ink: #b34700;
 
 	/* Secundaire editorial gold */
 	--vh-gold: #c9b97a;

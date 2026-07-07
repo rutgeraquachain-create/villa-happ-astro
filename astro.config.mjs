@@ -8,8 +8,16 @@ export default defineConfig({
   // robots en de noindex-guard volgen automatisch, zie src/lib/site.ts)
   site: process.env.PUBLIC_SITE_URL || 'https://villa-happ-astro.vercel.app',
   output: 'server',
+  build: {
+    // Kleine CSS-bundels (~7-9 KiB) inline zetten haalt de render-
+    // blokkerende <link>-verzoeken van het kritieke pad (Lighthouse: ~1,3s
+    // besparing op mobiel). Default 'auto' inlinet alleen onder 4 KiB.
+    inlineStylesheets: 'always',
+  },
   adapter: vercel({
-    webAnalytics: { enabled: true },
+    // Web Analytics loopt via de <Analytics /> component uit
+    // @vercel/analytics/astro (in Base.astro); de adapter-injectie is
+    // uitgezet omdat die naar een niet-bestaand script-pad wees (404).
     imageService: true,
     // Breedtes moeten matchen met IMG_WIDTHS in src/lib/img.ts
     imagesConfig: {

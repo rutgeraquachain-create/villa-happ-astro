@@ -476,7 +476,7 @@
 .vh-manifesto-label {
 	display: flex; align-items: center; gap: 14px;
 	margin-bottom: 48px;
-	color: var(--vh-ink-muted);
+	color: var(--vh-accent-ink);
 }
 .vh-manifesto-label::before { content: ''; width: 40px; height: 1px; background: var(--vh-accent); }
 .vh-manifesto-text {
@@ -1033,7 +1033,7 @@
 	text-align: center;
 	overflow: hidden;
 }
-.vh-yearmask-label { color: var(--vh-ink-muted); margin: 0 0 4px; }
+.vh-yearmask-label { color: var(--vh-accent-ink); margin: 0 0 4px; }
 .vh-yearmask-text {
 	margin: 0;
 	font-family: var(--vh-font-serif);

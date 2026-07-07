@@ -5,6 +5,7 @@ import { ClientRouter } from 'astro:transitions';
 import CartDrawer from '../components/commerce/CartDrawer.astro';
 import { isPreviewHost } from '../lib/site';
 import { srcsetFor, optimizedSrc } from '../lib/img';
+import Analytics from '@vercel/analytics/astro';
 
 // Self-hosted fonts (geen Google Fonts CDN: sneller, geen third-party, AVG-proof)
 import '@fontsource-variable/inter/index.css';
@@ -148,6 +149,8 @@ const preview = isPreviewHost(canonicalURL.origin);
   <div transition:persist="vh-cartdrawer">
     <CartDrawer />
   </div>
+
+  <Analytics />
 
   <script>
     // Homepage buiten de SPA-router houden: de GSAP/Lenis-motion daar
