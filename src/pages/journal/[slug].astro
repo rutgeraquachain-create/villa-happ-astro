@@ -5,6 +5,7 @@ import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Pic from '../../components/Pic.astro';
+import { stewardLd } from '../../lib/entity';
 import '../../styles/shop.css';
 
 export async function getStaticPaths() {
@@ -28,11 +29,15 @@ const articleLd = {
   headline: post.data.title,
   description: post.data.description,
   datePublished: post.data.date.toISOString(),
+  dateModified: post.data.date.toISOString(),
   image: post.data.image ? [siteOrigin + post.data.image] : undefined,
   url: postUrl,
+  mainEntityOfPage: postUrl,
   inLanguage: 'nl-NL',
-  author: { '@type': 'Organization', name: 'Villa Happ' },
-  publisher: { '@type': 'Organization', name: 'Villa Happ', url: siteOrigin },
+  // Person-auteur (Rutger van Happen) i.p.v. de organisatie: sterker
+  // E-E-A-T-signaal en een citeerbaar entiteitsanker voor AI-engines.
+  author: stewardLd(siteOrigin),
+  publisher: { '@id': `${siteOrigin}/#organization` },
 };
 
 const breadcrumbLd = {

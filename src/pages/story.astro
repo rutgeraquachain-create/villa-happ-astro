@@ -2,6 +2,31 @@
 export const prerender = true;
 
 import Base from '../layouts/Base.astro';
+import { BRAND, organizationLd } from '../lib/entity';
+
+const siteOrigin = Astro.site?.origin || Astro.url.origin;
+
+// AboutPage: dit is de entiteitspagina van het merk. De volledige
+// Organization hangt eronder als mainEntity, zodat zoek- en AI-engines
+// hier het complete, citeerbare beeld van Villa Happ ophalen.
+const aboutLd = {
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: 'Het verhaal van Villa Happ',
+  url: `${siteOrigin}/story`,
+  inLanguage: 'nl-NL',
+  description: BRAND.definition,
+  mainEntity: organizationLd(siteOrigin),
+};
+
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteOrigin}/` },
+    { '@type': 'ListItem', position: 2, name: 'Het verhaal', item: `${siteOrigin}/story` },
+  ],
+};
 
 const chapters = [
   {
@@ -67,6 +92,9 @@ const chapters = [
 ];
 ---
 <Base title="Het verhaal · Villa Happ" description="65 jaar Villa Happ: van Toni's Babyparadijs in Tilburg tot The Comeback Kid. Twee keer gevallen, drie keer opgestaan.">
+
+  <script type="application/ld+json" set:html={JSON.stringify(aboutLd)} is:inline></script>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} is:inline></script>
 
   <!-- Hero -->
   <header class="st-hero">

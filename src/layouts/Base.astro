@@ -5,6 +5,7 @@ import { ClientRouter } from 'astro:transitions';
 import CartDrawer from '../components/commerce/CartDrawer.astro';
 import { isPreviewHost } from '../lib/site';
 import { srcsetFor, optimizedSrc } from '../lib/img';
+import { organizationLd, websiteLd } from '../lib/entity';
 import Analytics from '@vercel/analytics/astro';
 
 // Self-hosted fonts (geen Google Fonts CDN: sneller, geen third-party, AVG-proof)
@@ -118,17 +119,9 @@ const preview = isPreviewHost(canonicalURL.origin);
   <!-- SPA-navigatie met shared-element morph (productfoto grid → PDP) -->
   <ClientRouter />
 
-  <!-- JSON-LD: Organization -->
-  <script type="application/ld+json" set:html={JSON.stringify({
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'Villa Happ',
-    url: canonicalURL.origin,
-    logo: `${canonicalURL.origin}/img/brand/villa-happ-logo.webp`,
-    description: 'Nederlands lifestylelabel sinds 1960.',
-    foundingDate: '1960',
-    foundingLocation: { '@type': 'Place', name: 'Tilburg, Nederland' },
-  })}></script>
+  <!-- JSON-LD: Organization + WebSite (merkentiteit uit src/lib/entity.ts) -->
+  <script type="application/ld+json" set:html={JSON.stringify(organizationLd(canonicalURL.origin))}></script>
+  <script type="application/ld+json" set:html={JSON.stringify(websiteLd(canonicalURL.origin))}></script>
 </head>
 
 <body class={`vh-body ${bodyClass}`}>
