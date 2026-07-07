@@ -1,5 +1,6 @@
 ---
 import { getFeaturedProducts, formatPrice } from '../../lib/commerce';
+import Pic from '../Pic.astro';
 const dbProducts = await getFeaturedProducts(6);
 const fallback = [
   { slug: 'organic-cotton-hoodie-olijfgroen', name: 'Organic Cotton Hoodie', price_cents: 5995, image_url: '/img/products/hoodie-grey-front.webp', hover_url: '/img/products/hoodie-grey-back.webp', badge: 'Sale', meta: 'Olijfgroen · Unisex' },
@@ -38,8 +39,8 @@ const products = dbProducts.length > 0
           <div class="vh-shop-card-media">
             <span class="vh-shop-card-num">0{i + 1}</span>
             {p.badge && <span class="vh-shop-card-badge">{p.badge}</span>}
-            <img src={p.image_url} alt={p.name} class="vh-shop-card-img is-primary" width="600" height="750" loading="lazy" />
-            <img src={p.hover_url} alt="" class="vh-shop-card-img is-hover" width="600" height="750" loading="lazy" aria-hidden="true" />
+            <Pic src={p.image_url} alt={p.name} class="vh-shop-card-img is-primary" width={600} height={750} widths={[320, 480, 640, 768]} sizes="(max-width: 700px) 90vw, (max-width: 1100px) 45vw, 30vw" loading="lazy" />
+            <Pic src={p.hover_url} alt="" class="vh-shop-card-img is-hover" width={600} height={750} widths={[320, 480, 640, 768]} sizes="(max-width: 700px) 90vw, (max-width: 1100px) 45vw, 30vw" loading="lazy" aria-hidden="true" />
             <button class="vh-shop-card-quick" type="button">Bekijk &amp; kies je maat</button>
           </div>
           <div class="vh-shop-card-info">

@@ -3,6 +3,7 @@
 // de echte cap-foto groeit van kaart naar fullscreen terwijl je scrolt,
 // tekstlagen bewegen met verschillende snelheden (parallax-diepte).
 import { getActiveDrop } from '../../lib/commerce';
+import Pic from '../Pic.astro';
 
 const drop = await getActiveDrop();
 const d: any = drop || {
@@ -24,7 +25,7 @@ const image = d.image_url || '/img/products/back-cap-front.webp';
 
     <!-- Het beeld dat het scherm overneemt -->
     <div class="vh-cine-media" data-cine-media>
-      <img src={image} alt={d.title} width="900" height="1125" loading="lazy" data-cine-img />
+      <Pic src={image} alt={d.title} width={900} height={1125} widths={[480, 640, 768, 1080, 1440]} sizes="100vw" loading="lazy" data-cine-img />
       <div class="vh-cine-scrim" data-cine-scrim></div>
     </div>
 

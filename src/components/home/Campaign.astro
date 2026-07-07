@@ -3,11 +3,12 @@
 // Extreem schaalcontrast: full-bleed beeld + piepkleine mono-labels in de
 // hoeken + één monumentale Fraunces-regel in het midden. Trage parallax,
 // maximale ademruimte, geen ruis. De koele YSL-structuur, het warme palet.
+import Pic from '../Pic.astro';
 const image = '/img/products/hoodie-blue-lifestyle.webp';
 ---
 <section class="vh-campaign" id="vh-campaign" aria-label="Campagne 2026">
   <div class="vh-campaign-media" data-campaign-media>
-    <img src={image} alt="Villa Happ campagne 2026, gedragen in de stad" width="1920" height="1280" loading="lazy" data-campaign-img />
+    <Pic src={image} alt="Villa Happ campagne 2026, gedragen in de stad" width={1920} height={1280} widths={[768, 1080, 1440, 1920]} sizes="100vw" loading="lazy" data-campaign-img />
     <div class="vh-campaign-scrim" aria-hidden="true"></div>
   </div>
 

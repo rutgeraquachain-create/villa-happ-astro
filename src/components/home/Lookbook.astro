@@ -1,5 +1,6 @@
 ---
 // Uit het archief — sleepbare 35mm filmstrook met perforatie
+import Pic from '../Pic.astro';
 const shots = [
   { img: '/img/products/hoodie-grey-lifestyle.webp', id: 'FW26·01' },
   { img: '/img/products/hoodie-blue-lifestyle.webp', id: 'TILBURG BLUE' },
@@ -25,7 +26,7 @@ const shots = [
       {shots.map((s) => (
         <div class="vh-film-frame">
           <div class="vh-film-shot">
-            <img src={s.img} alt="" loading="lazy" draggable="false" />
+            <Pic src={s.img} alt="" width={400} height={500} widths={[320, 480, 640, 768]} sizes="(max-width: 700px) 240px, 400px" loading="lazy" draggable="false" />
             <span class="vh-film-id vh-mono">{s.id}</span>
           </div>
         </div>
@@ -33,7 +34,7 @@ const shots = [
       {shots.map((s) => (
         <div class="vh-film-frame" aria-hidden="true">
           <div class="vh-film-shot">
-            <img src={s.img} alt="" loading="lazy" draggable="false" />
+            <Pic src={s.img} alt="" width={400} height={500} widths={[320, 480, 640, 768]} sizes="(max-width: 700px) 240px, 400px" loading="lazy" draggable="false" />
             <span class="vh-film-id vh-mono">{s.id}</span>
           </div>
         </div>

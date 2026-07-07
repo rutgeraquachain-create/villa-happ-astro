@@ -1,6 +1,7 @@
 ---
 // Horizontale pinned timeline, het echte verhaal in zes hoofdstukken.
 // Volledige versie staat op /story.
+import Pic from '../Pic.astro';
 const steps = [
   {
     num: 'Hoofdstuk 01 · Het begin',
@@ -71,7 +72,7 @@ const steps = [
         </div>
         <div class={`vh-heritage-media${step.img ? '' : ' vh-heritage-media--placeholder'}`}>
           {step.img
-            ? <img src={step.img} alt={step.title} loading="lazy" />
+            ? <Pic src={step.img} alt={step.title} width={800} height={600} widths={[480, 640, 768, 1080]} sizes="(max-width: 700px) 90vw, 45vw" loading="lazy" />
             : <span>{step.year}</span>
           }
         </div>

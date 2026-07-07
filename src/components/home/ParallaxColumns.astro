@@ -1,6 +1,7 @@
 ---
 // Twee beeldkolommen die tegengesteld driften op scroll,
 // met een groot italic woord dat er op een derde snelheid doorheen kruist.
+import Pic from '../Pic.astro';
 const colA = [
   '/img/products/back-cap-front.webp',
   '/img/products/hoodie-grey-lifestyle.webp',
@@ -19,12 +20,12 @@ const colB = [
   <div class="vh-drift-cols">
     <div class="vh-drift-col" data-drift="a">
       {colA.map((img) => (
-        <figure class="vh-drift-cell"><img src={img} alt="" loading="lazy" /></figure>
+        <figure class="vh-drift-cell"><Pic src={img} alt="" width={600} height={750} widths={[320, 480, 640, 768]} sizes="(max-width: 700px) 50vw, 30vw" loading="lazy" /></figure>
       ))}
     </div>
     <div class="vh-drift-col vh-drift-col--late" data-drift="b">
       {colB.map((img) => (
-        <figure class="vh-drift-cell"><img src={img} alt="" loading="lazy" /></figure>
+        <figure class="vh-drift-cell"><Pic src={img} alt="" width={600} height={750} widths={[320, 480, 640, 768]} sizes="(max-width: 700px) 50vw, 30vw" loading="lazy" /></figure>
       ))}
     </div>
   </div>

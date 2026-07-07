@@ -1,4 +1,5 @@
 ---
+import { optimizedSrc } from '../../lib/img';
 const navLinks = [
   { label: 'Home', href: '/', preview: '/img/products/hoodie-grey-lifestyle.webp' },
   { label: 'Shop', href: '/shop', preview: '/img/products/hoodie-grey-front.webp' },
@@ -11,7 +12,7 @@ const navLinks = [
 
 <header class="vh-header" id="vh-header">
   <a href="/" class="vh-header-logo" aria-label="Villa Happ home">
-    <img src="/img/brand/villa-happ-logo.webp" alt="Villa Happ" width="36" height="36" />
+    <img src={optimizedSrc('/img/brand/villa-happ-logo.webp', 160)} alt="Villa Happ" width="36" height="36" />
   </a>
 
   <nav class="vh-header-nav" aria-label="Hoofdnavigatie">

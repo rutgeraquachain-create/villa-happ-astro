@@ -1,4 +1,5 @@
 ---
+import { optimizedSrc } from '../../lib/img';
 const navCols = [
   {
     title: 'Shop',
@@ -43,7 +44,7 @@ const year = new Date().getFullYear();
     <div class="vh-footer-top">
       <!-- Brand + Newsletter -->
       <div class="vh-footer-brand-col">
-        <img src="/img/brand/villa-happ-logo.webp" alt="Villa Happ" width="48" height="48" class="vh-footer-logo" />
+        <img src={optimizedSrc('/img/brand/villa-happ-logo.webp', 160)} alt="Villa Happ" width="48" height="48" class="vh-footer-logo" />
         <p class="vh-footer-tagline">
           Een lifestylelabel met historie,<br />
           karakter en toekomst.
