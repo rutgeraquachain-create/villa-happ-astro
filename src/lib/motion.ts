@@ -50,12 +50,23 @@ function initLoader() {
   const bar = loader.querySelector('.vh-loader-bar span') as HTMLElement | null;
   const yearEl = loader.querySelector('[data-loader-year]') as HTMLElement | null;
 
+  // Start de titel-reveal pas als het serif-font geladen is, anders schuift
+  // hij tegen fallback-metrics op en verspringt bij de font-swap. Harde
+  // failsafe zodat de hero nooit blijft hangen als fonts.ready uitblijft.
+  let revealed = false;
+  const reveal = () => { if (revealed) return; revealed = true; hero?.classList.add('is-ready'); };
+  const revealWhenFontsReady = () => {
+    const fonts = (document as unknown as { fonts?: FontFaceSet }).fonts;
+    if (fonts && fonts.status !== 'loaded') { fonts.ready.then(reveal); setTimeout(reveal, 1200); }
+    else reveal();
+  };
+
   function dismiss() {
     if (loader!.classList.contains('is-done')) return;
     if (bar) bar.style.width = '100%';
     if (yearEl) yearEl.textContent = '2026';
     loader!.classList.add('is-done');
-    hero?.classList.add('is-ready');
+    revealWhenFontsReady();
     setTimeout(() => loader!.remove(), 600);
   }
 
