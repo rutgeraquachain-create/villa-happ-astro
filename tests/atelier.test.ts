@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { nextNumber, formatEdition, ClaimSchema, EDITION } from '../src/lib/atelier';
+import { nextNumber, formatEdition, ClaimSchema, EDITION, cleanInitials, describePiece } from '../src/lib/atelier';
 
 describe('nextNumber', () => {
   it('geeft 1 voor de eerste claim', () => {
@@ -46,5 +46,32 @@ describe('ClaimSchema', () => {
     const p = ClaimSchema.parse({ email: 'a@b.nl', name: 'Sanne', colour: 'navy' });
     expect(p.name).toBe('Sanne');
     expect(p.colour).toBe('navy');
+  });
+  it('accepteert kledingstuk en initialen', () => {
+    const p = ClaimSchema.parse({ email: 'a@b.nl', garment: 'cap', initials: 'GV' });
+    expect(p.garment).toBe('cap');
+    expect(p.initials).toBe('GV');
+  });
+  it('weigert een kledingstuk buiten de set en te lange/kleine-letter initialen', () => {
+    expect(() => ClaimSchema.parse({ email: 'a@b.nl', garment: 'schoen' })).toThrow();
+    expect(() => ClaimSchema.parse({ email: 'a@b.nl', initials: 'ABCD' })).toThrow();
+    expect(() => ClaimSchema.parse({ email: 'a@b.nl', initials: 'ab' })).toThrow();
+  });
+});
+
+describe('cleanInitials', () => {
+  it('maakt hoofdletters en houdt maximaal 3 letters', () => {
+    expect(cleanInitials('gv')).toBe('GV');
+    expect(cleanInitials('geoffrey')).toBe('GEO');
+    expect(cleanInitials('a1.b-c d')).toBe('ABC');
+    expect(cleanInitials('')).toBe('');
+  });
+});
+
+describe('describePiece', () => {
+  it('formatteert kledingstuk en kleur netjes', () => {
+    expect(describePiece('hoodie', 'olijfgroen')).toBe('Hoodie · Olijfgroen');
+    expect(describePiece('cap', 'navy')).toBe('Cap · Navy');
+    expect(describePiece(undefined, undefined)).toBe('Hoodie · Olijfgroen');
   });
 });

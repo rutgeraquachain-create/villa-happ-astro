@@ -50,7 +50,9 @@ export const POST: APIRoute = async ({ request }) => {
   const { error } = await sb.from('atelier_claims').insert({
     email: body.email,
     name: body.name,
+    garment: body.garment,
     colour: body.colour,
+    initials: body.initials,
     number,
     edition: EDITION,
   });

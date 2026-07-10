@@ -140,47 +140,91 @@ const ld = {
       </div>
     </section>
 
-    <!-- Finale: jouw nummer -->
+    <!-- Finale: de ontwerpstudio -->
     <section class="atl-finale" id="atl-finale">
-      <div id="atl-claim-intro">
-        <h2>Claim <em>jouw nummer</em></h2>
-        <p>
-          Laat je e-mail achter en we reserveren jouw plek in de eerstvolgende
-          oplage. Je krijgt je genummerde certificaat meteen te zien, en je hoort
-          als eerste wanneer de drop live gaat.
+      <header class="atl-studio-head">
+        <p class="vh-mono atl-studio-kicker">Station 05 · De ontwerpstudio</p>
+        <h2>Ontwerp <em>jouw stuk</em></h2>
+        <p class="atl-studio-sub">
+          Alles wat je zag komt hier samen. Kies je stuk, je kleur en je eigen
+          borduursel, en claim jouw nummer in de oplage.
         </p>
-      </div>
+      </header>
 
-      <form class="atl-form" id="atl-form" novalidate>
-        <div class="atl-form-row">
-          <input type="text" id="atl-name" name="name" placeholder="Je naam (optioneel)" autocomplete="name" maxlength="40" style="flex:1;min-width:150px" />
+      <div class="atl-studio">
+        <!-- Mockup -->
+        <div class="atl-studio-stage">
+          <span class="atl-frame-tag" id="atl-mockup-tag">Hoodie · Olijfgroen</span>
+          <img
+            id="atl-mockup"
+            src="/img/atelier/hoodie-olijfgroen.webp"
+            alt="Ontwerp: hoodie in olijfgroen"
+            width="928" height="1152" loading="lazy"
+          />
         </div>
-        <input type="email" id="atl-email" name="email" placeholder="jouw@email.nl" autocomplete="email" required aria-label="E-mailadres" />
-        <button type="submit" class="vh-btn vh-btn--accent" id="atl-submit"><span>Claim mijn nummer</span></button>
-        <p class="atl-form-msg" id="atl-msg" role="status" aria-live="polite"></p>
-        <p class="atl-form-note">We mailen je alleen over deze oplage. Geen spam, uitschrijven kan altijd.</p>
-      </form>
 
-      <!-- Certificaat (verschijnt na claim) -->
-      <div class="atl-cert" id="atl-cert" hidden>
-        <div class="atl-cert-head">
-          <div>
-            <p class="atl-cert-kicker">Villa Happ · Tilburg</p>
-            <p class="atl-cert-title">Certificaat van echtheid</p>
+        <!-- Configurator -->
+        <div class="atl-studio-controls" id="atl-config">
+          <div class="atl-control">
+            <span class="atl-control-label vh-mono">Het stuk</span>
+            <div class="atl-seg" role="group" aria-label="Kies een stuk">
+              <button type="button" class="atl-seg-btn is-on" data-garment="hoodie" aria-pressed="true">Hoodie</button>
+              <button type="button" class="atl-seg-btn" data-garment="cap" aria-pressed="false">Cap</button>
+            </div>
           </div>
-          <span class="atl-cert-seal">VH</span>
+
+          <div class="atl-control">
+            <span class="atl-control-label vh-mono">De kleur</span>
+            <div class="atl-studio-swatches" role="group" aria-label="Kies een kleur">
+              <button type="button" class="atl-cswatch is-on" data-colour="olijfgroen" style="--sw:#6B7A4E" aria-pressed="true" aria-label="Olijfgroen"></button>
+              <button type="button" class="atl-cswatch" data-colour="navy" style="--sw:#2c3a52" aria-pressed="false" aria-label="Navy"></button>
+              <button type="button" class="atl-cswatch" data-colour="antraciet" style="--sw:#2f2d2b" aria-pressed="false" aria-label="Antraciet"></button>
+            </div>
+          </div>
+
+          <div class="atl-control">
+            <span class="atl-control-label vh-mono">Jouw borduursel</span>
+            <div class="atl-emb-row">
+              <input type="text" id="atl-initials" maxlength="3" placeholder="VH" aria-label="Jouw initialen (maximaal 3 letters)" autocomplete="off" spellcheck="false" />
+              <!-- Leren patch met de geborduurde initialen -->
+              <span class="atl-patch" aria-hidden="true"><span class="atl-patch-text" id="atl-patch-text">VH</span></span>
+            </div>
+            <p class="atl-emb-hint vh-mono">Maximaal 3 letters, geborduurd op de patch.</p>
+          </div>
+
+          <form class="atl-form" id="atl-form" novalidate>
+            <input type="text" id="atl-name" name="name" placeholder="Je naam (optioneel)" autocomplete="name" maxlength="40" />
+            <input type="email" id="atl-email" name="email" placeholder="jouw@email.nl" autocomplete="email" required aria-label="E-mailadres" />
+            <button type="submit" class="vh-btn vh-btn--accent" id="atl-submit"><span>Claim mijn nummer</span></button>
+            <p class="atl-form-msg" id="atl-msg" role="status" aria-live="polite"></p>
+            <p class="atl-form-note">We mailen je alleen over deze oplage. Geen spam, uitschrijven kan altijd.</p>
+          </form>
         </div>
-        <p class="atl-cert-number" id="atl-cert-number">—</p>
-        <p class="atl-cert-meta" id="atl-cert-meta">Genummerde oplage</p>
-        <p class="atl-cert-foot" id="atl-cert-foot">
-          Dit nummer is gereserveerd. Je hoort als eerste wanneer de oplage live gaat.
-        </p>
       </div>
 
-      <div class="atl-finale-actions" id="atl-actions" hidden>
-        <button type="button" class="vh-btn vh-btn--light" id="atl-save"><span>Bewaar je certificaat</span></button>
-        <button type="button" class="vh-btn vh-btn--ghost" id="atl-share"><span>Deel</span></button>
-        <a href="/shop" class="vh-btn vh-btn--ghost" data-astro-reload><span>Naar de collectie</span></a>
+      <!-- Certificaat (verschijnt na claim, vervangt de configurator) -->
+      <div class="atl-result" id="atl-result" hidden>
+        <div class="atl-cert" id="atl-cert">
+          <div class="atl-cert-head">
+            <div>
+              <p class="atl-cert-kicker">Villa Happ · Tilburg</p>
+              <p class="atl-cert-title">Certificaat van echtheid</p>
+            </div>
+            <span class="atl-cert-seal" id="atl-cert-initials">VH</span>
+          </div>
+          <img class="atl-cert-mockup" id="atl-cert-mockup" src="/img/atelier/hoodie-olijfgroen.webp" alt="" width="928" height="1152" />
+          <p class="atl-cert-number" id="atl-cert-number">—</p>
+          <p class="atl-cert-meta" id="atl-cert-meta">Genummerde oplage</p>
+          <p class="atl-cert-foot" id="atl-cert-foot">
+            Dit stuk is voor jou gereserveerd. Je hoort als eerste wanneer de oplage live gaat.
+          </p>
+        </div>
+
+        <div class="atl-finale-actions">
+          <button type="button" class="vh-btn vh-btn--light" id="atl-save"><span>Bewaar je certificaat</span></button>
+          <button type="button" class="vh-btn vh-btn--ghost" id="atl-share"><span>Deel</span></button>
+          <a href="/shop" class="vh-btn vh-btn--ghost" data-astro-reload><span>Naar de collectie</span></a>
+        </div>
       </div>
     </section>
   </div>
@@ -190,35 +234,77 @@ const ld = {
 
 <script>
   import { initAtelier } from '../lib/atelier-motion';
-  import { formatEdition, EDITION } from '../lib/atelier';
+  import { formatEdition, EDITION, cleanInitials, describePiece } from '../lib/atelier';
   import '../lib/cart';
 
   initAtelier();
 
-  /* Kleurkeuze station 2: verf-kleur + onthouden voor het certificaat */
-  let chosenColour = 'olijfgroen';
-  const dye = document.getElementById('atl-dye');
   const colourHex: Record<string, string> = { olijfgroen: '#6B7A4E', navy: '#2c3a52', antraciet: '#2f2d2b' };
-  document.querySelectorAll<HTMLButtonElement>('.atl-swatch').forEach((btn) => {
+
+  /* Station 2 (tour): verf-teaser — verandert alvast de studiokleur mee */
+  const dye = document.getElementById('atl-dye');
+
+  /* ---------- De ontwerpstudio ---------- */
+  let garment = 'hoodie';
+  let colour = 'olijfgroen';
+  let initials = 'VH';
+
+  const mockup = document.getElementById('atl-mockup') as HTMLImageElement;
+  const mockupTag = document.getElementById('atl-mockup-tag')!;
+  const patchText = document.getElementById('atl-patch-text')!;
+  const initialsInput = document.getElementById('atl-initials') as HTMLInputElement;
+
+  const mockupSrc = () => `/img/atelier/${garment}-${colour}.webp`;
+  function syncMockup() {
+    if (mockup) { mockup.src = mockupSrc(); mockup.alt = `Ontwerp: ${describePiece(garment, colour).toLowerCase()}`; }
+    mockupTag.textContent = describePiece(garment, colour);
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('.atl-seg-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      chosenColour = btn.dataset.colour!;
-      document.querySelectorAll('.atl-swatch').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-      if (dye) dye.style.background = colourHex[chosenColour];
+      garment = btn.dataset.garment!;
+      document.querySelectorAll('.atl-seg-btn').forEach((b) => {
+        b.classList.toggle('is-on', b === btn); b.setAttribute('aria-pressed', String(b === btn));
+      });
+      syncMockup();
     });
   });
 
-  /* Claim-finale */
+  function pickColour(c: string) {
+    colour = c;
+    document.querySelectorAll<HTMLButtonElement>('.atl-cswatch').forEach((b) => {
+      const on = b.dataset.colour === c; b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on));
+    });
+    if (dye) dye.style.background = colourHex[c];
+    syncMockup();
+  }
+  document.querySelectorAll<HTMLButtonElement>('.atl-cswatch').forEach((btn) => {
+    btn.addEventListener('click', () => pickColour(btn.dataset.colour!));
+  });
+  // De tour-verfstalen (station 2) sturen de studiokleur alvast mee
+  document.querySelectorAll<HTMLButtonElement>('.atl-swatch').forEach((btn) => {
+    btn.addEventListener('click', () => pickColour(btn.dataset.colour!));
+  });
+
+  initialsInput?.addEventListener('input', () => {
+    initials = cleanInitials(initialsInput.value);
+    initialsInput.value = initials;
+    patchText.textContent = initials || 'VH';
+  });
+
+  /* ---------- Claim + certificaat ---------- */
   const form = document.getElementById('atl-form') as HTMLFormElement;
   const emailEl = document.getElementById('atl-email') as HTMLInputElement;
   const nameEl = document.getElementById('atl-name') as HTMLInputElement;
   const submitBtn = document.getElementById('atl-submit') as HTMLButtonElement;
   const msg = document.getElementById('atl-msg')!;
-  const intro = document.getElementById('atl-claim-intro')!;
-  const cert = document.getElementById('atl-cert')!;
+  const config = document.getElementById('atl-config')!;
+  const result = document.getElementById('atl-result')!;
   const certNumber = document.getElementById('atl-cert-number')!;
   const certMeta = document.getElementById('atl-cert-meta')!;
   const certFoot = document.getElementById('atl-cert-foot')!;
-  const actions = document.getElementById('atl-actions')!;
+  const certInitials = document.getElementById('atl-cert-initials')!;
+  const certMockup = document.getElementById('atl-cert-mockup') as HTMLImageElement;
 
   const KEY = 'vh_atelier_claim';
   const fmtDate = () => new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -230,22 +316,23 @@ const ld = {
     return (h % EDITION) + 1;
   }
 
-  interface Claim { number: number; edition: number; name: string; colour: string; date: string; }
+  interface Claim { number: number; edition: number; name: string; garment: string; colour: string; initials: string; date: string; }
 
-  function showCert(c: Claim) {
-    intro.setAttribute('hidden', '');
-    form.setAttribute('hidden', '');
+  function showResult(c: Claim) {
+    config.setAttribute('hidden', '');
+    result.removeAttribute('hidden');
     certNumber.textContent = formatEdition(c.number, c.edition);
-    certMeta.textContent = `${c.name ? c.name + ' · ' : ''}${c.colour} · ${c.date}`;
-    certFoot.textContent = 'Dit nummer is voor jou gereserveerd. Je hoort als eerste wanneer de oplage live gaat.';
-    cert.removeAttribute('hidden');
-    actions.removeAttribute('hidden');
+    certInitials.textContent = c.initials || 'VH';
+    certMeta.textContent = `${c.name ? c.name + ' · ' : ''}${describePiece(c.garment, c.colour)} · ${c.date}`;
+    certFoot.textContent = 'Dit stuk is voor jou gereserveerd. Je hoort als eerste wanneer de oplage live gaat.';
+    certMockup.src = `/img/atelier/${c.garment}-${c.colour}.webp`;
+    certMockup.alt = describePiece(c.garment, c.colour);
   }
 
-  // Al eerder geclaimd in deze browser? Toon meteen het certificaat.
+  // Al eerder geclaimd in deze browser? Toon meteen het resultaat.
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (saved && saved.number) showCert(saved);
+    if (saved && saved.number) showResult(saved);
   } catch {}
 
   form.addEventListener('submit', async (e) => {
@@ -263,7 +350,7 @@ const ld = {
       const res = await fetch('/api/atelier/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name: name || undefined, colour: chosenColour }),
+        body: JSON.stringify({ email, name: name || undefined, garment, colour, initials: initials || undefined }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -278,16 +365,27 @@ const ld = {
       number = localNumber(email);
     }
 
-    const claim: Claim = { number, edition, name, colour: chosenColour, date: fmtDate() };
+    const claim: Claim = { number, edition, name, garment, colour, initials, date: fmtDate() };
     try { localStorage.setItem(KEY, JSON.stringify(claim)); } catch {}
-    showCert(claim);
+    showResult(claim);
     window.dispatchEvent(new CustomEvent('vh:toast', { detail: `Nummer ${formatEdition(number, edition)} is van jou ✦` }));
   });
 
-  /* Certificaat als afbeelding bewaren (canvas, self-contained) */
+  function currentClaim(): Claim | null {
+    try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { return null; }
+  }
+
+  function loadImage(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const im = new Image(); im.crossOrigin = 'anonymous';
+      im.onload = () => resolve(im); im.onerror = reject; im.src = src;
+    });
+  }
+
+  /* Certificaat als deelbare afbeelding (canvas, self-contained) */
   async function renderCanvas(c: Claim): Promise<HTMLCanvasElement> {
-    const S = 2; // retina
-    const w = 440, h = 300;
+    const S = 2;
+    const w = 440, h = 560;
     const cv = document.createElement('canvas');
     cv.width = w * S; cv.height = h * S;
     const ctx = cv.getContext('2d')!;
@@ -296,32 +394,34 @@ const ld = {
     // achtergrond
     ctx.fillStyle = '#F4EEE3'; ctx.fillRect(0, 0, w, h);
     ctx.strokeStyle = 'rgba(28,24,19,0.18)'; ctx.setLineDash([4, 4]); ctx.strokeRect(12, 12, w - 24, h - 24); ctx.setLineDash([]);
-    // zegel
-    ctx.strokeStyle = '#1C1813'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(w - 58, 52, 24, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = '#1C1813'; ctx.font = 'italic 18px "Fraunces Variable", Georgia, serif';
-    ctx.textAlign = 'center'; ctx.fillText('VH', w - 58, 58);
+    // mockup
+    try {
+      const im = await loadImage(`/img/atelier/${c.garment}-${c.colour}.webp`);
+      const iw = 240, ih = iw * (im.height / im.width);
+      ctx.drawImage(im, (w - iw) / 2, 40, iw, ih);
+    } catch {}
     // koppen
     ctx.textAlign = 'left';
     ctx.fillStyle = 'rgba(28,24,19,0.6)'; ctx.font = '10px "Space Mono", monospace';
-    ctx.fillText('VILLA HAPP · TILBURG', 34, 46);
+    ctx.fillText('VILLA HAPP · TILBURG', 34, 380);
     ctx.fillStyle = '#1C1813'; ctx.font = '22px "Fraunces Variable", Georgia, serif';
-    ctx.fillText('Certificaat van echtheid', 34, 72);
+    ctx.fillText('Certificaat van echtheid', 34, 406);
     // nummer
-    ctx.font = '64px "Fraunces Variable", Georgia, serif';
-    ctx.fillText(formatEdition(c.number, c.edition), 32, 150);
+    ctx.font = '58px "Fraunces Variable", Georgia, serif';
+    ctx.fillText(formatEdition(c.number, c.edition), 32, 470);
+    // zegel met initialen
+    ctx.strokeStyle = '#1C1813'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(w - 62, 438, 26, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#1C1813'; ctx.textAlign = 'center'; ctx.font = 'italic 18px "Fraunces Variable", Georgia, serif';
+    ctx.fillText(c.initials || 'VH', w - 62, 445);
     // meta
-    ctx.fillStyle = 'rgba(28,24,19,0.6)'; ctx.font = '11px "Space Mono", monospace';
-    ctx.fillText(`${(c.name ? c.name.toUpperCase() + ' · ' : '')}${c.colour.toUpperCase()} · ${c.date.toUpperCase()}`, 34, 176);
+    ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(28,24,19,0.6)'; ctx.font = '11px "Space Mono", monospace';
+    ctx.fillText(`${(c.name ? c.name.toUpperCase() + ' · ' : '')}${describePiece(c.garment, c.colour).toUpperCase()}`, 34, 496);
     // voet
-    ctx.strokeStyle = 'rgba(28,24,19,0.12)'; ctx.beginPath(); ctx.moveTo(34, 224); ctx.lineTo(w - 34, 224); ctx.stroke();
+    ctx.strokeStyle = 'rgba(28,24,19,0.12)'; ctx.beginPath(); ctx.moveTo(34, 520); ctx.lineTo(w - 34, 520); ctx.stroke();
     ctx.fillStyle = 'rgba(28,24,19,0.6)'; ctx.font = '12px "Fraunces Variable", Georgia, serif';
-    ctx.fillText('Genummerd · gemaakt in Tilburg · komt niet terug', 34, 250);
+    ctx.fillText('Genummerd · gemaakt in Tilburg · komt niet terug', 34, 542);
     return cv;
-  }
-
-  function currentClaim(): Claim | null {
-    try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { return null; }
   }
 
   document.getElementById('atl-save')?.addEventListener('click', async () => {
@@ -335,7 +435,7 @@ const ld = {
 
   document.getElementById('atl-share')?.addEventListener('click', async () => {
     const c = currentClaim(); if (!c) return;
-    const text = `Ik heb nummer ${formatEdition(c.number, c.edition)} geclaimd bij Villa Happ.`;
+    const text = `Ik ontwierp mijn ${describePiece(c.garment, c.colour).toLowerCase()} en claimde nummer ${formatEdition(c.number, c.edition)} bij Villa Happ.`;
     const url = `${location.origin}/het-atelier`;
     if ((navigator as any).share) {
       try { await (navigator as any).share({ title: 'Villa Happ · Het Atelier', text, url }); return; } catch {}

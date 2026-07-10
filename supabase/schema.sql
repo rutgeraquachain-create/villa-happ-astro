@@ -220,7 +220,9 @@ CREATE TABLE IF NOT EXISTS atelier_claims (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email       TEXT UNIQUE NOT NULL,
   name        TEXT,
+  garment     TEXT,
   colour      TEXT,
+  initials    TEXT,
   number      INTEGER NOT NULL,
   edition     INTEGER NOT NULL DEFAULT 500,
   created_at  TIMESTAMPTZ DEFAULT NOW()

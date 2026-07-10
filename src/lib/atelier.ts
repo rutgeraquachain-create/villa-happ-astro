@@ -11,10 +11,22 @@ import { z } from 'zod';
 /** Oplagegrootte, gelijk aan de eerste genummerde drop (back-cap, 500 stuks). */
 export const EDITION = 500;
 
+export const GARMENTS = ['hoodie', 'cap'] as const;
+export const COLOURS = ['olijfgroen', 'navy', 'antraciet'] as const;
+export type Garment = (typeof GARMENTS)[number];
+export type Colour = (typeof COLOURS)[number];
+
+/** Normaliseer initialen: alleen letters, hoofdletters, maximaal drie. */
+export function cleanInitials(raw: string): string {
+  return (raw || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+}
+
 export const ClaimSchema = z.object({
   email: z.email(),
   name: z.string().min(1).max(40).optional(),
-  colour: z.enum(['olijfgroen', 'navy', 'antraciet']).optional(),
+  garment: z.enum(GARMENTS).optional(),
+  colour: z.enum(COLOURS).optional(),
+  initials: z.string().max(3).regex(/^[A-Z]*$/).optional(),
 });
 
 export type ClaimPayload = z.infer<typeof ClaimSchema>;
@@ -33,4 +45,11 @@ export function nextNumber(count: number, edition: number = EDITION): number {
 export function formatEdition(n: number, edition: number = EDITION): string {
   const digits = String(edition).length;
   return `${String(n).padStart(digits, '0')} / ${edition}`;
+}
+
+/** Leesbare naam van een geconfigureerd stuk, bv. "Hoodie · Olijfgroen". */
+export function describePiece(garment?: string, colour?: string): string {
+  const g = garment === 'cap' ? 'Cap' : 'Hoodie';
+  const c = colour ? colour.charAt(0).toUpperCase() + colour.slice(1) : 'Olijfgroen';
+  return `${g} · ${c}`;
 }
