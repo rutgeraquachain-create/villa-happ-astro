@@ -2,7 +2,7 @@
 title: "De hoodie die blijft: zo houd je 350 grams katoen mooi"
 description: "Onderhoudsgids voor de Heritage Hoodie: wassen, drogen en bewaren zodat zwaar biologisch katoen jaren meegaat."
 date: 2026-07-01
-image: "/img/products/hoodie-logo-detail.webp"
+image: "/img/products/hoodie-logo-detail-v2.webp"
 imageAlt: "Detail van het geborduurde Villa Happ embleem op de Heritage Hoodie"
 tags: ["onderhoud", "hoodie", "materiaal"]
 ---

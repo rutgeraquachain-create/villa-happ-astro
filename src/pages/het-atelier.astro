@@ -48,7 +48,7 @@ const ld = {
         <div class="atl-visual">
           <span class="atl-frame-tag">Station 01 · De stof</span>
           <div class="atl-weave">
-            <Pic src="/img/products/hoodie-logo-detail.webp" alt="Close-up van het geweven biologisch katoen" width={900} height={1125} widths={[480, 768, 1080]} sizes="(max-width: 900px) 100vw, 46vw" loading="lazy" />
+            <Pic src="/img/products/hoodie-logo-detail-v2.webp" alt="Close-up van het geweven biologisch katoen" width={900} height={1125} widths={[480, 768, 1080]} sizes="(max-width: 900px) 100vw, 46vw" loading="lazy" />
           </div>
           <div class="atl-loupe" aria-hidden="true"></div>
         </div>
@@ -156,7 +156,7 @@ const ld = {
           <span class="atl-frame-tag" id="atl-mockup-tag">Hoodie · Olijfgroen</span>
           <img
             id="atl-mockup"
-            src="/img/atelier/hoodie-olijfgroen.webp"
+            src="/img/atelier/hoodie-olijfgroen-v2.webp"
             alt="Ontwerp: hoodie in olijfgroen"
             width="928" height="1152" loading="lazy"
           />
@@ -210,7 +210,7 @@ const ld = {
             </div>
             <span class="atl-cert-seal">VH</span>
           </div>
-          <img class="atl-cert-mockup" id="atl-cert-mockup" src="/img/atelier/hoodie-olijfgroen.webp" alt="" width="928" height="1152" />
+          <img class="atl-cert-mockup" id="atl-cert-mockup" src="/img/atelier/hoodie-olijfgroen-v2.webp" alt="" width="928" height="1152" />
           <p class="atl-cert-number" id="atl-cert-number">—</p>
           <p class="atl-cert-meta" id="atl-cert-meta">Genummerde oplage</p>
           <p class="atl-cert-foot" id="atl-cert-foot">
@@ -254,7 +254,7 @@ const ld = {
 
   // Hoodie is per kleur; de cap komt in één uitvoering en heeft hoeken.
   function assetName(g: string, c: string, a: string): string {
-    return g === 'cap' ? `cap-${a}` : `hoodie-${c}`;
+    return g === 'cap' ? `cap-${a}` : `hoodie-${c}-v2`;
   }
   function syncMockup() {
     const src = `/img/atelier/${assetName(garment, colour, angle)}.webp`;

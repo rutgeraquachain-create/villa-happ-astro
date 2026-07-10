@@ -8,11 +8,11 @@ import Pic from '../Pic.astro';
 const drop = await getActiveDrop();
 const d: any = drop || {
   title: 'Villa Happ Back-Cap',
-  image_url: '/img/products/back-cap-front.webp',
+  image_url: '/img/products/back-cap-front-v2.webp',
   slug: 'villa-happ-back-cap',
 };
 const dropHref = drop ? `/drops/${d.slug}` : `/shop/${d.slug}`;
-const image = d.image_url || '/img/products/back-cap-front.webp';
+const image = d.image_url || '/img/products/back-cap-front-v2.webp';
 ---
 <section class="vh-cine" id="vh-cine">
   <div class="vh-cine-stage">

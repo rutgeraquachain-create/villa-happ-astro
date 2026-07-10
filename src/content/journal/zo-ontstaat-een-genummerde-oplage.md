@@ -2,7 +2,7 @@
 title: "Zo ontstaat een genummerde oplage"
 description: "Waarom Villa Happ in beperkte, genummerde oplages werkt en wat er gebeurt tussen schets en certificaat van echtheid."
 date: 2026-06-22
-image: "/img/products/back-cap-angle.webp"
+image: "/img/products/back-cap-angle-v2.webp"
 imageAlt: "De Villa Happ back-cap uit de eerste genummerde drop van 500 stuks"
 tags: ["drops", "vakmanschap", "oplage"]
 ---

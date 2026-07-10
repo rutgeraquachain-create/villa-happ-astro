@@ -55,10 +55,10 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
       'Ontworpen in Tilburg',
     ],
     images: [
-      '/img/products/hoodie-grey-front.webp',
-      '/img/products/hoodie-grey-back.webp',
-      '/img/products/hoodie-grey-lifestyle.webp',
-      '/img/products/hoodie-logo-detail.webp',
+      '/img/products/hoodie-grey-front-v2.webp',
+      '/img/products/hoodie-grey-back-v2.webp',
+      '/img/products/hoodie-grey-lifestyle-v2.webp',
+      '/img/products/hoodie-logo-detail-v2.webp',
     ],
     badge: 'Sale',
     meta: 'Olijfgroen · Unisex',
@@ -87,7 +87,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
       'Ontworpen in Tilburg',
     ],
     images: [
-      '/img/products/hoodie-blue-front.webp',
+      '/img/products/hoodie-blue-front-v2.webp',
       '/img/products/hoodie-blue-back.webp',
     ],
     badge: 'Sale',
@@ -118,9 +118,9 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
       'Ontworpen in Tilburg',
     ],
     images: [
-      '/img/products/back-cap-front.webp',
-      '/img/products/back-cap-side.webp',
-      '/img/products/back-cap-angle.webp',
+      '/img/products/back-cap-front-v2.webp',
+      '/img/products/back-cap-side-v2.webp',
+      '/img/products/back-cap-angle-v2.webp',
     ],
     // model: '/models/back-cap.glb',  // weer aanzetten zodra er een scan-kwaliteit model is
     badge: 'Limited · 500',
