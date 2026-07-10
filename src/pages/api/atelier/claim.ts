@@ -52,7 +52,6 @@ export const POST: APIRoute = async ({ request }) => {
     name: body.name,
     garment: body.garment,
     colour: body.colour,
-    initials: body.initials,
     number,
     edition: EDITION,
   });

@@ -16,17 +16,11 @@ export const COLOURS = ['olijfgroen', 'navy', 'antraciet'] as const;
 export type Garment = (typeof GARMENTS)[number];
 export type Colour = (typeof COLOURS)[number];
 
-/** Normaliseer initialen: alleen letters, hoofdletters, maximaal drie. */
-export function cleanInitials(raw: string): string {
-  return (raw || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
-}
-
 export const ClaimSchema = z.object({
   email: z.email(),
   name: z.string().min(1).max(40).optional(),
   garment: z.enum(GARMENTS).optional(),
   colour: z.enum(COLOURS).optional(),
-  initials: z.string().max(3).regex(/^[A-Z]*$/).optional(),
 });
 
 export type ClaimPayload = z.infer<typeof ClaimSchema>;
@@ -47,9 +41,10 @@ export function formatEdition(n: number, edition: number = EDITION): string {
   return `${String(n).padStart(digits, '0')} / ${edition}`;
 }
 
-/** Leesbare naam van een geconfigureerd stuk, bv. "Hoodie · Olijfgroen". */
+/** Leesbare naam van een geconfigureerd stuk. Hoodie krijgt de kleur mee;
+ *  de cap komt in één klassieke uitvoering, dus zonder kleur. */
 export function describePiece(garment?: string, colour?: string): string {
-  const g = garment === 'cap' ? 'Cap' : 'Hoodie';
+  if (garment === 'cap') return 'Cap · Grijs melange';
   const c = colour ? colour.charAt(0).toUpperCase() + colour.slice(1) : 'Olijfgroen';
-  return `${g} · ${c}`;
+  return `Hoodie · ${c}`;
 }

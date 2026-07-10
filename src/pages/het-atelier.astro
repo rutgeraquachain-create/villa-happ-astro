@@ -173,7 +173,7 @@ const ld = {
             </div>
           </div>
 
-          <div class="atl-control">
+          <div class="atl-control" id="atl-colour-control">
             <span class="atl-control-label vh-mono">De kleur</span>
             <div class="atl-studio-swatches" role="group" aria-label="Kies een kleur">
               <button type="button" class="atl-cswatch is-on" data-colour="olijfgroen" style="--sw:#6B7A4E" aria-pressed="true" aria-label="Olijfgroen"></button>
@@ -182,14 +182,14 @@ const ld = {
             </div>
           </div>
 
-          <div class="atl-control">
-            <span class="atl-control-label vh-mono">Jouw borduursel</span>
-            <div class="atl-emb-row">
-              <input type="text" id="atl-initials" maxlength="3" placeholder="VH" aria-label="Jouw initialen (maximaal 3 letters)" autocomplete="off" spellcheck="false" />
-              <!-- Leren patch met de geborduurde initialen -->
-              <span class="atl-patch" aria-hidden="true"><span class="atl-patch-text" id="atl-patch-text">VH</span></span>
+          <div class="atl-control" id="atl-angle-control" hidden>
+            <span class="atl-control-label vh-mono">Bekijk van</span>
+            <div class="atl-angles" role="group" aria-label="Kies een hoek">
+              <button type="button" class="atl-angle-btn is-on" data-angle="front" aria-pressed="true">Voorkant</button>
+              <button type="button" class="atl-angle-btn" data-angle="side" aria-pressed="false">Zijkant</button>
+              <button type="button" class="atl-angle-btn" data-angle="back" aria-pressed="false">Achter</button>
             </div>
-            <p class="atl-emb-hint vh-mono">Maximaal 3 letters, geborduurd op de patch.</p>
+            <p class="atl-onesize">Onze cap komt in één klassieke uitvoering: grijs met zwart mesh.</p>
           </div>
 
           <form class="atl-form" id="atl-form" novalidate>
@@ -210,7 +210,7 @@ const ld = {
               <p class="atl-cert-kicker">Villa Happ · Tilburg</p>
               <p class="atl-cert-title">Certificaat van echtheid</p>
             </div>
-            <span class="atl-cert-seal" id="atl-cert-initials">VH</span>
+            <span class="atl-cert-seal">VH</span>
           </div>
           <img class="atl-cert-mockup" id="atl-cert-mockup" src="/img/atelier/hoodie-olijfgroen.webp" alt="" width="928" height="1152" />
           <p class="atl-cert-number" id="atl-cert-number">—</p>
@@ -234,7 +234,7 @@ const ld = {
 
 <script>
   import { initAtelier } from '../lib/atelier-motion';
-  import { formatEdition, EDITION, cleanInitials, describePiece } from '../lib/atelier';
+  import { formatEdition, EDITION, describePiece } from '../lib/atelier';
   import '../lib/cart';
 
   initAtelier();
@@ -247,17 +247,24 @@ const ld = {
   /* ---------- De ontwerpstudio ---------- */
   let garment = 'hoodie';
   let colour = 'olijfgroen';
-  let initials = 'VH';
+  let angle = 'front'; // alleen voor de cap (front/side/back)
 
   const mockup = document.getElementById('atl-mockup') as HTMLImageElement;
   const mockupTag = document.getElementById('atl-mockup-tag')!;
-  const patchText = document.getElementById('atl-patch-text')!;
-  const initialsInput = document.getElementById('atl-initials') as HTMLInputElement;
+  const colourControl = document.getElementById('atl-colour-control')!;
+  const angleControl = document.getElementById('atl-angle-control')!;
 
-  const mockupSrc = () => `/img/atelier/${garment}-${colour}.webp`;
+  // Hoodie is per kleur; de cap komt in één uitvoering en heeft hoeken.
+  function assetName(g: string, c: string, a: string): string {
+    return g === 'cap' ? `cap-${a}` : `hoodie-${c}`;
+  }
   function syncMockup() {
-    if (mockup) { mockup.src = mockupSrc(); mockup.alt = `Ontwerp: ${describePiece(garment, colour).toLowerCase()}`; }
+    const src = `/img/atelier/${assetName(garment, colour, angle)}.webp`;
+    if (mockup) { mockup.src = src; mockup.alt = `Ontwerp: ${describePiece(garment, colour).toLowerCase()}`; }
     mockupTag.textContent = describePiece(garment, colour);
+    // Juiste bediening tonen: kleur voor de hoodie, hoek voor de cap
+    colourControl.toggleAttribute('hidden', garment === 'cap');
+    angleControl.toggleAttribute('hidden', garment !== 'cap');
   }
 
   document.querySelectorAll<HTMLButtonElement>('.atl-seg-btn').forEach((btn) => {
@@ -286,10 +293,14 @@ const ld = {
     btn.addEventListener('click', () => pickColour(btn.dataset.colour!));
   });
 
-  initialsInput?.addEventListener('input', () => {
-    initials = cleanInitials(initialsInput.value);
-    initialsInput.value = initials;
-    patchText.textContent = initials || 'VH';
+  document.querySelectorAll<HTMLButtonElement>('.atl-angle-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      angle = btn.dataset.angle!;
+      document.querySelectorAll('.atl-angle-btn').forEach((b) => {
+        b.classList.toggle('is-on', b === btn); b.setAttribute('aria-pressed', String(b === btn));
+      });
+      syncMockup();
+    });
   });
 
   /* ---------- Claim + certificaat ---------- */
@@ -303,7 +314,6 @@ const ld = {
   const certNumber = document.getElementById('atl-cert-number')!;
   const certMeta = document.getElementById('atl-cert-meta')!;
   const certFoot = document.getElementById('atl-cert-foot')!;
-  const certInitials = document.getElementById('atl-cert-initials')!;
   const certMockup = document.getElementById('atl-cert-mockup') as HTMLImageElement;
 
   const KEY = 'vh_atelier_claim';
@@ -316,16 +326,17 @@ const ld = {
     return (h % EDITION) + 1;
   }
 
-  interface Claim { number: number; edition: number; name: string; garment: string; colour: string; initials: string; date: string; }
+  interface Claim { number: number; edition: number; name: string; garment: string; colour: string; angle: string; date: string; }
+
+  const claimAsset = (c: Claim) => `/img/atelier/${assetName(c.garment, c.colour, c.angle || 'front')}.webp`;
 
   function showResult(c: Claim) {
     config.setAttribute('hidden', '');
     result.removeAttribute('hidden');
     certNumber.textContent = formatEdition(c.number, c.edition);
-    certInitials.textContent = c.initials || 'VH';
     certMeta.textContent = `${c.name ? c.name + ' · ' : ''}${describePiece(c.garment, c.colour)} · ${c.date}`;
     certFoot.textContent = 'Dit stuk is voor jou gereserveerd. Je hoort als eerste wanneer de oplage live gaat.';
-    certMockup.src = `/img/atelier/${c.garment}-${c.colour}.webp`;
+    certMockup.src = claimAsset(c);
     certMockup.alt = describePiece(c.garment, c.colour);
   }
 
@@ -350,7 +361,7 @@ const ld = {
       const res = await fetch('/api/atelier/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name: name || undefined, garment, colour, initials: initials || undefined }),
+        body: JSON.stringify({ email, name: name || undefined, garment, colour: garment === 'cap' ? undefined : colour }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -365,7 +376,7 @@ const ld = {
       number = localNumber(email);
     }
 
-    const claim: Claim = { number, edition, name, garment, colour, initials, date: fmtDate() };
+    const claim: Claim = { number, edition, name, garment, colour, angle, date: fmtDate() };
     try { localStorage.setItem(KEY, JSON.stringify(claim)); } catch {}
     showResult(claim);
     window.dispatchEvent(new CustomEvent('vh:toast', { detail: `Nummer ${formatEdition(number, edition)} is van jou ✦` }));
@@ -396,7 +407,7 @@ const ld = {
     ctx.strokeStyle = 'rgba(28,24,19,0.18)'; ctx.setLineDash([4, 4]); ctx.strokeRect(12, 12, w - 24, h - 24); ctx.setLineDash([]);
     // mockup
     try {
-      const im = await loadImage(`/img/atelier/${c.garment}-${c.colour}.webp`);
+      const im = await loadImage(claimAsset(c));
       const iw = 240, ih = iw * (im.height / im.width);
       ctx.drawImage(im, (w - iw) / 2, 40, iw, ih);
     } catch {}
@@ -409,11 +420,11 @@ const ld = {
     // nummer
     ctx.font = '58px "Fraunces Variable", Georgia, serif';
     ctx.fillText(formatEdition(c.number, c.edition), 32, 470);
-    // zegel met initialen
+    // VH-zegel
     ctx.strokeStyle = '#1C1813'; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.arc(w - 62, 438, 26, 0, Math.PI * 2); ctx.stroke();
     ctx.fillStyle = '#1C1813'; ctx.textAlign = 'center'; ctx.font = 'italic 18px "Fraunces Variable", Georgia, serif';
-    ctx.fillText(c.initials || 'VH', w - 62, 445);
+    ctx.fillText('VH', w - 62, 445);
     // meta
     ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(28,24,19,0.6)'; ctx.font = '11px "Space Mono", monospace';
     ctx.fillText(`${(c.name ? c.name.toUpperCase() + ' · ' : '')}${describePiece(c.garment, c.colour).toUpperCase()}`, 34, 496);
