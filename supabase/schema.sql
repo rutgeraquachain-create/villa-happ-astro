@@ -10,6 +10,29 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================================
+-- DROPS (limited edition collections)
+-- Staat bewust vóór products: products.drop_id verwijst naar drops(id),
+-- dus deze tabel moet eerst bestaan op een verse database.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS drops (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  slug          TEXT UNIQUE NOT NULL,
+  title         TEXT NOT NULL,
+  description   TEXT,
+  image_url     TEXT,
+  status        TEXT NOT NULL DEFAULT 'coming-soon', -- coming-soon | live | sold-out | archived
+  launch_date   TIMESTAMPTZ,
+  end_date      TIMESTAMPTZ,
+  total_pieces  INTEGER,
+  certificate   TEXT,                              -- HTML/text certificaat tekst
+  featured      BOOLEAN DEFAULT FALSE,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_drops_status ON drops(status);
+
+-- ============================================================
 -- PRODUCTS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS products (
@@ -26,6 +49,10 @@ CREATE TABLE IF NOT EXISTS products (
   featured      BOOLEAN DEFAULT FALSE,
   image_url     TEXT,                            -- primaire afbeelding
   gallery       JSONB DEFAULT '[]'::jsonb,       -- array van extra image URLs
+  details       JSONB DEFAULT '[]'::jsonb,       -- bullet-lijst op de PDP
+  note          TEXT,                            -- warm sfeerzinnetje (o.a. mandje)
+  edition       INTEGER,                         -- genummerde oplage (voedt de scarcity-balk)
+  badge         TEXT,                            -- expliciete badge (bv. 'Limited · 500'), anders afgeleid
   drop_id       UUID REFERENCES drops(id) ON DELETE SET NULL,
   weight_grams  INTEGER,                         -- voor shipping calc
   created_at    TIMESTAMPTZ DEFAULT NOW(),
@@ -63,27 +90,6 @@ CREATE TABLE IF NOT EXISTS inventory (
   low_stock_at  INTEGER DEFAULT 5,                -- threshold voor "bijna op" badge
   updated_at    TIMESTAMPTZ DEFAULT NOW()
 );
-
--- ============================================================
--- DROPS (limited edition collections)
--- ============================================================
-CREATE TABLE IF NOT EXISTS drops (
-  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  slug          TEXT UNIQUE NOT NULL,
-  title         TEXT NOT NULL,
-  description   TEXT,
-  image_url     TEXT,
-  status        TEXT NOT NULL DEFAULT 'coming-soon', -- coming-soon | live | sold-out | archived
-  launch_date   TIMESTAMPTZ,
-  end_date      TIMESTAMPTZ,
-  total_pieces  INTEGER,
-  certificate   TEXT,                              -- HTML/text certificaat tekst
-  featured      BOOLEAN DEFAULT FALSE,
-  created_at    TIMESTAMPTZ DEFAULT NOW(),
-  updated_at    TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_drops_status ON drops(status);
 
 -- ============================================================
 -- CUSTOMERS (gast checkout = nullable supabase_user_id)

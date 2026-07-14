@@ -32,6 +32,10 @@ interface DbProduct {
   description: string | null;
   image_url: string | null;
   gallery: string[] | null;
+  details: string[] | null;
+  note: string | null;
+  edition: number | null;
+  badge: string | null;
   featured: boolean | null;
   category: string | null;
   product_variants: DbVariant[];
@@ -51,7 +55,7 @@ export async function getCatalog(): Promise<CatalogProduct[]> {
   // Eén query met joins i.p.v. per product losse variant- en voorraadcalls
   const { data, error } = await sb
     .from('products')
-    .select('slug, name, price_cents, compare_at_cents, short_desc, description, image_url, gallery, featured, category, product_variants(id, sku, size, color, inventory(quantity, reserved))')
+    .select('slug, name, price_cents, compare_at_cents, short_desc, description, image_url, gallery, details, note, edition, badge, featured, category, product_variants(id, sku, size, color, inventory(quantity, reserved))')
     .eq('status', 'published')
     .order('created_at', { ascending: false });
 
@@ -72,10 +76,12 @@ export async function getCatalog(): Promise<CatalogProduct[]> {
     compare_at_cents: p.compare_at_cents || undefined,
     short_desc: p.short_desc || '',
     description: p.description || '',
-    details: [],
+    details: p.details || [],
     images: [p.image_url, ...(p.gallery || [])].filter(Boolean) as string[],
-    badge: p.compare_at_cents ? 'Sale' : (p.featured ? 'Featured' : undefined),
+    badge: p.badge || (p.compare_at_cents ? 'Sale' : (p.featured ? 'Featured' : undefined)),
     meta: p.category || '',
+    edition: p.edition || undefined,
+    note: p.note || undefined,
     variants: p.product_variants.map((v) => ({
       id: v.id,
       size: v.size || 'One size',
