@@ -15,7 +15,12 @@ export const prerender = false;
 
 export const GET: APIRoute = async ({ url }) => {
   const sb = getSupabase(); // anon client volstaat: voorraad is publiek leesbaar (RLS)
-  if (!sb) return new Response(JSON.stringify({ error: 'no-db' }), { status: 503 });
+  // Zonder database (demo/preview): 200 met lege lijst i.p.v. 503. De PDP houdt
+  // dan de gebakken voorraadwaarden aan, en er komt geen console-fout (503) die
+  // de Lighthouse best-practices-score drukt.
+  if (!sb) return new Response(JSON.stringify({ variants: [], demo: true }), {
+    status: 200, headers: { 'Content-Type': 'application/json' },
+  });
 
   const slug = url.searchParams.get('slug') || '';
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) {

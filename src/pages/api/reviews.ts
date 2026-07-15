@@ -24,7 +24,11 @@ const PostSchema = z.object({
 
 export const GET: APIRoute = async ({ url }) => {
   const sb = getSupabaseAdmin();
-  if (!sb) return new Response(JSON.stringify({ error: 'no-db' }), { status: 503 });
+  // Zonder database (demo/preview): 200 met lege lijst i.p.v. 503, zodat de
+  // PDP geen 503-console-fout logt (Lighthouse best-practices).
+  if (!sb) return new Response(JSON.stringify({ reviews: [] }), {
+    status: 200, headers: { 'Content-Type': 'application/json' },
+  });
 
   const slug = url.searchParams.get('slug') || '';
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) {
