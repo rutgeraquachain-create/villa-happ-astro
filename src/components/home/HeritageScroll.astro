@@ -9,6 +9,7 @@ const steps = [
     title: 'Noordstraat 85',
     text: 'Het land is vijf dagen vrij als Tony Kuijsters en haar partner Gaillard hun winkel openen aan de Noordstraat. Vier kinderen later is Gaillard er niet meer; de jongste is twee maanden oud. Tony doet de volgende ochtend gewoon weer open. En de ochtend daarna ook.',
     img: '/img/heritage/1945-noordstraat-85-gaillard-kuijsters.webp',
+    alt: 'De winkel Gaillard Kuijsters aan de Noordstraat 85 in Tilburg, met twee etalages vol kinderwagens, wiegjes en babygoed.',
   },
   {
     num: 'Hoofdstuk 02 · Babyparadijs',
@@ -16,6 +17,7 @@ const steps = [
     title: 'Een nieuwe naam in de Heuvelstraat',
     text: 'Jaren staat ze er alleen voor. Dan ontmoet ze Noud van Happen, en samen beginnen ze opnieuw, een paar straten verderop. De winkel krijgt een naam die je niet vergeet: Babyparadijs. Er komen nog drie kinderen bij, van wie Rogér de jongste is.',
     img: '/img/heritage/babyparadijs-heuvelstraat.webp',
+    alt: 'Babyparadijs op de hoek van de Heuvelstraat in Tilburg, met de winkelpui en voorbijgangers op straat.',
   },
   {
     num: 'Hoofdstuk 03 · De gok',
@@ -23,6 +25,7 @@ const steps = [
     title: 'De eerste die ging',
     text: 'De inkoopprijzen blijven stijgen en Noud rekent uit dat het anders kan. Hij pakt zijn laatste zakcenten en vertrekt naar het Verre Oosten om er zelf te laten produceren. Niemand in Europa is hem voorgegaan, dus niemand kan hem vertellen hoe het moet. Die gok wordt het fundament onder alles.',
     img: null,
+    alt: '',
   },
   {
     num: 'Hoofdstuk 04 · De stille jaren',
@@ -30,13 +33,15 @@ const steps = [
     title: 'De marktleider die je niet zag',
     text: 'Dertig jaar lang kleedt deze familie half Nederland, zonder dat iemand het weet. Op de labels staan Wibra, Zeeman, HEMA en V&D. Grote kans dat jij het droeg, of je moeder. De grootste order ooit, miljoenen rompertjes, valt op 12 juli 1986. Diezelfde dag wordt Rutger geboren.',
     img: '/img/heritage/1980-industrieweg-74-76-waalwijk.webp',
+    alt: 'Het bedrijfspand van Van Happen aan de Industrieweg in Waalwijk, met twee vrachtwagens op het terrein.',
   },
   {
     num: 'Hoofdstuk 05 · Het gezicht',
     year: '1999',
     title: 'Een eigen naam in de Koopgoot',
     text: 'Na decennia van andermans labels komt er eindelijk een eigen naam: Villa Happ. De eerste winkel opent in de Koopgoot, en het lint wordt doorgeknipt door een jongen van dertien. Diezelfde jongen kruipt daarna in het pak van Arjo the Rat. Er volgen tachtig winkels door Europa, geleid vanuit het hoofdkantoor aan de James Wattlaan in Drunen, met ambities tot Dubai aan toe.',
-    img: '/img/heritage/arjo-the-rat.webp',
+    img: '/img/heritage/villa-happ-winkel.webp',
+    alt: 'Een Villa Happ winkel met het logo boven de etalages, kinderkleding in de vitrines en Arjo the Rat bij de ingang.',
   },
   {
     num: 'Hoofdstuk 06 · De val, twee keer',
@@ -44,6 +49,7 @@ const steps = [
     title: 'The Comeback Kid',
     text: 'Verkocht, gevallen, teruggekocht, weer opgebouwd. De vakpers geeft het merk in 2007 een bijnaam die blijft plakken. In 2010 ligt er opnieuw een doorstart klaar en is de financiering zo goed als rond, tot de merkrechten niet worden overgedragen. Daar houdt het op.',
     img: null,
+    alt: '',
   },
   {
     num: 'Hoofdstuk 07 · Nu',
@@ -51,6 +57,7 @@ const steps = [
     title: 'De derde generatie',
     text: 'Tien jaar later vervallen die merkrechten alsnog, en Rutger haalt ze terug naar de familie. In Spanje ligt een straat die naar zijn opa is vernoemd; zijn vader stond daar in 1985 op de foto, hij veertig jaar later op dezelfde plek. Hoofdstuk drie begint. Stap voor stap.',
     img: '/img/heritage/2025-calle-artoni-rutger.webp',
+    alt: 'Rutger van Happen bij het straatnaambord Calle Artoni in Spanje, de straat die naar zijn opa Noud is vernoemd.',
   },
 ];
 ---
@@ -79,7 +86,7 @@ const steps = [
         </div>
         <div class={`vh-heritage-media${step.img ? '' : ' vh-heritage-media--placeholder'}`}>
           {step.img
-            ? <Pic src={step.img} alt={step.title} width={800} height={600} widths={[480, 640, 768, 1080]} sizes="(max-width: 700px) 90vw, 45vw" loading="lazy" />
+            ? <Pic src={step.img} alt={step.alt} width={800} height={600} widths={[480, 640, 768, 1080]} sizes="(max-width: 700px) 90vw, 45vw" loading="lazy" />
             : <span>{step.year}</span>
           }
         </div>
