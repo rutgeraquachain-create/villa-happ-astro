@@ -1,48 +1,55 @@
 ---
-// Horizontale pinned timeline, het echte verhaal in zes hoofdstukken.
+// Horizontale pinned timeline, het echte verhaal in zeven hoofdstukken.
 // Volledige versie staat op /story.
 import Pic from '../Pic.astro';
 const steps = [
   {
     num: 'Hoofdstuk 01 · Het begin',
-    year: '1960',
-    title: 'Een moeder, vier kinderen, één winkel',
-    text: 'Tony Kuijsters opent Babyparadijs in Tilburg: babykleding, kinderwagens, kinderkamers. Ze staat er alleen voor, met vier jonge kinderen. De jongste is twee weken oud. De winkel blijft open.',
+    year: '1945',
+    title: 'Noordstraat 85',
+    text: 'Vijf dagen na de bevrijding openen Tony Kuijsters en haar partner Gaillard een winkel in Tilburg. Als hun vierde kind twee maanden oud is, overlijdt Gaillard. Tony zet de zaak alleen voort.',
     img: '/img/heritage/origin-babyparadijs.webp',
   },
   {
-    num: 'Hoofdstuk 02 · De gok',
-    year: '1965',
-    title: 'Van zand en grind naar kinderkleding',
-    text: 'Noud van Happen ruilt het zand- en grindbedrijf van de familie in voor stof en garen. Met zijn laatste spaarcenten reist hij naar het Verre Oosten om een eigen productielijn op te zetten. Die gok wordt het fundament.',
+    num: 'Hoofdstuk 02 · Babyparadijs',
+    year: "Jaren '50",
+    title: 'Een nieuwe naam in de Heuvelstraat',
+    text: 'Tony ontmoet Noud van Happen. Samen openen ze een winkel in de Heuvelstraat onder een nieuwe naam: Babyparadijs. Tussen 1955 en 1961 krijgen ze drie kinderen.',
     img: null,
   },
   {
-    num: 'Hoofdstuk 03 · De stille jaren',
+    num: 'Hoofdstuk 03 · De gok',
+    year: "Jaren '60",
+    title: 'De eerste die ging',
+    text: 'De inkoopprijzen lopen op, dus reist Noud met zijn laatste zakcenten naar het Verre Oosten om er een eigen productielijn op te zetten. Hij is de eerste Europeaan die dat doet. Die gok wordt het fundament.',
+    img: null,
+  },
+  {
+    num: 'Hoofdstuk 04 · De stille jaren',
     year: "'80s",
     title: 'De marktleider die je niet zag',
     text: 'Van Happen Fashion Groep kleedt een hele generatie, van Wibra en Zeeman tot HEMA en V&D. Grote kans dat je het droeg zonder het te weten. Eigen labels als VHF en Artoni draaien op volle toeren.',
     img: null,
   },
   {
-    num: 'Hoofdstuk 04 · Het gezicht',
+    num: 'Hoofdstuk 05 · Het gezicht',
     year: '1999',
     title: 'Een eigen naam in de Koopgoot',
     text: 'De eerste Villa Happ winkel opent in de Rotterdamse Koopgoot, de tweede in Nijmegen. Het groeit uit tot 80 winkels door Europa, geleid vanuit Kasteel Zwijnsbergen in Brabant, met ambities tot Dubai aan toe.',
     img: '/img/products/hoodie-logo-detail-v2.webp',
   },
   {
-    num: 'Hoofdstuk 05 · De val, twee keer',
+    num: 'Hoofdstuk 06 · De val, twee keer',
     year: '2×',
     title: 'The Comeback Kid',
     text: 'Verkocht, gevallen, teruggekocht, opnieuw opgebouwd, opnieuw gevallen. De vakpers gaf Villa Happ in 2007 al een bijnaam: The Comeback Kid. Opstaan zit in het DNA van dit merk.',
     img: null,
   },
   {
-    num: 'Hoofdstuk 06 · Nu',
+    num: 'Hoofdstuk 07 · Nu',
     year: '2026',
     title: 'De derde generatie',
-    text: 'Rutger van Happen, kleinzoon van Tony en Noud, haalt in 2021 de merkrechten terug naar de familie. In 2026 keert Villa Happ terug als lifestylelabel, nu vanuit Waalwijk. Niet als herhaling van vroeger, maar als hoofdstuk drie. Stap voor stap.',
+    text: 'Rutger van Happen, kleinzoon van Tony en Noud, haalt in 2021 de merkrechten terug naar de familie. In 2026 keert Villa Happ terug als lifestylelabel, nu vanuit Waalwijk. Hoofdstuk drie begint. Stap voor stap.',
     img: '/img/products/hoodie-grey-lifestyle-v2.webp',
   },
 ];
@@ -52,7 +59,7 @@ const steps = [
 
     <!-- Intro panel -->
     <div class="vh-heritage-panel vh-heritage-panel--intro">
-      <span class="vh-sticker vh-sticker--light" style="--rot: -7deg; top: 20%; right: 14%;">Est. 1960 ✦ Tilburg</span>
+      <span class="vh-sticker vh-sticker--light" style="--rot: -7deg; top: 20%; right: 14%;">Est. 1945 ✦ Tilburg</span>
       <span class="vh-sticker vh-sticker--light" style="--rot: 4deg; bottom: 18%; left: 12%;">The Comeback Kid · 2007</span>
       <div>
         <p class="vh-heritage-intro-label vh-mono">02 / Het verhaal</p>

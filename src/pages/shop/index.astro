@@ -5,6 +5,7 @@ import Base from '../../layouts/Base.astro';
 import Pic from '../../components/Pic.astro';
 import { getCatalog } from '../../lib/catalog';
 import { formatPrice } from '../../lib/commerce';
+import { BRAND } from '../../lib/entity';
 import '../../styles/shop.css';
 
 const products = await getCatalog();
@@ -25,7 +26,7 @@ const skuPrefixOf = (p: Product) => p.variants[0]?.sku?.split('-').slice(0, 2).j
 const ficheOf = (p: Product) =>
   p.edition ? `${skuPrefixOf(p)} · oplage ${p.edition} · nog ${stockOf(p)}` : `${skuPrefixOf(p)} · ${p.meta}`;
 ---
-<Base title="Shop · Villa Happ" description="De Villa Happ collectie: heritage hoodies en limited editions, genummerd en gemaakt met ruim 65 jaar vakmanschap.">
+<Base title="Shop · Villa Happ" description={`De Villa Happ collectie: heritage hoodies en limited editions, genummerd en gemaakt met ruim ${BRAND.age} jaar vakmanschap.`}>
   <section class="vh-page">
     <div class="vh-page-inner">
 
@@ -86,7 +87,7 @@ const ficheOf = (p: Product) =>
               <a href="/story" class="vh-editorial-inner">
                 <Pic src="/img/heritage/origin-babyparadijs.webp" alt="" width={600} height={750} loading="lazy" aria-hidden="true" />
                 <div class="vh-editorial-body">
-                  <p class="vh-editorial-kicker vh-mono">Uit het archief · 1960</p>
+                  <p class="vh-editorial-kicker vh-mono">Uit het archief · 1945</p>
                   <p class="vh-editorial-quote">Twee keer gevallen, drie keer opgestaan. Elk stuk draagt dat verhaal.</p>
                   <span class="vh-editorial-link vh-mono">Lees het verhaal →</span>
                 </div>
@@ -105,12 +106,12 @@ const ficheOf = (p: Product) =>
       <div class="vh-shop-intro">
         <h2>Heritage, gemaakt om te dragen</h2>
         <p>
-          Villa Happ begon in 1960 in Tilburg en groeide uit tot een naam die een
+          Villa Happ begon in 1945 in Tilburg en groeide uit tot een naam die een
           generatie kleedde. De collectie van vandaag bouwt op dat vakmanschap voort:
           biologisch katoen, geborduurde emblemen en stukken die in beperkte,
           genummerde oplages worden gemaakt. Geen overproductie, geen wegwerpmode.
           Elk stuk wordt vanuit Waalwijk ontworpen en geleverd met de zorg van een
-          merk dat al ruim 65 jaar weet wat blijven betekent.
+          merk dat al ruim {BRAND.age} jaar weet wat blijven betekent.
         </p>
         <p>
           Benieuwd naar het verhaal achter het merk? Lees over

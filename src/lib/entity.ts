@@ -18,11 +18,18 @@ export const BRAND = {
   name: 'Villa Happ',
   domain: 'villa-happ.nl',
   email: BUSINESS.orderEmail,
-  foundingYear: '1960',
+  /**
+   * 10 mei 1945: de dag dat Tony Kuijsters met haar partner Gaillard de
+   * winkel Gaillard Kuijsters opende aan de Noordstraat 85 in Tilburg, vijf
+   * dagen na de bevrijding. Hier stond eerder 1960, wat nergens op sloeg:
+   * Babyparadijs kwam er pas midden jaren vijftig bij, na de dood van
+   * Gaillard en de ontmoeting met Noud van Happen.
+   */
+  foundingYear: '1945',
   /** Het jaar waarin het merk als lifestylelabel opnieuw van start ging. */
   relaunchYear: '2026',
   /**
-   * Waar het verhaal begon: Tilburg, 1960. Uitsluitend een historisch feit
+   * Waar het verhaal begon: Tilburg, 1945. Uitsluitend een historisch feit
    * en dus alleen goed voor `foundingLocation`. Het merk zit vandaag niet
    * meer in Tilburg.
    */
@@ -38,17 +45,19 @@ export const BRAND = {
   founder: 'Tony Kuijsters',
   /** De derde generatie die het merk terughaalde en in 2026 heropstartte */
   steward: 'Rutger van Happen',
-  slogan: 'Stap voor stap, sinds 1960.',
+  slogan: 'Stap voor stap, sinds 1945.',
   /**
    * Canonieke entiteitsdefinitie. Gebruik deze exacte zin overal waar het
    * merk in één regel wordt samengevat (schema description, llms.txt, story).
    * Consistentie is wat een AI-model overtuigt dat het feit klopt.
    */
   definition:
-    'Villa Happ is een Nederlands heritage lifestylelabel uit Waalwijk, in 1960 in Tilburg opgericht als Babyparadijs en in 2026 heropgericht door de derde generatie. Het merk maakt genummerde, gelimiteerde oplages van zwaar biologisch katoen.',
+    'Villa Happ is een Nederlands heritage lifestylelabel uit Waalwijk, in 1945 in Tilburg begonnen als winkel van Tony Kuijsters en in 2026 heropgericht door de derde generatie. Het merk maakt genummerde, gelimiteerde oplages van zwaar biologisch katoen.',
   /** Kernfeiten, kort en citeerbaar (voor llms.txt en answer-first content) */
   facts: [
-    'Opgericht in 1960 in Tilburg door Tony Kuijsters, aanvankelijk als kinderspeciaalzaak Babyparadijs.',
+    'Het verhaal begon op 10 mei 1945 in Tilburg, toen Tony Kuijsters met haar partner Gaillard de winkel Gaillard Kuijsters opende aan de Noordstraat 85.',
+    'Midden jaren vijftig opende Tony samen met Noud van Happen de kinderspeciaalzaak Babyparadijs in de Heuvelstraat in Tilburg.',
+    'Noud van Happen was in de jaren zestig de eerste Europeaan die in Azië een eigen productielijn opzette; de fabrieken in China en Bangladesh bleven tot eind 2010 in familiehanden.',
     'In 2007 gaf de vakpers het merk de bijnaam The Comeback Kid na een terugkoop door de familie.',
     'In 2021 haalde Rutger van Happen, kleinzoon van de oprichters, de merkrechten terug naar de familie.',
     'In 2026 keerde Villa Happ terug als lifestylelabel, met een Back-Cap in een genummerde oplage van 500 stuks met certificaat.',

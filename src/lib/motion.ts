@@ -42,7 +42,12 @@ function initLenis() {
   gsap.ticker.lagSmoothing(0);
 }
 
-/* ---------- Loader (jaarteller 1960 → 2026) ---------- */
+/* ---------- Loader (jaarteller 1945 → 2026) ---------- */
+/** Begin- en eindjaar van de teller. Startjaar moet gelijk zijn aan
+ *  BRAND.foundingYear in src/lib/entity.ts en aan het jaartal in
+ *  Loader.astro; anders springt de teller bij het laden. */
+const TELLER_VAN = 1945;
+const TELLER_TOT = 2026;
 function initLoader() {
   const loader = document.getElementById('vh-loader');
   const hero = document.getElementById('vh-hero');
@@ -75,7 +80,7 @@ function initLoader() {
   const iv = setInterval(() => {
     p = Math.min(95, p + 22);
     if (bar) bar.style.width = p + '%';
-    if (yearEl) yearEl.textContent = String(1960 + Math.round((p / 95) * 66));
+    if (yearEl) yearEl.textContent = String(TELLER_VAN + Math.round((p / 95) * (TELLER_TOT - TELLER_VAN)));
   }, 60);
 
   const finish = () => { clearInterval(iv); dismiss(); };

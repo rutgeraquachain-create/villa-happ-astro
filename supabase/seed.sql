@@ -154,7 +154,7 @@ VALUES (
   'stap-voor-stap-sokken',
   'Stap voor Stap sokken',
   'De sokken waarmee de comeback begon. Want zo gaat dit verhaal verder: stap voor stap.',
-  'Stap voor Stap: zo heten de sokken, en zo heet de comeback. Een knipoog naar de eerste stapjes waar het in 1960 allemaal mee begon, en naar de manier waarop dit merk terugkeert. Verkrijgbaar in maat 36/41 en 42/46.',
+  'Stap voor Stap: zo heten de sokken, en zo heet de comeback. Een knipoog naar de eerste stapjes waar het in 1945 allemaal mee begon, en naar de manier waarop dit merk terugkeert. Verkrijgbaar in maat 36/41 en 42/46.',
   895, 'Sokken · 2 maten', 'published', FALSE,
   '/img/brand/villa-happ-logo.webp',
   '[]'::jsonb,

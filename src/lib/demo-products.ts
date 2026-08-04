@@ -136,7 +136,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
     price_cents: 895,
     short_desc: 'De sokken waarmee de comeback begon. Want zo gaat dit verhaal verder: stap voor stap.',
     description:
-      'Stap voor Stap: zo heten de sokken, en zo heet de comeback. Een knipoog naar de eerste stapjes waar het in 1960 allemaal mee begon, en naar de manier waarop dit merk terugkeert. Verkrijgbaar in maat 36/41 en 42/46.',
+      'Stap voor Stap: zo heten de sokken, en zo heet de comeback. Een knipoog naar de eerste stapjes waar het in 1945 allemaal mee begon, en naar de manier waarop dit merk terugkeert. Verkrijgbaar in maat 36/41 en 42/46.',
     details: [
       'Verkrijgbaar in 36/41 en 42/46',
       'Villa Happ embleem ingebreid',
