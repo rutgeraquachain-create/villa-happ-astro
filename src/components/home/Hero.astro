@@ -11,17 +11,40 @@ import Pic from '../Pic.astro';
       <p class="vh-hero-chrome-note">Waar het begon.</p>
     </div>
 
+    <!--
+      Twee lagen. Het beeld opent met de collectie van nu en lost tijdens het
+      inklappen op in de winkelpui van 1945, zodat er in het polaroidframe
+      staat wat het bijschrift belooft: waar het begon.
+
+      De archieflaag staat op `contain`, niet op `cover`. Het frame is bijna
+      vierkant en de pui is anderhalf keer zo breed als hoog; met `cover` zou
+      je juist de etalages links en rechts wegsnijden, en dat is precies het
+      overzicht dat je wilt zien.
+    -->
     <div class="vh-hero-media">
-      <Pic
-        src="/img/heritage/1945-noordstraat-85-gaillard-kuijsters.webp"
-        alt="De winkel Gaillard Kuijsters aan de Noordstraat 85 in Tilburg, geopend op 10 mei 1945. Twee etalages met kinderwagens, wiegjes en babygoed."
-        width={2000}
-        height={1436}
-        widths={[480, 768, 1080, 1440, 1920]}
-        sizes="100vw"
-        loading="eager"
-        fetchpriority="high"
-      />
+      <div class="vh-hero-layer" data-hero-layer="nu">
+        <Pic
+          src="/img/products/hoodie-grey-lifestyle-v2.webp"
+          alt="Villa Happ Heritage Hoodie in olijfgroen, gedragen in een herfstbos."
+          width={1920}
+          height={1280}
+          widths={[480, 768, 1080, 1440, 1920]}
+          sizes="100vw"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </div>
+      <div class="vh-hero-layer vh-hero-layer--archief" data-hero-layer="toen">
+        <Pic
+          src="/img/heritage/1945-noordstraat-winkelpui.webp"
+          alt="De winkel Gaillard Kuijsters aan de Noordstraat 85 in Tilburg, geopend op 10 mei 1945. Twee etalages met kinderwagens, wiegjes en babygoed."
+          width={2000}
+          height={1324}
+          widths={[480, 768, 1080, 1440]}
+          sizes="(max-width: 900px) 90vw, 40vw"
+          loading="eager"
+        />
+      </div>
       <div class="vh-hero-scrim"></div>
     </div>
   </div>

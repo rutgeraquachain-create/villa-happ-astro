@@ -214,12 +214,34 @@
 	overflow: hidden;
 	will-change: clip-path;
 }
+/* Twee lagen over elkaar: de collectie van nu, en daaronder het archief dat
+   tijdens het inklappen naar voren komt. */
+.vh-hero-layer {
+	position: absolute;
+	inset: 0;
+}
 .vh-hero-media img {
 	width: 100%; height: 114%;
 	object-fit: cover;
 	object-position: center 30%;
 	will-change: transform;
 }
+/* De archieflaag past ín het frame in plaats van het te vullen: de pui is
+   breder dan hoog en met `cover` zouden de etalages links en rechts wegvallen.
+   De crèmekleur eronder is dezelfde als de polaroidrand, dus de banden boven
+   en onder lezen als de rand van de afdruk. */
+.vh-hero-layer--archief {
+	opacity: 0;
+	background: #FBF8F1;
+}
+.vh-hero-layer--archief img {
+	height: 100%;
+	object-fit: contain;
+	object-position: center center;
+}
+/* Zonder JS blijft de tweede laag onzichtbaar; het openingsbeeld staat er dan
+   gewoon, zonder overgang. */
+.no-js .vh-hero-layer--archief { display: none; }
 .vh-hero-scrim {
 	position: absolute;
 	inset: 0;

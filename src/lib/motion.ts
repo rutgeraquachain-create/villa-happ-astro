@@ -100,6 +100,8 @@ function initHeroCinema() {
   if (!hero) return;
   const media = hero.querySelector('.vh-hero-media') as HTMLElement | null;
   const img = hero.querySelector('.vh-hero-media img') as HTMLElement | null;
+  /** Archieflaag: komt naar voren terwijl het beeld in het frame klapt. */
+  const archief = hero.querySelector('[data-hero-layer="toen"]') as HTMLElement | null;
   const stage = hero.querySelector('.vh-hero-stage') as HTMLElement | null;
   const chrome = hero.querySelector('.vh-hero-chrome') as HTMLElement | null;
   const scrim = hero.querySelector('.vh-hero-scrim') as HTMLElement | null;
@@ -140,6 +142,8 @@ function initHeroCinema() {
     tl.to('.vh-hero-bottom', { opacity: 0, y: -30, pointerEvents: 'none', duration: 0.22, ease: 'power1.in' }, 0)
       .to(['.vh-viewfinder', '.vh-hero-scroll-cue', '.vh-hero-corner'], { opacity: 0, duration: 0.16 }, 0.05)
       .to(media, { clipPath: 'inset(11% 7% 27% 7% round 18px)', duration: 0.5, ease: 'power2.inOut' }, 0.3);
+    // Overvloeien naar het archief terwijl het frame dichtklapt.
+    if (archief) tl.to(archief, { opacity: 1, duration: 0.28, ease: 'power1.inOut' }, 0.44);
     if (scrim) tl.to(scrim, { opacity: 0.2, duration: 0.4 }, 0.3);
     tl.to(hero, { backgroundColor: '#F4EEE3', duration: 0.35, ease: 'none' }, 0.38);
     if (chrome) tl.fromTo(chrome, { opacity: 0 }, { opacity: 1, duration: 0.18 }, 0.62);
@@ -173,6 +177,14 @@ function initHeroCinema() {
     .to(stage, { rotate: -3, duration: 0.5, ease: 'power2.inOut' }, 0.22)
     .to(hero, { backgroundColor: '#F4EEE3', duration: 0.35, ease: 'none' }, 0.3)
     .fromTo(chrome, { opacity: 0 }, { opacity: 1, duration: 0.2 }, 0.52);
+
+  /**
+   * Het beeld lost onderweg op in de winkelpui van 1945. Bewust pas nadat het
+   * inklappen op gang is (dat loopt van 0.22 tot 0.72), zodat de overgang in
+   * het frame gebeurt en niet nog over het volle scherm. Als de polaroidrand
+   * op 0.52 verschijnt, staat het archief er al.
+   */
+  if (archief) tl.to(archief, { opacity: 1, duration: 0.26, ease: 'power1.inOut' }, 0.34);
 }
 
 /* ---------- Manifesto word fill ---------- */
