@@ -709,6 +709,39 @@ function initHeroSkew() {
   loop();
 }
 
+/**
+ * Pins hermeten bij een venstermaatverandering.
+ *
+ * ScrollTrigger schrijft bij het pinnen inline maten op het element
+ * (`width`, `height`, `max-width`, `max-height`, `position: fixed`) en dat is
+ * een momentopname. Sleept iemand het venster smaller, dan blijft de hero op
+ * zijn oude maat staan terwijl de titel in `vw` wél meeschaalt: gemeten bleef
+ * een hero van 940px staan in een venster van 760px, ook een seconde later en
+ * ook na een echt resize-event.
+ *
+ * Alleen verversen als de BREEDTE verandert, of als de hoogte verandert op een
+ * apparaat zonder aanraakscherm. Op mobiel schuift de URL-balk tijdens het
+ * scrollen in en uit; dat is een hoogteverandering waarop verversen de pins
+ * laat springen, en juist dat voorkomt `ignoreMobileResize` hierboven.
+ */
+function initPinResize() {
+  const grofAanwijsapparaat = window.matchMedia('(pointer: coarse)').matches;
+  let vorigeBreedte = window.innerWidth;
+  let vorigeHoogte = window.innerHeight;
+  let wachter = 0;
+
+  window.addEventListener('resize', () => {
+    const breedteVeranderd = window.innerWidth !== vorigeBreedte;
+    const hoogteVeranderd = window.innerHeight !== vorigeHoogte;
+    if (!breedteVeranderd && !(hoogteVeranderd && !grofAanwijsapparaat)) return;
+    vorigeBreedte = window.innerWidth;
+    vorigeHoogte = window.innerHeight;
+    clearTimeout(wachter);
+    // Slepen vuurt tientallen events; pas hermeten als de gebruiker loslaat.
+    wachter = window.setTimeout(() => ScrollTrigger.refresh(), 180);
+  }, { passive: true });
+}
+
 function init() {
   // Eén falende init mag nooit de rest van de motion-keten slopen.
   // De eerste fout bewaren we voor de ?vh-debug overlay.
@@ -744,6 +777,7 @@ function init() {
   (window as unknown as { __vhMotion?: boolean }).__vhMotion = true;
   // Refresh after fonts/images settle
   window.addEventListener('load', () => setTimeout(() => ScrollTrigger.refresh(), 200));
+  safe('pinResize', initPinResize);
 }
 
 if (document.readyState === 'loading') {
