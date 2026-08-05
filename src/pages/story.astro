@@ -146,7 +146,7 @@ const chapters = [
     <p class="st-hero-sub">
       Van een winkel aan de Noordstraat in Tilburg tot 80 winkels door Europa,
       en terug. Dit is het echte verhaal van Villa Happ, verteld in zeven
-      hoofdstukken. Ontstaan in Tilburg, vandaag thuis in Waalwijk.
+      hoofdstukken. <span class="vh-heel">Ontstaan in Tilburg, vandaag thuis in Waalwijk.</span>
     </p>
     <span class="st-hero-cue vh-mono">Scroll</span>
   </header>
@@ -178,7 +178,7 @@ const chapters = [
 
     <!-- Pull quote -->
     <aside class="st-quote st-reveal">
-      <p class="st-quote-text">De drager van toen, zijn de <span class="vh-italic-accent st-accent">dragers</span> van nu.</p>
+      <p class="st-quote-text">De dragers van toen, zijn de <span class="vh-italic-accent st-accent">dragers</span> van nu.</p>
       <p class="st-quote-attr vh-mono">Villa Happ · Waalwijk, NL</p>
     </aside>
 
@@ -248,16 +248,31 @@ const chapters = [
   .st-chapter--flip .st-chapter-media { order: 1; }
 
   /**
-   * Liggend beeld dat de tekst niet naast zich verdraagt. De twee foto's van
-   * Calle Artoni lopen in elkaar over: Rogér links, Rutger rechts. In de
-   * smalle mediakolom van 5fr wordt dat een strook waarop je geen van beiden
-   * meer herkent, en dan is de hele vergelijking weg. Dus: tekst boven,
-   * beeld eronder over de volle breedte, in de verhouding van het bestand.
+   * Liggend beeld naast de tekst. De twee opnamen van Calle Artoni lopen in
+   * elkaar over, Rogér links en Rutger rechts, en dat verdraagt de staande
+   * 4/5-verhouding van de andere hoofdstukken niet: `object-fit: cover` snijdt
+   * dan links en rechts weg en je houdt een strook over waarop je geen van
+   * beiden meer herkent.
+   *
+   * Dus dezelfde tweekolomsopzet als de rest, maar met de mediakolom wat
+   * ruimer en het beeld in zijn eigen verhouding.
+   *
+   * De verschuiving omlaag: het raster centreert op de hele tekstkolom, dus
+   * inclusief het jaartal en de titel erboven. Bij een staand beeld valt dat
+   * niet op, maar dit blok is een stuk lager en komt dan hoog naast de kop te
+   * hangen. Deze nudge zet het midden op de alinea's in plaats van op de
+   * kolom. Een transform en geen marge, zodat de hoogte van het hoofdstuk
+   * niet verandert; de ruimte tussen hoofdstukken vangt het op.
    */
-  .st-chapter--breed { grid-template-columns: 1fr; gap: clamp(28px, 4vw, 48px); }
-  .st-chapter--breed .st-chapter-text,
-  .st-chapter--breed .st-chapter-media { order: 0; }
-  .st-chapter--breed .st-chapter-media { aspect-ratio: 1160 / 800; }
+  .st-chapter--breed { grid-template-columns: 5fr 7fr; }
+  .st-chapter--breed .st-chapter-media {
+    aspect-ratio: 1160 / 800;
+    transform: translateY(clamp(0px, 6vw, 78px));
+  }
+  /* Onder elkaar heeft die verschuiving geen betekenis meer. */
+  @media (max-width: 860px) {
+    .st-chapter--breed .st-chapter-media { transform: none; }
+  }
 
   .st-chapter-num { color: var(--vh-ink-muted); margin: 0 0 14px; }
   .st-chapter-year {

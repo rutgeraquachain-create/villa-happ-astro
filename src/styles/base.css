@@ -79,9 +79,33 @@ h1, h2, h3, h4, h5, h6 {
 	font-weight: 400;
 	letter-spacing: var(--vh-tracking-tight);
 	line-height: var(--vh-leading-tight);
+	/* Verdeelt de woorden gelijkmatig over de regels in plaats van elke regel
+	   vol te gieten tot hij niet meer past. Zonder dit eindigt een kop
+	   regelmatig met één los woord op de laatste regel. */
+	text-wrap: balance;
 }
 
-p { margin: 0; }
+p {
+	margin: 0;
+	/* Voorkomt een losse staart: de browser schuift woorden door zodat de
+	   laatste regel niet uit één woord bestaat. Anders dan `balance` blijft
+	   de rest van de alinea normaal uitgevuld, wat bij lopende tekst
+	   prettiger leest. Browsers die het niet kennen negeren het. */
+	text-wrap: pretty;
+}
+
+/**
+ * Houdt een zin bij elkaar op ruimere schermen. Voor korte slotzinnen die
+ * halverwege afbreken en dan rommelig staan, bijvoorbeeld "Ontstaan in
+ * Tilburg, vandaag thuis in Waalwijk".
+ *
+ * Bewust met een bovengrens: op een smal scherm past zo'n zin gewoon niet op
+ * één regel, en `nowrap` zou hem dan uit de layout duwen. Onder 700 pixels
+ * breekt hij dus gewoon af zoals altijd.
+ */
+@media (min-width: 700px) {
+	.vh-heel { white-space: nowrap; }
+}
 
 /* Utility: visually hidden but accessible */
 .vh-sr-only {
