@@ -42,7 +42,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
     slug: 'organic-cotton-hoodie-olijfgroen',
     name: 'Organic Cotton Hoodie',
     color: 'Olijfgroen',
-    price_cents: 5995,
+    price_cents: 7495,
     short_desc: 'Unisex hoodie van biologisch katoen en gerecycled polyester, in olijfgroen.',
     description:
       'De Organic Cotton Hoodie is het eerste vaste stuk van de comeback. Gemaakt van biologisch katoen en gerecycled polyester: zacht, stevig en verantwoord. Het Villa Happ embleem is geborduurd, niet geprint, precies zoals op de stukken uit het archief.',
@@ -72,7 +72,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
     slug: 'organic-cotton-hoodie-navy',
     name: 'Organic Cotton Hoodie',
     color: 'Navy',
-    price_cents: 5995,
+    price_cents: 7495,
     short_desc: 'Dezelfde hoodie van biologisch katoen, in diep navy.',
     description:
       'De Organic Cotton Hoodie in navy: hetzelfde biologische katoen, hetzelfde geborduurde embleem, een kleur die overal bij past. De maten L en XL zijn bijna op, en XXL is al uitverkocht. Als het op is, is het op.',
@@ -100,7 +100,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
     slug: 'villa-happ-back-cap',
     name: 'Villa Happ Back-Cap',
     color: 'Limited Edition',
-    price_cents: 2195,
+    price_cents: 2795,
     short_desc: 'Genummerde oplage van 500 stuks, met uniek code-label en certificaat van echtheid.',
     description:
       'Het allereerste product van de comeback: de Villa Happ Back-Cap. Een oplage van precies 500 stuks, elk exemplaar met een uniek code-label en een certificaat van echtheid. Drop 001 uit het nieuwe hoofdstuk. Als deze 500 op zijn, komen ze niet terug.',
@@ -157,7 +157,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
     slug: 'stap-voor-stap-sokken-5-pack',
     name: 'Stap voor Stap sokken · 5-pack',
     color: 'Villa Happ',
-    price_cents: 2995,
+    price_cents: 3995,
     short_desc: 'Vijf paar Stap voor Stap sokken in één pack.',
     description:
       'Voor wie elke dag een stap zet: vijf paar Stap voor Stap sokken in één pack. Verkrijgbaar in maat 36/41 en 42/46.',
