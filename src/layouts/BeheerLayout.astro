@@ -66,6 +66,7 @@ const csrf = ingelogd && sessieCookie ? maakCsrfToken(sessieCookie) : '';
         <p class="bh-merk">Villa Happ<span>Beheer</span></p>
         <div class="bh-top-acties">
           {terug && <a class="bh-chip" href={terug.href}>{terug.label}</a>}
+          <a class="bh-chip" href="/beheer/voorraad">Voorraad</a>
           <a class="bh-chip" href="/api/beheer/export">Exporteer CSV</a>
           <form method="post" action="/api/beheer/logout" style="display:inline">
             <button type="submit" class="bh-chip">Uitloggen</button>

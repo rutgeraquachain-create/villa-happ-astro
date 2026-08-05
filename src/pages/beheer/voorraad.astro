@@ -1,0 +1,199 @@
+---
+/**
+ * /beheer/voorraad — voorraadoverzicht en correcties
+ *
+ * Server-gerenderd en niet cachebaar, net als de orderlijst: dit zegt
+ * precies wat er wel en niet op de plank ligt.
+ *
+ * Wat aandacht vraagt staat bovenaan. De sortering kijkt naar wat vrij
+ * verkoopbaar is, niet naar wat er ligt: tien stuks waarvan er negen
+ * gereserveerd zijn is voor een klant hetzelfde als één stuk.
+ */
+export const prerender = false;
+
+import BeheerLayout from '../../layouts/BeheerLayout.astro';
+import { BEHEER_COOKIE, beheerToegang, beheerGeconfigureerd } from '../../lib/beheer-sessie';
+import { getSupabaseAdmin } from '../../lib/supabase';
+import { BEHEER_HEADERS } from '../../lib/beheer';
+import {
+  leesVoorraad, leesMutaties, sorteerVoorraad, kerncijfers,
+  vrijVerkoopbaar, staatVan, STAAT_LABEL, STAAT_TOON,
+  type VoorraadRij, type MutatieRegel,
+} from '../../lib/voorraad';
+
+for (const [k, v] of Object.entries(BEHEER_HEADERS)) Astro.response.headers.set(k, v);
+
+const cookie = Astro.cookies.get(BEHEER_COOKIE)?.value;
+const ingelogd = beheerToegang(cookie);
+const geconfigureerd = beheerGeconfigureerd();
+const sb = getSupabaseAdmin();
+
+let rijen: VoorraadRij[] = [];
+let mutaties: MutatieRegel[] = [];
+
+if (ingelogd && sb) {
+  const [v, m] = await Promise.all([leesVoorraad(sb), leesMutaties(sb)]);
+  rijen = sorteerVoorraad(v);
+  mutaties = m;
+}
+
+const cijfers = kerncijfers(rijen);
+
+const tijdstip = (iso: string) =>
+  new Date(iso).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+---
+
+<BeheerLayout
+  title="Voorraad · Beheer"
+  ingelogd={ingelogd}
+  geconfigureerd={geconfigureerd}
+  terug={{ href: '/beheer', label: '← Bestellingen' }}
+>
+  <div class="bh-cijfers">
+    <div class={`bh-cijfer${cijfers.uitverkocht ? ' is-actie' : ''}`}>
+      <b>{cijfers.uitverkocht}</b><span>Uitverkocht</span>
+    </div>
+    <div class={`bh-cijfer${cijfers.bijnaOp ? ' is-actie' : ''}`}>
+      <b>{cijfers.bijnaOp}</b><span>Bijna op</span>
+    </div>
+    <div class="bh-cijfer"><b>{cijfers.stuksTotaal}</b><span>Stuks op voorraad</span></div>
+    <div class="bh-cijfer"><b>{cijfers.stuksGereserveerd}</b><span>Gereserveerd</span></div>
+  </div>
+
+  <div id="bh-vr-melding" class="bh-melding" hidden></div>
+
+  {rijen.length === 0 ? (
+    <p class="bh-leeg">Geen voorraadregels gevonden.</p>
+  ) : (
+    <div class="bh-tabelwrap">
+      <table class="bh-tabel">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Variant</th>
+            <th>Op voorraad</th>
+            <th>Gereserveerd</th>
+            <th>Vrij</th>
+            <th>Staat</th>
+            <th>Bijstellen</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rijen.map((r) => {
+            const staat = staatVan(r);
+            return (
+              <tr data-variant={r.variantId}>
+                <td class="klant">{r.productNaam}</td>
+                <td>{r.variantLabel}<br /><small style="color:var(--vh-ink-muted)">{r.sku}</small></td>
+                <td class="bedrag" data-veld="aantal">{r.aantal}</td>
+                <td class="bedrag" data-veld="gereserveerd">{r.gereserveerd}</td>
+                <td class="bedrag" data-veld="vrij">{vrijVerkoopbaar(r)}</td>
+                <td><span class="bh-badge" data-toon={STAAT_TOON[staat]}>{STAAT_LABEL[staat]}</span></td>
+                <td>
+                  <form class="bh-vr-form" data-variant={r.variantId} style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                    <label class="vh-sr-only" for={`vr-a-${r.variantId}`}>Aantal bijstellen voor {r.productNaam} {r.variantLabel}</label>
+                    <input id={`vr-a-${r.variantId}`} name="verschil" inputmode="numeric" placeholder="+12" required
+                           style="width:74px;padding:7px 9px;border:1px solid var(--vh-ink-hairline);border-radius:4px;font:inherit;" />
+                    <label class="vh-sr-only" for={`vr-r-${r.variantId}`}>Reden</label>
+                    <input id={`vr-r-${r.variantId}`} name="reden" placeholder="Reden" required maxlength="200"
+                           style="width:150px;padding:7px 9px;border:1px solid var(--vh-ink-hairline);border-radius:4px;font:inherit;" />
+                    <button type="submit" class="bh-chip">Opslaan</button>
+                  </form>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  )}
+
+  <div class="bh-blok" style="margin-top:26px;">
+    <h2>Laatste bijstellingen</h2>
+    {mutaties.length === 0 ? (
+      <p style="color:var(--vh-ink-muted);font-size:13px;margin:0;">
+        Nog geen handmatige correcties. Verkopen en reserveringen lopen automatisch en staan hier niet in.
+      </p>
+    ) : (
+      <table class="bh-regels">
+        <tbody>
+          {mutaties.map((m) => (
+            <tr>
+              <td>
+                {m.productNaam} <span style="color:var(--vh-ink-muted)">{m.variantLabel}</span><br />
+                <small style="color:var(--vh-ink-muted)">{m.reden} · {tijdstip(m.wanneer)}</small>
+              </td>
+              <td>{m.verschil > 0 ? `+${m.verschil}` : m.verschil}<br /><small style="color:var(--vh-ink-muted)">naar {m.standNa}</small></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+
+  <script>
+    /**
+     * Er gaat een verschil naar de server, geen nieuwe stand. Tussen het
+     * laden van deze pagina en het opslaan kan een klant afrekenen; met een
+     * absoluut getal zou je die bestelling overschrijven.
+     */
+    const melding = document.getElementById('bh-vr-melding')!;
+    const toon = (tekst: string, soort: 'goed' | 'fout') => {
+      melding.textContent = tekst;
+      melding.className = `bh-melding is-${soort}`;
+      melding.hidden = false;
+    };
+
+    document.querySelectorAll<HTMLFormElement>('.bh-vr-form').forEach((form) => {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const variantId = form.dataset.variant!;
+        const rij = document.querySelector<HTMLTableRowElement>(`tr[data-variant="${variantId}"]`)!;
+        const knop = form.querySelector('button')!;
+        const velden = form.querySelectorAll<HTMLInputElement>('input');
+        const [aantalVeld, redenVeld] = Array.from(velden);
+
+        const ruw = aantalVeld.value.trim().replace(/\s+/g, '');
+        if (!/^[+-]?\d{1,5}$/.test(ruw) || Number(ruw) === 0) {
+          toon('Vul een aantal in als +12 of -1. Nul is geen wijziging.', 'fout');
+          aantalVeld.focus();
+          return;
+        }
+
+        knop.disabled = true;
+        const oudeTekst = knop.textContent;
+        knop.textContent = 'Bezig…';
+
+        try {
+          const res = await fetch('/api/beheer/voorraad', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              variantId,
+              verschil: Number(ruw),
+              reden: redenVeld.value.trim(),
+              csrf: document.body.dataset.csrf || '',
+            }),
+          });
+          const uit = await res.json().catch(() => null);
+
+          if (res.ok && uit?.success) {
+            const gereserveerd = Number(rij.querySelector('[data-veld="gereserveerd"]')!.textContent);
+            rij.querySelector('[data-veld="aantal"]')!.textContent = String(uit.aantal);
+            rij.querySelector('[data-veld="vrij"]')!.textContent = String(Math.max(0, uit.aantal - gereserveerd));
+            aantalVeld.value = '';
+            redenVeld.value = '';
+            toon(`Bijgewerkt naar ${uit.aantal}. Ververs de pagina voor de nieuwe volgorde en de staat.`, 'goed');
+          } else {
+            toon(uit?.error || 'Bijwerken lukte niet.', 'fout');
+          }
+        } catch {
+          toon('Verbinding mislukt.', 'fout');
+        }
+
+        knop.disabled = false;
+        knop.textContent = oudeTekst;
+      });
+    });
+  </script>
+</BeheerLayout>

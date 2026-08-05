@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { maakOrderToken, leesOrderToken, authSecretOntbreekt } from '../src/lib/order-token';
 import {
   hashWachtwoord, controleerWachtwoord,
-  maakBeheerSessie, leesBeheerSessie,
+  maakBeheerSessie, leesBeheerSessie, beheerToegang,
   maakCsrfToken, controleerCsrf,
 } from '../src/lib/beheer-sessie';
 
@@ -128,6 +128,25 @@ describe('beheersessie', () => {
     for (const rommel of ['', 'abc', 'beheer:1.zz', undefined]) {
       expect(leesBeheerSessie(rommel as any)).toBe(false);
     }
+  });
+});
+
+describe('beheerToegang', () => {
+  it('eist een geldige sessie én een geconfigureerd portaal', () => {
+    vi.stubEnv('ADMIN_PASSWORD_HASH', hashWachtwoord('geheim'));
+    expect(beheerToegang(maakBeheerSessie())).toBe(true);
+    expect(beheerToegang('rommel')).toBe(false);
+  });
+
+  it('sluit een lopende sessie meteen buiten als de hash weg is', () => {
+    // Zo zet je het portaal dicht: haal ADMIN_PASSWORD_HASH weg. Zonder deze
+    // eis bleef een cookie dat al liep nog twaalf uur lang bestellingen en
+    // voorraad tonen, terwijl de API-routes wél al 404 gaven.
+    const sessie = maakBeheerSessie();
+    vi.stubEnv('ADMIN_PASSWORD_HASH', hashWachtwoord('geheim'));
+    expect(beheerToegang(sessie)).toBe(true);
+    vi.stubEnv('ADMIN_PASSWORD_HASH', '');
+    expect(beheerToegang(sessie)).toBe(false);
   });
 });
 

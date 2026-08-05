@@ -128,6 +128,19 @@ export function leesBeheerSessie(cookie: string | undefined, nu: number = Date.n
   return Number.isFinite(verval) && nu <= verval;
 }
 
+/**
+ * Mag deze bezoeker een beheerpagina zien?
+ *
+ * Bewust méér dan alleen een geldig cookie. Haal je ADMIN_PASSWORD_HASH weg
+ * om het portaal dicht te zetten, dan hoort dat meteen te gelden. Zonder deze
+ * extra eis bleef een sessie die al liep nog tot twaalf uur lang bestellingen
+ * en voorraad tonen, terwijl de API-routes wél al dichtgingen. Dat verschil
+ * tussen lezen en schrijven is precies wat je niet wilt uitleggen.
+ */
+export function beheerToegang(cookie: string | undefined, nu: number = Date.now()): boolean {
+  return beheerGeconfigureerd() && leesBeheerSessie(cookie, nu);
+}
+
 export const COOKIE_OPTIES = {
   path: '/',
   httpOnly: true,
