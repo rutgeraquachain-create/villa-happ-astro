@@ -7,11 +7,11 @@ imageAlt: "Archieffoto van de winkel aan de Noordstraat in Tilburg, waar Villa H
 tags: ["heritage", "tilburg", "familie"]
 ---
 
-Op 10 mei 1945, vijf dagen na de bevrijding, openden Tony Kuijsters en haar partner Gaillard een winkel aan de Noordstraat 85 in Tilburg. Er lag geen plan voor een imperium onder. Er was een gezin dat vond dat kinderkleding beter kon.
+Op 10 mei 1945, vijf dagen na de bevrijding, openden Tony Kuijsters en haar partner Bas Gaillard een winkel aan de Noordstraat 85 in Tilburg. Er lag geen plan voor een imperium onder. Er was een gezin dat vond dat kinderkleding beter kon.
 
 ## De eerste generatie
 
-Toen hun vierde kind twee maanden oud was, overleed Gaillard. Tony zette de zaak alleen voort, met vier jonge kinderen thuis. Halverwege de jaren vijftig ontmoette ze Noud van Happen. Samen openden ze een winkel in de Heuvelstraat, onder de naam die de familie bekend zou maken: Babyparadijs.
+Toen hun vierde kind twee maanden oud was, overleed Bas. Tony zette de zaak alleen voort, met vier jonge kinderen thuis. Halverwege de jaren vijftig ontmoette ze Noud van Happen. Samen openden ze een winkel in de Heuvelstraat, onder de naam die de familie bekend zou maken: Babyparadijs.
 
 Wat de zaak groot maakte was consequent hetzelfde: kwaliteit waar gezinnen op konden rekenen. Klanten kwamen terug, jaar na jaar, kind na kind.
 
