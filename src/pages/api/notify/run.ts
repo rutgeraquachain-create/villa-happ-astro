@@ -56,10 +56,34 @@ export const GET: APIRoute = async ({ request }) => {
   // op Vercel Pro, zet deze cron dan op elk uur (zie vercel.json).
   const outbox = await verwerkWachtrij();
 
+  /**
+   * 2. Blijven hangende reserveringen vrijgeven.
+   *
+   * Klikt een klant het betaalscherm weg, dan blijft zijn voorraad
+   * gereserveerd tot Mollie meldt dat de betaling is verlopen. Komt die
+   * melding niet aan, bijvoorbeeld doordat de webhook een tijd onbereikbaar
+   * was, dan zit die voorraad voorgoed vast. Bij een oplage van 500 stuks
+   * zie je dan uitverkocht staan wat gewoon op de plank ligt.
+   *
+   * Vierentwintig uur is ruim: een iDEAL-betaling verloopt binnen een kwartier
+   * en Mollie blijft de webhook langer dan een dag proberen. Wat hier
+   * overblijft is dus echt vergeten, geen betaling die nog onderweg is.
+   *
+   * Draait vóór de voorraadmeldingen, zodat iemand die op een uitverkochte
+   * maat wacht in dezelfde run bericht krijgt als die maat hierdoor vrijkomt.
+   */
+  const { data: opgeruimd, error: oErr } = await sb.rpc('geef_verlopen_reserveringen_vrij', { p_uren: 24 });
+  if (oErr) console.error('[cron] vrijgeven van verlopen reserveringen faalde:', oErr);
+  const reserveringen = {
+    vrijgegeven: Array.isArray(opgeruimd) ? opgeruimd.length : 0,
+    orders: Array.isArray(opgeruimd) ? opgeruimd.map((r: any) => r.order_number) : [],
+  };
+
   if (!isMailConfigured()) {
     // Zonder mailkanaal niets markeren: de wachtrij blijft intact
     return new Response(JSON.stringify({
       outbox,
+      reserveringen,
       sent: 0,
       skipped: 'mail niet geconfigureerd',
     }), { status: 200 });
@@ -72,8 +96,8 @@ export const GET: APIRoute = async ({ request }) => {
     .order('created_at', { ascending: true })
     .limit(200);
 
-  if (pErr) return new Response(JSON.stringify({ outbox, error: 'query failed' }), { status: 500 });
-  if (!pending?.length) return new Response(JSON.stringify({ outbox, sent: 0, pending: 0 }), { status: 200 });
+  if (pErr) return new Response(JSON.stringify({ outbox, reserveringen, error: 'query failed' }), { status: 500 });
+  if (!pending?.length) return new Response(JSON.stringify({ outbox, reserveringen, sent: 0, pending: 0 }), { status: 200 });
 
   // Voorraad + productnaam per (slug, maat) in één query
   const slugs = [...new Set(pending.map((p: any) => p.product_slug))];
@@ -83,7 +107,7 @@ export const GET: APIRoute = async ({ request }) => {
     .in('slug', slugs)
     .eq('status', 'published');
 
-  if (prErr) return new Response(JSON.stringify({ outbox, error: 'query failed' }), { status: 500 });
+  if (prErr) return new Response(JSON.stringify({ outbox, reserveringen, error: 'query failed' }), { status: 500 });
 
   const availableByKey: Record<string, number> = {};
   const nameBySlug: Record<string, string> = {};
@@ -113,7 +137,7 @@ export const GET: APIRoute = async ({ request }) => {
     }
   }
 
-  return new Response(JSON.stringify({ outbox, pending: pending.length, due: due.length, sent }), {
+  return new Response(JSON.stringify({ outbox, reserveringen, pending: pending.length, due: due.length, sent }), {
     status: 200,
     headers: { 'Content-Type': 'application/json' },
   });
