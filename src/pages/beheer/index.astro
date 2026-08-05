@@ -11,7 +11,7 @@
 export const prerender = false;
 
 import BeheerLayout from '../../layouts/BeheerLayout.astro';
-import { BEHEER_COOKIE, leesBeheerSessie, beheerGeconfigureerd } from '../../lib/beheer-sessie';
+import { BEHEER_COOKIE, beheerToegang, beheerGeconfigureerd } from '../../lib/beheer-sessie';
 import { getSupabaseAdmin } from '../../lib/supabase';
 import { leesOrders, leesKerncijfers, BEHEER_HEADERS } from '../../lib/beheer';
 import { wachtrijStatus } from '../../lib/outbox';
@@ -19,7 +19,7 @@ import { STATUS_KORT, STATUS_TOON, euro, type OrderStatus } from '../../lib/orde
 
 for (const [k, v] of Object.entries(BEHEER_HEADERS)) Astro.response.headers.set(k, v);
 
-const ingelogd = leesBeheerSessie(Astro.cookies.get(BEHEER_COOKIE)?.value);
+const ingelogd = beheerToegang(Astro.cookies.get(BEHEER_COOKIE)?.value);
 const geconfigureerd = beheerGeconfigureerd();
 const sb = getSupabaseAdmin();
 
