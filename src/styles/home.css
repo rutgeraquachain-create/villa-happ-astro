@@ -325,11 +325,22 @@
 	   van 780. Het overschot puilt aan de bovenkant naar buiten, want
 	   .vh-hero-inner zet de inhoud met justify-content: flex-end tegen de
 	   onderrand. De eerste regel liep daardoor achter de header langs.
-	   20vh houdt de drie regels binnen het scherm. Bij 16:9 en alles wat
-	   staander is wint 11vw nog steeds, dus op een normaal venster verandert
-	   de typografie niet; de hoogtegrens grijpt alleen in op vensters die
-	   breder zijn dan ongeveer 1,8 keer hun hoogte. */
-	font-size: clamp(60px, min(11vw, 20vh), 200px);
+	   Een simpele `vh` volstaat hier niet. Onder de titel staat een vaste
+	   overhead die NIET met de hoogte meeschaalt: 32px marge, de subregel en
+	   de onderpadding, samen gemeten 214px bij 1880 breed en 181px bij 1280.
+	   Een eerste poging met 20vh haalde de overlap op 1880x780 weg (-10px naar
+	   +10px) maar liet 1880x700 op -13px staan, precies omdat die 214px
+	   ongemoeid bleef.
+
+	   De titel is gemeten 2,98x de lettergrootte hoog (drie regels van 0,86em
+	   plus 0,4em maskerruimte). Met de header op 76px en 24px speling als
+	   doel: lettergrootte <= (hoogte - 320) / 3.
+
+	   Dat bijt alleen op echt lage vensters. Op 1440x900, 1280x800 en
+	   1920x1080 wint 11vw nog steeds en verandert er niets; op 1280x720 kost
+	   het 7px lettergrootte, en dat is de prijs voor een titel die gegarandeerd
+	   onder de header blijft. */
+	font-size: clamp(60px, min(11vw, (100vh - 320px) / 3), 200px);
 	line-height: 0.86;
 	letter-spacing: -0.04em;
 	font-weight: 400;
