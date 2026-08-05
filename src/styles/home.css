@@ -319,7 +319,17 @@
 .vh-hero-corner .vh-mono { color: rgba(244, 238, 227, 0.7); }
 .vh-hero-title {
 	font-family: var(--vh-font-serif);
-	font-size: clamp(60px, 11vw, 200px);
+	/* De titel schaalde alleen mee met de BREEDTE. Op een breed maar laag
+	   venster (1880x780 is een doodgewone maat) werd hij 200px, en dan is er
+	   818px nodig voor titel, subregel, knoppen en onderpadding in een hero
+	   van 780. Het overschot puilt aan de bovenkant naar buiten, want
+	   .vh-hero-inner zet de inhoud met justify-content: flex-end tegen de
+	   onderrand. De eerste regel liep daardoor achter de header langs.
+	   20vh houdt de drie regels binnen het scherm. Bij 16:9 en alles wat
+	   staander is wint 11vw nog steeds, dus op een normaal venster verandert
+	   de typografie niet; de hoogtegrens grijpt alleen in op vensters die
+	   breder zijn dan ongeveer 1,8 keer hun hoogte. */
+	font-size: clamp(60px, min(11vw, 20vh), 200px);
 	line-height: 0.86;
 	letter-spacing: -0.04em;
 	font-weight: 400;
