@@ -54,7 +54,11 @@ const chapters = [
     ],
   },
   {
-    breed: false,
+    // Liggende opname, net als hoofdstuk 07. In het staande 4/5-kader sneed
+    // `object-fit: cover` het uithangbord af op "BABY PA" en bleef er vooral
+    // de blinde zijmuur van het buurpand over. Voor een hoofdstuk dat
+    // Babyparadijs heet, moet je Babyparadijs kunnen lezen.
+    breed: true,
     num: 'Hoofdstuk 02',
     year: 'Midden jaren vijftig',
     title: 'Babyparadijs',
@@ -83,8 +87,13 @@ const chapters = [
     num: 'Hoofdstuk 04',
     year: "Jaren '70, '80, '90",
     title: 'De marktleider die je niet zag',
-    img: '/img/heritage/1980-industrieweg-74-76-waalwijk.webp',
-    alt: 'Het bedrijfspand van Van Happen aan de Industrieweg in Waalwijk, met twee vrachtwagens op het terrein.',
+    // Het hoofdkantoor in Drunen, 1991. Al op 4:5 gesneden en bewust naar
+    // rechts verschoven: `object-fit: cover` zou anders de letters
+    // "van happen fashion" van de gevel snijden, en dat is het hele punt van
+    // een hoofdstuk over een marktleider die je niet zag. De Industrieweg-foto
+    // blijft op de homepage staan, in de tijdlijn en de carrousel.
+    img: '/img/heritage/1991-james-wattlaan-7-drunen.webp',
+    alt: 'Het hoofdkantoor van Van Happen Fashion aan de James Wattlaan in Drunen, 1991, met een bedrijfssculptuur op het gazon ervoor.',
     paras: [
       'Babyparadijs groeit uit tot de Van Happen Fashion Groep en wordt in de jaren tachtig marktleider in private label kinderkleding. Op de labels staan andere namen: Wibra, Zeeman, HEMA, V&D. Als er ruimte over was in de fabrieken, werden daar ook merken als Replay en Diesel geproduceerd. Veel mensen hebben kleding van deze familie gedragen zonder dat ooit te weten. Daarnaast draaien de eigen merken VHF en Artoni op volle toeren.',
       'Het bedrijf verhuist mee met zijn groei. Elzenweg 33 in Waalwijk in 1972, Industrieweg 74-76 in 1980, en in 1990 een nieuw hoofdkantoor aan de James Wattlaan 7 in Drunen.',
