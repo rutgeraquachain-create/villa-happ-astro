@@ -37,3 +37,7 @@ pnpm-debug.log*
 # Losse curl-uitvoer bij het controleren van een deploy
 *.html
 !src/**/*.html
+
+# Tussenversies van de archieffoto's: afgeleide van docs/archief-express/,
+# reproduceerbaar met ffmpeg. Alleen de bronnen horen in de repo.
+docs/archief-klaar/
