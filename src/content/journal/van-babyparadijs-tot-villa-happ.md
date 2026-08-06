@@ -1,25 +1,25 @@
 ---
-title: "Van Noordstraat 85 tot Villa Happ: drie generaties"
+title: "Van Heuvelstraat 85 tot Villa Happ: drie generaties"
 description: "Hoe een winkel die vijf dagen na de bevrijding openging uitgroeide tot een merk met 80 winkels, twee keer viel en nu aan hoofdstuk drie begint."
 date: 2026-06-15
 image: "/img/heritage/origin-babyparadijs.webp"
-imageAlt: "Archieffoto van de winkel aan de Noordstraat in Tilburg, waar Villa Happ begon"
+imageAlt: "Archieffoto van de winkel aan de Heuvelstraat in Tilburg, waar Villa Happ begon"
 tags: ["heritage", "tilburg", "familie"]
 ---
 
-Op 10 mei 1945, vijf dagen na de bevrijding, openden Tony Kuijsters en haar partner Bas Gaillard een winkel aan de Noordstraat 85 in Tilburg. Er lag geen plan voor een imperium onder. Er was een gezin dat vond dat kinderkleding beter kon.
+Op 10 mei 1945, vijf dagen na de bevrijding, openden Tony Kuijsters en haar man Bas Gaillard een winkel aan de Heuvelstraat 85 in Tilburg. Er lag geen plan voor een imperium onder. Er was een gezin dat vond dat kinderkleding beter kon.
 
 ## De eerste generatie
 
-Toen hun vierde kind twee maanden oud was, overleed Bas. Tony zette de zaak alleen voort, met vier jonge kinderen thuis. Halverwege de jaren vijftig ontmoette ze Noud van Happen. Samen openden ze een winkel in de Heuvelstraat, onder de naam die de familie bekend zou maken: Babyparadijs.
+Toen hun vierde kind twee maanden oud was, overleed Bas. Tony zette de zaak alleen voort, met vier jonge kinderen thuis. Halverwege de jaren vijftig ging het pand tegen de vlakte en kwam er een modern gebouw voor terug. In diezelfde periode kreeg Tony een relatie met Noud van Happen. Op datzelfde adres openden ze de winkel onder de naam die de familie bekend zou maken: Babyparadijs.
 
 Wat de zaak groot maakte was consequent hetzelfde: kwaliteit waar gezinnen op konden rekenen. Klanten kwamen terug, jaar na jaar, kind na kind.
 
 ## De gok die het fundament werd
 
-In de jaren zestig liepen de inkoopprijzen op. Noud rekende uit dat het goedkoper kon als je zelf produceerde, en reisde met zijn laatste zakcenten naar het Verre Oosten om er een eigen productielijn op te zetten. Hij was de eerste Europeaan die dat deed.
+In de jaren zestig liepen de prijzen in België op, waar toen werd ingekocht en geproduceerd. Noud rekende uit dat het anders kon, en reisde met zijn laatste zakcenten naar het Verre Oosten om er een eigen productielijn op te zetten. Hij hoorde bij de eersten in Europa die dat aandurfden.
 
-Tot eind 2010 bleven die fabrieken in handen van de familie. Ze draaiden voor Wibra, Zeeman, HEMA en V&D, en als er ruimte over was ook voor merken als Replay en Diesel. Veel mensen hebben kleding van deze familie gedragen zonder dat ooit te weten.
+Vanaf 1996 produceerde de familie in eigen fabrieken in Bangladesh en China, met zo’n achthonderd mensen in dienst. Ze draaiden voor Wibra, Zeeman, HEMA, V&D, C&A en Prénatal, en als er ruimte over was ook voor merken als Replay en Diesel. Veel mensen hebben kleding van deze familie gedragen zonder dat ooit te weten.
 
 ## De groei en de val
 

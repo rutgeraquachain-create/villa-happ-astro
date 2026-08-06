@@ -19,11 +19,13 @@ export const BRAND = {
   domain: 'villahapp.nl',
   email: BUSINESS.orderEmail,
   /**
-   * 10 mei 1945: de dag dat Tony Kuijsters met haar partner Bas Gaillard de
-   * winkel Gaillard Kuijsters opende aan de Noordstraat 85 in Tilburg, vijf
+   * 10 mei 1945: de dag dat Tony Kuijsters met haar man Bas Gaillard de
+   * winkel Gaillard Kuijsters opende aan de Heuvelstraat 85 in Tilburg, vijf
    * dagen na de bevrijding. Hier stond eerder 1960, wat nergens op sloeg:
    * Babyparadijs kwam er pas midden jaren vijftig bij, na de dood van
-   * Bas en de ontmoeting met Noud van Happen.
+   * Bas en de ontmoeting met Noud van Happen. Het adres stond eerder als
+   * Noordstraat vermeld; dat was het productiebedrijf van Bas' ouders,
+   * niet de winkel.
    */
   foundingYear: '1945',
   /** Het jaar waarin het merk als lifestylelabel opnieuw van start ging. */
@@ -42,7 +44,13 @@ export const BRAND = {
    */
   locality: 'Waalwijk',
   country: 'NL',
-  founder: 'Tony Kuijsters',
+  /**
+   * Tony Kuijsters en Noud van Happen. De winkel van 1945 opende Tony met
+   * haar man Bas Gaillard, maar het merk zoals het bekend werd (Babyparadijs
+   * en later de Van Happen Fashion Groep) bouwde zij samen met Noud op. Dit
+   * is de lezing die de familie zelf aanhoudt; /pers noemt dezelfde twee.
+   */
+  founder: 'Tony Kuijsters en Noud van Happen',
   /** De derde generatie die het merk terughaalde en in 2026 heropstartte */
   steward: 'Rutger van Happen',
   slogan: 'Stap voor stap, sinds 1945.',
@@ -55,9 +63,9 @@ export const BRAND = {
     'Villa Happ is een Nederlands heritage lifestylelabel uit Waalwijk, in 1945 in Tilburg begonnen als winkel van Tony Kuijsters en in 2026 heropgericht door de derde generatie. Het merk maakt genummerde, gelimiteerde oplages van zwaar biologisch katoen.',
   /** Kernfeiten, kort en citeerbaar (voor llms.txt en answer-first content) */
   facts: [
-    'Het verhaal begon op 10 mei 1945 in Tilburg, toen Tony Kuijsters met haar partner Bas Gaillard de winkel Gaillard Kuijsters opende aan de Noordstraat 85.',
-    'Midden jaren vijftig opende Tony samen met Noud van Happen de kinderspeciaalzaak Babyparadijs in de Heuvelstraat in Tilburg.',
-    'Noud van Happen was in de jaren zestig de eerste Europeaan die in Azië een eigen productielijn opzette; de fabrieken in China en Bangladesh bleven tot eind 2010 in familiehanden.',
+    'Het verhaal begon op 10 mei 1945 in Tilburg, toen Tony Kuijsters met haar man Bas Gaillard de winkel Gaillard Kuijsters opende aan de Heuvelstraat 85.',
+    'Midden jaren vijftig opende Tony samen met Noud van Happen de kinderspeciaalzaak Babyparadijs, in de nieuwbouw op datzelfde adres aan de Heuvelstraat 85 in Tilburg.',
+    'Noud van Happen behoorde in de jaren zestig tot de eerste Europeanen die in Azië een eigen productielijn opzetten; vanaf 1996 produceerde de familie in eigen fabrieken in Bangladesh en China.',
     'In 2007 gaf de vakpers het merk de bijnaam The Comeback Kid na een terugkoop door de familie.',
     'In 2021 haalde Rutger van Happen, kleinzoon van de oprichters, de merkrechten terug naar de familie.',
     'In 2026 keerde Villa Happ terug als lifestylelabel, met een Back-Cap in een genummerde oplage van 500 stuks met certificaat.',
