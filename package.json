@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   },
   "_overrides_toelichting": "@vercel/routing-utils sleept path-to-regexp 6.1.0 mee, kwetsbaar voor backtracking-regex (GHSA-9wv6-86v2-598j, gefixt vanaf 6.3.0). De fix zit binnen dezelfde major, dus API-compatibel; de gegenereerde Vercel-routes zijn voor en na identiek geverifieerd. Verwijder deze override zodra @vercel/routing-utils zelf bijwerkt.",
