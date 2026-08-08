@@ -19,10 +19,16 @@ import '../styles/tokens.css';
 import '../styles/base.css';
 import '../styles/buttons.css';
 
+/** Het sitebrede deelbeeld. Afmetingen hieronder horen bij dít bestand. */
+const DEFAULT_OG_IMAGE = '/img/og/villa-happ-og.webp';
+const DEFAULT_OG_SIZE = { width: 1200, height: 628 };
+
 export interface Props {
   title?: string;
   description?: string;
   ogImage?: string;
+  /** Alt-tekst bij het deelbeeld. Beschrijf wat er te zien is, niet het merk. */
+  ogImageAlt?: string;
   bodyClass?: string;
   showHeader?: boolean;
   showFooter?: boolean;
@@ -34,7 +40,8 @@ export interface Props {
 const {
   title = 'Villa Happ · Heritage lifestyle, gemaakt voor nu',
   description = 'Nederlands lifestylelabel sinds 1945, ontstaan in Tilburg en gevestigd in Waalwijk. Van familieverhaal naar mode-erfgoed, met limited edition drops.',
-  ogImage = '/img/og/villa-happ-og.webp',
+  ogImage = DEFAULT_OG_IMAGE,
+  ogImageAlt,
   bodyClass = '',
   showHeader = true,
   showFooter = true,
@@ -45,6 +52,16 @@ const {
 const canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url.origin);
 // Social platforms vereisen een absolute og:image-URL
 const ogImageAbs = new URL(ogImage, canonicalURL).toString();
+/**
+ * Afmetingen alleen meegeven bij het sitebrede deelbeeld. PDP's en journal
+ * sturen hun eigen beeld mee met een andere verhouding; een hardgecodeerde
+ * 1200x628 zou daar een leugen zijn en levert een verkeerd bijgesneden preview.
+ */
+const ogSize = ogImage === DEFAULT_OG_IMAGE ? DEFAULT_OG_SIZE : null;
+const ogAlt = ogImageAlt
+  ?? (ogImage === DEFAULT_OG_IMAGE
+    ? 'Villa Happ heritage lifestyle: genummerde stukken van zwaar biologisch katoen'
+    : title);
 // Preview-omgeving (*.vercel.app) mag nooit de index in
 const preview = isPreviewHost(canonicalURL.origin);
 
@@ -158,12 +175,22 @@ const gtmId = !preview ? (import.meta.env.PUBLIC_GTM_ID || '') : '';
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
   <meta property="og:image" content={ogImageAbs} />
+  <meta property="og:image:alt" content={ogAlt} />
+  {ogSize && (
+    <>
+      <meta property="og:image:width" content={String(ogSize.width)} />
+      <meta property="og:image:height" content={String(ogSize.height)} />
+    </>
+  )}
   <meta property="og:type" content="website" />
   <meta property="og:url" content={canonicalURL.toString()} />
   <meta property="og:site_name" content="Villa Happ" />
   <meta property="og:locale" content="nl_NL" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
   <meta name="twitter:image" content={ogImageAbs} />
+  <meta name="twitter:image:alt" content={ogAlt} />
 
   <meta name="theme-color" content="#F7F3EC" />
 

@@ -50,7 +50,12 @@ const breadcrumbLd = {
   ],
 };
 ---
-<Base title={`${post.data.title} · Villa Happ`} description={post.data.description} ogImage={post.data.image}>
+<Base
+  title={`${post.data.title} · Villa Happ`}
+  description={post.data.description}
+  ogImage={post.data.image}
+  ogImageAlt={post.data.imageAlt || post.data.title}
+>
   <section class="vh-page">
     <div class="vh-page-inner vh-article-inner">
 
