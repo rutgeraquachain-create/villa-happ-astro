@@ -7,7 +7,7 @@ imageAlt: "Detail van het geborduurde Villa Happ embleem op de Heritage Hoodie"
 tags: ["onderhoud", "hoodie", "materiaal"]
 ---
 
-De Heritage Hoodie is gemaakt van biologisch katoen van 350 gram per vierkante meter. Dat is bewust zwaar: het valt beter, houdt warmte vast en slijt langzamer dan de dunne kwaliteiten die je in de meeste winkelstraten vindt. Zwaar katoen heeft wel één voorwaarde: je moet er goed mee omgaan. Zo doe je dat.
+De [Organic Cotton Hoodie](/shop/organic-cotton-hoodie-olijfgroen) is gemaakt van biologisch katoen van 350 gram per vierkante meter. Dat is bewust zwaar: het valt beter, houdt warmte vast en slijt langzamer dan de dunne kwaliteiten die je in de meeste winkelstraten vindt. Zwaar katoen heeft wel één voorwaarde: je moet er goed mee omgaan. Zo doe je dat.
 
 ## Wassen
 
@@ -27,4 +27,6 @@ Vouw de hoodie op in plaats van hem maandenlang aan een dunne hanger te laten ha
 
 ## Waarom dit werkt
 
-Een kledingstuk dat jaren meegaat is de duurzaamste keuze die er bestaat, duurzamer dan welk label ook. Daarom komt elke Villa Happ in een genummerde oplage en met deze gids: we maken liever één hoodie die tien jaar blijft dan drie die na één winter op zijn. Twijfel je over je maat of zit je met een onderhoudsvraag? Stuur ons een bericht via de contactpagina, we denken graag mee.
+Een kledingstuk dat jaren meegaat is de duurzaamste keuze die er bestaat, duurzamer dan welk label ook. Daarom komt elke Villa Happ in een [genummerde oplage](/journal/zo-ontstaat-een-genummerde-oplage) en met deze gids: we maken liever één hoodie die tien jaar blijft dan drie die na één winter op zijn. Twijfel je over je maat of zit je met een onderhoudsvraag? Stuur ons een bericht via de [contactpagina](/contact), we denken graag mee.
+
+De hoodie is er in [olijfgroen](/shop/organic-cotton-hoodie-olijfgroen) en [navy](/shop/organic-cotton-hoodie-navy).
