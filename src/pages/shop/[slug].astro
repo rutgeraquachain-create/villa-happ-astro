@@ -212,6 +212,28 @@ const faqLd = {
 };
 
 // Data voor het client-script (maatselectie + add-to-cart)
+/**
+ * Meta description los van `short_desc`. Die laatste staat zichtbaar op de
+ * pagina en is bewust kort; een zoekresultaat heeft ruimte voor circa 155
+ * tekens en verdient ook een koopreden. Opbouw: wat het is, waarom het
+ * bijzonder is, en wat de bezoeker krijgt. Afgekapt op woordgrens zodat er
+ * nooit een halve zin in de SERP staat.
+ */
+const mentionsEdition = /oplage/i.test(product.short_desc);
+const metaBits = [
+  product.short_desc,
+  mentionsEdition
+    ? null
+    : product.edition
+      ? `Genummerde oplage van ${product.edition} stuks, met certificaat van echtheid.`
+      : 'Gemaakt in genummerde oplages, geen overproductie.',
+  `${BUSINESS.returnDays} dagen bedenktijd.`,
+].filter(Boolean) as string[];
+let metaDescription = metaBits.join(' ');
+if (metaDescription.length > 158) {
+  metaDescription = metaDescription.slice(0, 158).replace(/\s+\S*$/, '') + '…';
+}
+
 const pdpData = {
   slug: product.slug,
   name: product.name,
@@ -223,7 +245,12 @@ const pdpData = {
   edition: product.edition || null,
 };
 ---
-<Base title={`${displayTitle} · Villa Happ`} description={product.short_desc} ogImage={product.images[0]}>
+<Base
+  title={`${displayTitle} · Villa Happ`}
+  description={metaDescription}
+  ogImage={product.images[0]}
+  ogImageAlt={`${product.name} ${product.color}`}
+>
   <section class="vh-page">
     <div class="vh-page-inner">
 

@@ -25,6 +25,47 @@ const stockOf = (p: Product) => p.variants.reduce((s, v) => s + v.stock, 0);
 const skuPrefixOf = (p: Product) => p.variants[0]?.sku?.split('-').slice(0, 2).join('-') || 'VH';
 const ficheOf = (p: Product) =>
   p.edition ? `${skuPrefixOf(p)} · oplage ${p.edition} · nog ${stockOf(p)}` : `${skuPrefixOf(p)} · ${p.meta}`;
+
+const siteOrigin = Astro.site?.origin || Astro.url.origin;
+
+/**
+ * De collectiepagina als expliciete entiteit. De `ItemList` verwijst alleen
+ * naar de PDP-URL's en herhaalt geen prijzen: die staan in het Product-schema
+ * op de pagina zelf. Eén bron van waarheid, dus geen kans dat de lijst en de
+ * PDP elkaar tegenspreken zodra een prijs wijzigt.
+ */
+const collectionLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  '@id': `${siteOrigin}/shop#collection`,
+  url: `${siteOrigin}/shop`,
+  name: 'Shop',
+  description: `De Villa Happ collectie: heritage hoodies en limited editions, genummerd en gemaakt met ruim ${BRAND.age} jaar vakmanschap.`,
+  inLanguage: 'nl-NL',
+  isPartOf: { '@id': `${siteOrigin}/#website` },
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: products.length,
+    itemListOrder: 'https://schema.org/ItemListOrderAscending',
+    itemListElement: products.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      // Kleur erbij: twee hoodies delen dezelfde `name` en zijn zonder de
+      // kleur niet uit elkaar te houden in de lijst.
+      name: `${p.name} ${p.color}`.trim(),
+      url: `${siteOrigin}/shop/${p.slug}`,
+    })),
+  },
+};
+
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteOrigin}/` },
+    { '@type': 'ListItem', position: 2, name: 'Shop', item: `${siteOrigin}/shop` },
+  ],
+};
 ---
 <Base title="Shop · Villa Happ" description={`De Villa Happ collectie: heritage hoodies en limited editions, genummerd en gemaakt met ruim ${BRAND.age} jaar vakmanschap.`}>
   <section class="vh-page">
@@ -122,6 +163,9 @@ const ficheOf = (p: Product) =>
 
     </div>
   </section>
+
+  <script type="application/ld+json" set:html={JSON.stringify(collectionLd)} is:inline></script>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} is:inline></script>
 </Base>
 
 <script>

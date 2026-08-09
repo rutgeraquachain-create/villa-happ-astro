@@ -12,6 +12,42 @@ const posts = (await getCollection('journal')).sort(
 
 const fmt = (d: Date) =>
   d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+
+const siteOrigin = Astro.site?.origin || Astro.url.origin;
+
+/**
+ * Het journal als `Blog`-entiteit, met per artikel een `BlogPosting`-stub.
+ * Bewust een stub: de volledige `Article`-node staat op het artikel zelf.
+ * Hier alleen genoeg om de reeks en de datums leesbaar te maken, zonder de
+ * kans dat twee plekken een andere titel of datum beweren.
+ */
+const blogLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  '@id': `${siteOrigin}/journal#blog`,
+  url: `${siteOrigin}/journal`,
+  name: 'Villa Happ Journal',
+  description:
+    'Verhalen, achtergronden en het leven achter het label. Over drie generaties Tilburgs vakmanschap, drops en materiaal.',
+  inLanguage: 'nl-NL',
+  isPartOf: { '@id': `${siteOrigin}/#website` },
+  publisher: { '@id': `${siteOrigin}/#organization` },
+  blogPost: posts.map((post) => ({
+    '@type': 'BlogPosting',
+    headline: post.data.title,
+    url: `${siteOrigin}/journal/${post.id}`,
+    datePublished: post.data.date.toISOString(),
+  })),
+};
+
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteOrigin}/` },
+    { '@type': 'ListItem', position: 2, name: 'Journal', item: `${siteOrigin}/journal` },
+  ],
+};
 ---
 <Base
   title="Journal · Villa Happ"
@@ -84,6 +120,9 @@ const fmt = (d: Date) =>
       .vh-journal-grid { grid-template-columns: 1fr; max-width: 560px; margin: 0 auto; }
     }
   </style>
+
+  <script type="application/ld+json" set:html={JSON.stringify(blogLd)} is:inline></script>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} is:inline></script>
 </Base>
 
 <script>import '../../lib/cart';</script>

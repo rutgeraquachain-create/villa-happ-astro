@@ -2,17 +2,23 @@
 // Twee beeldkolommen die tegengesteld driften op scroll,
 // met een groot italic woord dat er op een derde snelheid doorheen kruist.
 import Pic from '../Pic.astro';
+/**
+ * De sectie heet niet voor niets "Archiefbeelden": dit zijn echte product- en
+ * archieffoto's, geen decoratie. Vier ervan komen nergens anders op de
+ * homepage voor, dus een lege alt maakt ze onvindbaar in Google Afbeeldingen
+ * en onzichtbaar voor een schermlezer. Alt per beeld dus.
+ */
 const colA = [
-  '/img/products/back-cap-front-v2.webp',
-  '/img/products/hoodie-grey-lifestyle-v2.webp',
-  '/img/products/hoodie-blue-front-v2.webp',
-  '/img/heritage/origin-babyparadijs.webp',
+  { src: '/img/products/back-cap-front-v2.webp', alt: 'Villa Happ Back-Cap in grijs melange, vooraanzicht met geborduurd embleem.' },
+  { src: '/img/products/hoodie-grey-lifestyle-v2.webp', alt: 'De Heritage Hoodie in grijs, gedragen.' },
+  { src: '/img/products/hoodie-blue-front-v2.webp', alt: 'De Organic Cotton Hoodie in navy, vooraanzicht.' },
+  { src: '/img/heritage/origin-babyparadijs.webp', alt: 'Archiefbeeld van Babyparadijs, de kinderspeciaalzaak van Tony Kuijsters en Noud van Happen in Tilburg.' },
 ];
 const colB = [
-  '/img/products/hoodie-blue-lifestyle-v2.webp',
-  '/img/products/back-cap-side-v2.webp',
-  '/img/products/hoodie-grey-back-v2.webp',
-  '/img/products/back-cap-angle-v2.webp',
+  { src: '/img/products/hoodie-blue-lifestyle-v2.webp', alt: 'De Organic Cotton Hoodie in navy, gedragen.' },
+  { src: '/img/products/back-cap-side-v2.webp', alt: 'Villa Happ Back-Cap in grijs melange, zijaanzicht.' },
+  { src: '/img/products/hoodie-grey-back-v2.webp', alt: 'De Heritage Hoodie in grijs, achteraanzicht.' },
+  { src: '/img/products/back-cap-angle-v2.webp', alt: 'Villa Happ Back-Cap in grijs melange, schuin van boven met het genummerde code-label.' },
 ];
 ---
 <section class="vh-drift" aria-label="Archiefbeelden">
@@ -20,12 +26,12 @@ const colB = [
   <div class="vh-drift-cols">
     <div class="vh-drift-col" data-drift="a">
       {colA.map((img) => (
-        <figure class="vh-drift-cell"><Pic src={img} alt="" width={600} height={750} widths={[320, 480, 640, 768]} sizes="(max-width: 700px) 50vw, 30vw" loading="lazy" /></figure>
+        <figure class="vh-drift-cell"><Pic src={img.src} alt={img.alt} width={600} height={750} widths={[320, 480, 640, 768]} sizes="(max-width: 700px) 50vw, 30vw" loading="lazy" /></figure>
       ))}
     </div>
     <div class="vh-drift-col vh-drift-col--late" data-drift="b">
       {colB.map((img) => (
-        <figure class="vh-drift-cell"><Pic src={img} alt="" width={600} height={750} widths={[320, 480, 640, 768]} sizes="(max-width: 700px) 50vw, 30vw" loading="lazy" /></figure>
+        <figure class="vh-drift-cell"><Pic src={img.src} alt={img.alt} width={600} height={750} widths={[320, 480, 640, 768]} sizes="(max-width: 700px) 50vw, 30vw" loading="lazy" /></figure>
       ))}
     </div>
   </div>
