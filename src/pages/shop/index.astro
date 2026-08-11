@@ -29,6 +29,14 @@ const ficheOf = (p: Product) =>
 const siteOrigin = Astro.site?.origin || Astro.url.origin;
 
 /**
+ * Eén description voor zowel de meta-tag als het CollectionPage-schema.
+ * Stond eerder twee keer letterlijk in dit bestand, wat betekent dat een
+ * wijziging op één plek stil uit de pas gaat lopen met de andere.
+ * "Genummerd" hoort bij de caps: de hoodies en sokken zijn dat niet.
+ */
+const shopDescription = `De Villa Happ collectie: heritage hoodies, sokken en genummerde caps, gemaakt met ruim ${BRAND.age} jaar vakmanschap.`;
+
+/**
  * De collectiepagina als expliciete entiteit. De `ItemList` verwijst alleen
  * naar de PDP-URL's en herhaalt geen prijzen: die staan in het Product-schema
  * op de pagina zelf. Eén bron van waarheid, dus geen kans dat de lijst en de
@@ -40,7 +48,7 @@ const collectionLd = {
   '@id': `${siteOrigin}/shop#collection`,
   url: `${siteOrigin}/shop`,
   name: 'Shop',
-  description: `De Villa Happ collectie: heritage hoodies en limited editions, genummerd en gemaakt met ruim ${BRAND.age} jaar vakmanschap.`,
+  description: shopDescription,
   inLanguage: 'nl-NL',
   isPartOf: { '@id': `${siteOrigin}/#website` },
   mainEntity: {
@@ -67,14 +75,14 @@ const breadcrumbLd = {
   ],
 };
 ---
-<Base title="Shop · Villa Happ" description={`De Villa Happ collectie: heritage hoodies en limited editions, genummerd en gemaakt met ruim ${BRAND.age} jaar vakmanschap.`}>
+<Base title="Shop · Villa Happ" description={shopDescription}>
   <section class="vh-page">
     <div class="vh-page-inner">
 
       <header class="vh-page-head">
         <p class="vh-page-label vh-mono">De collectie · FW26</p>
         <h1 class="vh-page-title">Nu te <span class="vh-italic-accent">dragen</span></h1>
-        <p class="vh-page-sub">{products.length} stuks. Genummerde oplages, geen overproductie. Als het op is, is het op.</p>
+        <p class="vh-page-sub">{products.length} stuks. Beperkte oplages, geen overproductie. Als het op is, is het op.</p>
       </header>
 
       <div class="vh-shop-toolbar">
@@ -149,8 +157,9 @@ const breadcrumbLd = {
         <p>
           Villa Happ begon in 1945 in Tilburg en groeide uit tot een naam die een
           generatie kleedde. De collectie van vandaag bouwt op dat vakmanschap voort:
-          biologisch katoen, geborduurde emblemen en stukken die in beperkte,
-          genummerde oplages worden gemaakt. Geen overproductie, geen wegwerpmode.
+          biologisch katoen, geborduurde emblemen en stukken die in beperkte oplage
+          worden gemaakt — de caps zelfs genummerd, met certificaat. Geen
+          overproductie, geen wegwerpmode.
           Elk stuk wordt vanuit Waalwijk ontworpen en geleverd met de zorg van een
           merk dat al ruim {BRAND.age} jaar weet wat blijven betekent.
         </p>

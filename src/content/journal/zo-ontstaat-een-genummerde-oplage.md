@@ -1,13 +1,13 @@
 ---
 title: "Zo ontstaat een genummerde oplage"
-description: "Waarom Villa Happ in beperkte, genummerde oplages werkt en wat er gebeurt tussen schets en certificaat van echtheid."
+description: "Waarom Villa Happ in beperkte oplages werkt, en hoe een genummerde cap ontstaat tussen schets en certificaat van echtheid."
 date: 2026-06-22
 image: "/img/products/back-cap-angle-v2.webp"
 imageAlt: "De Villa Happ back-cap uit de eerste genummerde drop van 500 stuks"
 tags: ["drops", "vakmanschap", "oplage"]
 ---
 
-Elke Villa Happ drop heeft een vast aantal. De eerste [Villa Happ Back-Cap](/shop/villa-happ-back-cap) kwam in een oplage van 500 stuks, en dat aantal stond vast voordat het eerste exemplaar gemaakt werd. Hier lees je waarom we het zo doen, en wat er gebeurt voordat een genummerd stuk bij je op de mat valt.
+Elke Villa Happ drop heeft een vast aantal. Bij de caps gaan we een stap verder: die zijn ook stuk voor stuk genummerd. De eerste [Villa Happ Back-Cap](/shop/villa-happ-back-cap) kwam in een oplage van 500, en dat aantal stond vast voordat het eerste exemplaar gemaakt werd. Hier lees je waarom we het zo doen, en wat er gebeurt voordat een genummerde cap bij je op de mat valt.
 
 ## Waarom een vast aantal
 
@@ -19,7 +19,7 @@ Dat is eerlijker voor de wereld en eerlijker voor jou: jouw stuk wordt niet volg
 
 Een drop begint in Waalwijk, op papier. Het ontwerp gaat pas in productie als materiaal, pasvorm en afwerking kloppen. Voor de [hoodies](/shop/organic-cotton-hoodie-olijfgroen) betekent dat zwaar biologisch katoen van 350 gram — [zo houd je dat mooi](/journal/de-hoodie-die-blijft) — voor de caps een geborduurd embleem in plaats van een print die na tien wasbeurten barst.
 
-Daarna krijgt elk exemplaar zijn eigen nummer in de oplage. Dat nummer staat niet op een sticker maar hoort bij het stuk, samen met een certificaat van echtheid dat meegeleverd wordt.
+Bij de caps krijgt daarna elk exemplaar zijn eigen nummer in de oplage. Dat nummer staat niet op een sticker maar hoort bij het stuk, samen met een certificaat van echtheid dat meegeleverd wordt.
 
 ## Wat het nummer betekent
 

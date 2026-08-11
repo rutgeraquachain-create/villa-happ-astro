@@ -22,7 +22,7 @@ const facts = [
   { k: 'Heropstart', v: '2026, door Rutger van Happen (derde generatie)' },
   { k: 'Vestigingsplaats', v: `${BUSINESS.visitingAddress.street}, ${BUSINESS.visitingAddress.postalCode} ${BUSINESS.visitingAddress.city}` },
   { k: 'Hoogtepunt', v: '80 winkels door Europa' },
-  { k: 'Nu', v: 'Heritage lifestylelabel, genummerde oplages' },
+  { k: 'Nu', v: 'Heritage lifestylelabel; caps in genummerde oplage' },
 ];
 
 const assets = [
@@ -50,6 +50,15 @@ const assets = [
         <div class="vh-trust-group">
           <h2 class="vh-trust-group-title">Het merk in één alinea</h2>
           <p class="vh-prose">{BRAND.definition}</p>
+        </div>
+
+        {/* De definitie erboven is bedoeld om letterlijk te citeren; dit is
+            dezelfde inhoud als lopend verhaal, voor wie een langere tekst
+            nodig heeft. Eén bron in entity.ts, zodat de twee niet uit de
+            pas gaan lopen. */}
+        <div class="vh-trust-group">
+          <h2 class="vh-trust-group-title">Het merk in het verhaal</h2>
+          {BRAND.narrative.map((p) => <p class="vh-prose">{p}</p>)}
         </div>
 
         <div class="vh-trust-group">

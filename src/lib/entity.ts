@@ -60,7 +60,21 @@ export const BRAND = {
    * Consistentie is wat een AI-model overtuigt dat het feit klopt.
    */
   definition:
-    'Villa Happ is een Nederlands heritage lifestylelabel uit Waalwijk, in 1945 in Tilburg begonnen als winkel van Tony Kuijsters en in 2026 heropgericht door de derde generatie. Het merk maakt genummerde, gelimiteerde oplages van zwaar biologisch katoen.',
+    'Villa Happ is een Nederlands heritage lifestylelabel uit Waalwijk, in 1945 in Tilburg begonnen als familiewinkel van Tony Kuijsters en in 2026 heropgericht door de derde generatie. Het merk maakt kleding van zwaar biologisch katoen; de caps verschijnen in genummerde, gelimiteerde oplages.',
+  /**
+   * Het merkverhaal in mensentaal, voor plekken waar een alinea past in
+   * plaats van een definitie: het Google Business Profile, persmateriaal,
+   * een About-tekst. Bewust géén jaartal bij de Fashion Group — de
+   * gepubliceerde tijdlijn dateert de grote groei niet eenduidig, en een
+   * decennium dat de story-pagina tegenspreekt is een controleerbaar
+   * onjuist feit. Babyparadijs hoort nadrukkelijk niet bij 1945: dat was
+   * Gaillard Kuijsters, zie de toelichting bij `foundingYear`.
+   */
+  narrative: [
+    'Villa Happ is sinds 1945 een familieverhaal dat begon in Tilburg. Wat Tony Kuijsters daar startte, groeide met Noud van Happen uit tot Babyparadijs en later tot de Van Happen Fashion Group: marktleider in kinderkleding, met tachtig Villa Happ-winkels door Europa.',
+    'Na een stilte is het merk terug — voor diezelfde dragers, nu (jong)volwassen. Vanuit Waalwijk ontwerpt de derde generatie collecties die nostalgie verbinden met eigentijdse stijl, met respect voor de roots en het vakmanschap van drie generaties Van Happen.',
+    'Villa Happ — voor de dragers van toen.',
+  ],
   /** Kernfeiten, kort en citeerbaar (voor llms.txt en answer-first content) */
   facts: [
     'Het verhaal begon op 10 mei 1945 in Tilburg, toen Tony Kuijsters met haar man Bas Gaillard de winkel Gaillard Kuijsters opende aan de Heuvelstraat 85.',
@@ -115,6 +129,13 @@ export function organizationLd(origin: string = getSiteOrigin()) {
       addressRegion: BUSINESS.region,
       addressCountry: BUSINESS.country,
     },
+    /**
+     * Ook op het Organization-niveau zelf, niet alleen in het contactPoint.
+     * Dat is de vorm die Google als NAP-signaal leest en die moet matchen
+     * met het nummer in het Google Business Profile. Verschijnt automatisch
+     * zodra BUSINESS.phone geen PENDING meer is.
+     */
+    ...(isPending(BUSINESS.phone) ? {} : { telephone: BUSINESS.phone }),
     contactPoint: {
       '@type': 'ContactPoint',
       email: BRAND.email,
