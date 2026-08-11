@@ -222,11 +222,15 @@ const faqLd = {
 const mentionsEdition = /oplage/i.test(product.short_desc);
 const metaBits = [
   product.short_desc,
-  mentionsEdition
-    ? null
-    : product.edition
-      ? `Genummerde oplage van ${product.edition} stuks, met certificaat van echtheid.`
-      : 'Gemaakt in genummerde oplages, geen overproductie.',
+  /**
+   * Alleen een oplage-zin bij een product dat er écht een heeft. Hier stond
+   * eerder een `else`-tak die bij álle andere stukken "gemaakt in genummerde
+   * oplages" beweerde. Dat klopt niet: de caps lopen in een genummerde
+   * oplage, de hoodies en sokken niet.
+   */
+  product.edition && !mentionsEdition
+    ? `Genummerde oplage van ${product.edition} stuks, met certificaat van echtheid.`
+    : null,
   `${BUSINESS.returnDays} dagen bedenktijd.`,
 ].filter(Boolean) as string[];
 let metaDescription = metaBits.join(' ');
