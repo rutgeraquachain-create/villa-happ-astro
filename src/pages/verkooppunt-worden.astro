@@ -1,0 +1,296 @@
+---
+export const prerender = true;
+
+import Base from '../layouts/Base.astro';
+import { BUSINESS } from '../lib/business';
+import '../styles/shop.css';
+
+/**
+ * Aanmeldpagina voor retailers die Villa Happ willen verkopen.
+ *
+ * Let op de richting: dit is het spiegelbeeld van /voor-merken. Daar melden
+ * merken zich aan om via Villa Happ verkocht te worden; hier melden winkels
+ * zich aan om Villa Happ zelf in te kopen. Twee tegengestelde stromen die in
+ * de mode allebei bestaan, dus de teksten benoemen expliciet welke het is.
+ *
+ * Onderbouwt de categorie "Kledinggroothandel" in het Google Business
+ * Profile en de SBI-code 46421 bij de KvK. Zonder deze pagina claimt het
+ * profiel een groothandelsfunctie die nergens op de site terugkomt, en landt
+ * een inkoper op een consumentenwebshop zonder route naar een gesprek.
+ *
+ * Het formulier post naar /api/contact, net als /voor-merken en /contact:
+ * één mailpad, één rate limit, één honeypot.
+ *
+ * Bewust geen prijzen, marges of minimale afname op de pagina. Er is geen
+ * drempel, en de voorwaarden komen in het gesprek. Dat scheelt een pagina
+ * die verouderd zodra de condities wijzigen.
+ */
+
+const siteOrigin = Astro.site?.origin || Astro.url.origin;
+
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Verkooppunt worden van Villa Happ',
+  url: `${siteOrigin}/verkooppunt-worden`,
+  inLanguage: 'nl-NL',
+  description:
+    'Winkel, webshop of marktplaats die Villa Happ wil verkopen? Meld je aan als verkooppunt. Geen minimale afname, levering door heel Europa.',
+  publisher: { '@id': `${siteOrigin}/#organization` },
+};
+
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteOrigin}/` },
+    { '@type': 'ListItem', position: 2, name: 'Verkooppunt worden', item: `${siteOrigin}/verkooppunt-worden` },
+  ],
+};
+
+const steps = [
+  { n: '01', t: 'Je meldt je aan', d: 'Vul het formulier in met je winkel of webshop en waar we die kunnen bekijken.' },
+  { n: '02', t: 'Wij kijken mee', d: 'We beoordelen of het past: het soort assortiment, de manier van presenteren en het publiek. Je hoort binnen tien werkdagen van ons.' },
+  { n: '03', t: 'We spreken de voorwaarden door', d: 'Past het, dan bespreken we inkoopprijzen, marges, levertijden en welke stukken beschikbaar zijn. Die condities staan niet op de site; die maken we per verkooppunt passend.' },
+  { n: '04', t: 'Je verkoopt Villa Happ', d: 'Je ontvangt de eerste levering, met beeldmateriaal en het verhaal erbij, zodat je het merk kunt vertellen zoals het bedoeld is.' },
+];
+---
+<Base
+  title="Verkooppunt worden · Villa Happ"
+  description="Winkel, webshop of marktplaats die Villa Happ wil verkopen? Meld je aan als verkooppunt. Geen minimale afname, levering door heel Europa."
+>
+  <section class="vh-page">
+    <div class="vh-page-inner">
+      <header class="vh-page-head">
+        <p class="vh-page-label vh-mono">Voor retailers</p>
+        <h1 class="vh-page-title">Verkoop Villa Happ in <span class="vh-italic-accent">jouw winkel</span></h1>
+        <p class="vh-page-sub">
+          Villa Happ levert aan winkels, webshops en marktplaatsen door heel
+          Europa. Geen minimale afname: we kijken liever of het past dan of je
+          genoeg afneemt. Meld je hier aan.
+        </p>
+      </header>
+
+      <div class="vh-contact">
+        <form class="vh-form vh-contact-form" id="vh-retail-form" novalidate>
+          <div class="vh-form-row">
+            <div class="vh-field">
+              <label for="rt-company">Bedrijfsnaam</label>
+              <input id="rt-company" name="companyName" autocomplete="organization" required />
+            </div>
+            <div class="vh-field">
+              <label for="rt-name">Contactpersoon</label>
+              <input id="rt-name" name="name" autocomplete="name" required />
+            </div>
+          </div>
+
+          <div class="vh-form-row">
+            <div class="vh-field">
+              <label for="rt-email">E-mailadres</label>
+              <input id="rt-email" name="email" type="email" autocomplete="email" required />
+            </div>
+            <div class="vh-field">
+              <label for="rt-site">Website of winkeladres</label>
+              <input id="rt-site" name="website" placeholder="https:// of straat en plaats" required />
+            </div>
+          </div>
+
+          <div class="vh-form-row">
+            <div class="vh-field">
+              <label for="rt-type">Soort verkooppunt</label>
+              <select id="rt-type" name="type">
+                <option value="Fysieke winkel">Fysieke winkel</option>
+                <option value="Webshop">Webshop</option>
+                <option value="Marktplaats">Marktplaats</option>
+                <option value="Fysiek en online">Fysiek en online</option>
+              </select>
+            </div>
+            <div class="vh-field">
+              <label for="rt-country">Land</label>
+              <input id="rt-country" name="country" autocomplete="country-name" value="Nederland" required />
+            </div>
+          </div>
+
+          <div class="vh-field">
+            <label for="rt-message">Vertel over je winkel</label>
+            <textarea id="rt-message" name="message" rows="6" required
+              placeholder="Wat verkoop je, welke merken voer je, wie is je klant, en waarom past Villa Happ daarbij?"></textarea>
+          </div>
+
+          <!-- Honeypot: onzichtbaar voor mensen, ingevuld door bots -->
+          <div class="vh-hp" aria-hidden="true">
+            <label for="rt-hp">Bedrijf (niet invullen)</label>
+            <input id="rt-hp" name="hp" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <button type="submit" class="vh-btn vh-btn--accent" id="vh-retail-send">
+            <span id="vh-retail-send-label">Verstuur aanmelding</span>
+            <svg class="vh-btn-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <p class="vh-contact-error" id="vh-retail-error" role="alert"></p>
+          <p class="vh-contact-note vh-mono">
+            We gebruiken je gegevens alleen om je aanmelding te beoordelen en
+            contact met je op te nemen. Zie de <a href="/privacy">privacyverklaring</a>.
+          </p>
+        </form>
+
+        <div class="vh-contact-done" id="vh-retail-done" hidden>
+          <p class="vh-contact-done-mark">✦</p>
+          <h2>Bedankt, <span class="vh-italic-accent">we hebben je aanmelding</span>.</h2>
+          <p>We nemen je winkel door en laten binnen tien werkdagen weten wat we ervan vinden.</p>
+          <a href="/story" class="vh-btn vh-btn--ghost"><span>Lees ons verhaal</span></a>
+        </div>
+
+        <aside class="vh-contact-aside">
+          <div class="vh-trust-group">
+            <h2 class="vh-trust-group-title">Hoe we leveren</h2>
+            <ul class="vh-prose-list">
+              <li><b>Geen minimale afname.</b> We kijken of het merk past bij je winkel, niet of je genoeg inkoopt.</li>
+              <li><b>Winkels, webshops en marktplaatsen.</b> Alle drie welkom, ook een combinatie.</li>
+              <li><b>Heel Europa.</b> We leveren vanuit Waalwijk aan verkooppunten door heel Europa.</li>
+              <li><b>Voorwaarden in het gesprek.</b> Inkoopprijzen en marges maken we per verkooppunt passend, dus die staan niet op de site.</li>
+              <li><b>Verhaal en beeld erbij.</b> Je krijgt beeldmateriaal en de herkomst mee, zodat je het merk kunt vertellen.</li>
+            </ul>
+          </div>
+
+          <div class="vh-trust-group">
+            <h2 class="vh-trust-group-title">Zo gaat het verder</h2>
+            <ol class="vh-trust-steps">
+              {steps.map((s) => (
+                <li>
+                  <span class="vh-trust-step-n vh-mono">{s.n}</span>
+                  <div>
+                    <h3>{s.t}</h3>
+                    <p>{s.d}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div class="vh-trust-group">
+            <h2 class="vh-trust-group-title">Wil je juist je eigen merk aanbieden?</h2>
+            <p class="vh-prose">
+              Dan zoek je de andere kant op: via <a href="/voor-merken">voor merken</a>
+              meld je je merk aan om via Villa Happ verkocht te worden.
+            </p>
+          </div>
+
+          <div class="vh-trust-group">
+            <h2 class="vh-trust-group-title">Liever direct mailen?</h2>
+            <p class="vh-prose">
+              Dat mag ook: <a href={`mailto:${BUSINESS.supportEmail}`}>{BUSINESS.supportEmail}</a>,
+              met &ldquo;verkooppunt&rdquo; in het onderwerp.
+            </p>
+            <p class="vh-prose" style="margin-top:10px;">
+              {BUSINESS.legalName}<br />
+              {BUSINESS.registeredAddress.street}<br />
+              {BUSINESS.registeredAddress.postalCode} {BUSINESS.registeredAddress.city}
+            </p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <script type="application/ld+json" set:html={JSON.stringify(ld)} is:inline></script>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} is:inline></script>
+</Base>
+
+<script>
+  import '../lib/cart';
+  import { trackGenerateLead } from '../lib/analytics';
+  import { onPageReady } from '../lib/page';
+
+  onPageReady(() => {
+    const form = document.getElementById('vh-retail-form') as HTMLFormElement | null;
+    if (!form) return;
+    const done = document.getElementById('vh-retail-done')!;
+
+    const reqInputs = Array.from(form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[required]'));
+    function fieldMsg(input: Element): HTMLElement {
+      let m = input.parentElement!.querySelector('.vh-field-msg') as HTMLElement | null;
+      if (!m) { m = document.createElement('small'); m.className = 'vh-field-msg'; input.parentElement!.appendChild(m); }
+      return m;
+    }
+    function validate(input: HTMLInputElement | HTMLTextAreaElement): boolean {
+      const v = input.value.trim();
+      let ok = !!v;
+      if (ok && (input as HTMLInputElement).type === 'email') ok = /.+@.+\..+/.test(v);
+      input.classList.toggle('is-invalid', !ok);
+      input.classList.toggle('is-valid', ok);
+      fieldMsg(input).textContent = ok ? '' : ((input as HTMLInputElement).type === 'email' ? 'Vul een geldig e-mailadres in' : 'Dit veld is verplicht');
+      return ok;
+    }
+    reqInputs.forEach((input) => {
+      input.addEventListener('blur', () => validate(input));
+      input.addEventListener('input', () => { if (input.classList.contains('is-invalid')) validate(input); });
+    });
+
+    const sendBtn = document.getElementById('vh-retail-send') as HTMLButtonElement;
+    const sendLabel = document.getElementById('vh-retail-send-label')!;
+    const errEl = document.getElementById('vh-retail-error')!;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errEl.textContent = '';
+      errEl.classList.remove('is-visible');
+
+      let valid = true;
+      reqInputs.forEach((input) => { if (!validate(input)) valid = false; });
+      if (!valid) { form.querySelector<HTMLElement>('.is-invalid')?.focus(); return; }
+
+      const fd = new FormData(form);
+      const val = (k: string) => String(fd.get(k) || '').trim();
+
+      // Eén bericht door de bestaande contactroute, net als /voor-merken.
+      // Het onderwerp verschilt, zodat een verkooppunt-aanvraag in de inbox
+      // meteen te onderscheiden is van een merkaanmelding.
+      const message = [
+        `Bedrijfsnaam: ${val('companyName')}`,
+        `Soort verkooppunt: ${val('type')}`,
+        `Land: ${val('country')}`,
+        `Website / adres: ${val('website')}`,
+        '',
+        val('message'),
+      ].join('\n');
+
+      sendBtn.disabled = true;
+      sendLabel.textContent = 'Versturen…';
+
+      let data: any = null;
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: val('name'),
+            email: val('email'),
+            subject: 'Verkooppunt-aanvraag',
+            message,
+            company: val('hp'), // honeypot
+          }),
+        });
+        data = await res.json().catch(() => null);
+      } catch { /* netwerkfout: hieronder afgehandeld */ }
+
+      sendBtn.disabled = false;
+      sendLabel.textContent = 'Verstuur aanmelding';
+
+      if (data?.success) {
+        // Pas hier: de server bevestigde dat het bericht verstuurd is.
+        trackGenerateLead('verkooppunt-aanvraag');
+        form.hidden = true;
+        done.removeAttribute('hidden');
+        done.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      const mailto = data?.mailto;
+      errEl.innerHTML = mailto
+        ? `${data?.error || 'Versturen lukte niet.'} Mail ons rechtstreeks op <a href="mailto:${mailto}">${mailto}</a>, dan pakken we het alsnog op.`
+        : (data?.error || 'Versturen lukte niet. Controleer je verbinding en probeer het opnieuw.');
+      errEl.classList.add('is-visible');
+    });
+  }); // einde onPageReady
+</script>

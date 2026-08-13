@@ -93,8 +93,20 @@ export const BRAND = {
   get age(): number {
     return new Date().getFullYear() - Number(this.foundingYear);
   },
-  /** Echte profiel-URL's die de merkentiteit aan de kennisgraaf koppelen */
-  sameAs: ['https://www.linkedin.com/company/villahapp'] as string[],
+  /**
+   * Echte profiel-URL's die de merkentiteit aan de kennisgraaf koppelen.
+   * Dit is hoe Google en AI-engines losse profielen aan één entiteit knopen,
+   * dus alleen geverifieerde accounts van het merk zelf — een verkeerd
+   * profiel koppelt een vreemde entiteit aan Villa Happ.
+   *
+   * Instagram en Facebook zijn op 11 augustus 2026 door de eigenaar
+   * bevestigd. Dezelfde URL's horen in het Google Business Profile te staan.
+   */
+  sameAs: [
+    'https://www.linkedin.com/company/villahapp',
+    'https://www.instagram.com/villahapp_official/',
+    'https://www.facebook.com/p/Villa-Happ-100064953071309/',
+  ] as string[],
   /** Profiel-URL('s) van de merkverteller Rutger van Happen (Person-entiteit) */
   stewardSameAs: ['https://www.linkedin.com/in/rutger-van-happen-a27b4727'] as string[],
 };
