@@ -15,6 +15,7 @@ export const prerender = true;
 const staticRoutes = [
   '', 'shop', 'story', 'het-atelier', 'journal', 'pers',
   'faq', 'verzending', 'retourneren', 'contact', 'voor-merken',
+  'verkooppunt-worden',
   'privacy', 'algemene-voorwaarden', 'herroeping', 'cookies',
 ];
 

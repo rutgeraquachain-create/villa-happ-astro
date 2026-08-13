@@ -108,8 +108,13 @@ export function trackPurchase(opts: {
 
 /**
  * Lead. Vuurt op het bevestigde antwoord van de server, niet op de klik.
- * `lead_type` onderscheidt het contactformulier van een merkaanmelding.
+ * `lead_type` onderscheidt de drie ingangen: het contactformulier, een merk
+ * dat via Villa Happ verkocht wil worden, en een winkel die Villa Happ wil
+ * inkopen. Die laatste twee zijn tegengestelde stromen en horen in de
+ * rapportage niet op één hoop.
  */
-export function trackGenerateLead(leadType: 'contact' | 'merkaanmelding') {
+export function trackGenerateLead(
+  leadType: 'contact' | 'merkaanmelding' | 'verkooppunt-aanvraag',
+) {
   push({ event: 'generate_lead', lead_type: leadType });
 }
