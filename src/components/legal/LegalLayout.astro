@@ -48,7 +48,7 @@ const { title, heading, headingAccent, intro, description, updated } = Astro.pro
               <dd>{isPending(BUSINESS.vatId) ? <em>volgt</em> : BUSINESS.vatId}</dd>
             </div>
             <div>
-              <dt>{isPending(BUSINESS.visitingAddress.street) ? 'Postadres' : 'Vestigingsadres'}</dt>
+              <dt>{isPending(BUSINESS.registeredAddress.street) ? 'Postadres' : 'Vestigingsadres'}</dt>
               <dd>{addressLine()}</dd>
             </div>
             <div><dt>E-mail</dt><dd><a href={`mailto:${BUSINESS.supportEmail}`}>{BUSINESS.supportEmail}</a></dd></div>
