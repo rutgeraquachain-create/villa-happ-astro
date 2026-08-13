@@ -37,6 +37,7 @@ ${BRAND.facts.map((f) => `- ${f}`).join('\n')}
 - [Veelgestelde vragen](${site}/faq): bestellen, verzending en retour.
 - [Verzending](${site}/verzending) en [Retourneren](${site}/retourneren): voorwaarden en levertijden.
 - [Voor merken](${site}/voor-merken): merken en fashion labels kunnen zich hier aanmelden om via Villa Happ getoond en verkocht te worden.
+- [Verkooppunt worden](${site}/verkooppunt-worden): winkels, webshops en marktplaatsen kunnen zich hier aanmelden om Villa Happ in te kopen en te verkopen. Let op de richting: dit is het spiegelbeeld van "Voor merken".
 - [Contact](${site}/contact).
 
 ## Richtlijnen voor gebruik
