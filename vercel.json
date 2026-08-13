@@ -124,6 +124,61 @@
       "source": "/WebRoot/:path*",
       "destination": "/",
       "permanent": true
+    },
+    {
+      "source": "/img/products/hoodie-grey-lifestyle-v2.webp",
+      "destination": "/img/products/hoodie-olijfgroen-lifestyle.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/hoodie-grey-lifestyle-2.webp",
+      "destination": "/img/products/hoodie-olijfgroen-lifestyle-2.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/hoodie-grey-front-v2.webp",
+      "destination": "/img/products/hoodie-olijfgroen-front.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/hoodie-grey-back-v2.webp",
+      "destination": "/img/products/hoodie-olijfgroen-back.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/hoodie-blue-lifestyle-v2.webp",
+      "destination": "/img/products/hoodie-navy-lifestyle.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/hoodie-blue-front-v2.webp",
+      "destination": "/img/products/hoodie-navy-front.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/hoodie-blue-back.webp",
+      "destination": "/img/products/hoodie-navy-back.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/hoodie-logo-detail-v2.webp",
+      "destination": "/img/products/hoodie-logo-detail.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/back-cap-front-v2.webp",
+      "destination": "/img/products/back-cap-front.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/back-cap-angle-v2.webp",
+      "destination": "/img/products/back-cap-angle.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/back-cap-side-v2.webp",
+      "destination": "/img/products/back-cap-side.webp",
+      "permanent": true
     }
   ],
   "headers": [

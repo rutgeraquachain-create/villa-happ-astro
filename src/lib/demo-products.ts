@@ -53,10 +53,10 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
       'Ontworpen in Waalwijk',
     ],
     images: [
-      '/img/products/hoodie-grey-front-v2.webp',
-      '/img/products/hoodie-grey-back-v2.webp',
-      '/img/products/hoodie-grey-lifestyle-v2.webp',
-      '/img/products/hoodie-logo-detail-v2.webp',
+      '/img/products/hoodie-olijfgroen-front.webp',
+      '/img/products/hoodie-olijfgroen-back.webp',
+      '/img/products/hoodie-olijfgroen-lifestyle.webp',
+      '/img/products/hoodie-logo-detail.webp',
     ],
     meta: 'Olijfgroen · Unisex',
     note: 'Biologisch katoen, embleem geborduurd, niet geprint.',
@@ -83,8 +83,8 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
       'Ontworpen in Waalwijk',
     ],
     images: [
-      '/img/products/hoodie-blue-front-v2.webp',
-      '/img/products/hoodie-blue-back.webp',
+      '/img/products/hoodie-navy-front.webp',
+      '/img/products/hoodie-navy-back.webp',
     ],
     meta: 'Navy · Unisex',
     note: 'Biologisch katoen, embleem geborduurd, niet geprint.',
@@ -112,9 +112,9 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
       'Ontworpen in Waalwijk',
     ],
     images: [
-      '/img/products/back-cap-front-v2.webp',
-      '/img/products/back-cap-side-v2.webp',
-      '/img/products/back-cap-angle-v2.webp',
+      '/img/products/back-cap-front.webp',
+      '/img/products/back-cap-side.webp',
+      '/img/products/back-cap-angle.webp',
     ],
     // model: '/models/back-cap.glb',  // weer aanzetten zodra er een scan-kwaliteit model is
     // LET OP bij aanzetten: @google/model-viewer laadt decoders van
