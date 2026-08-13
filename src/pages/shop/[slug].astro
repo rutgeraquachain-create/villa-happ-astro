@@ -103,6 +103,15 @@ const productLd = {
   image: absImages,
   description: product.short_desc,
   sku: product.variants[0]?.sku,
+  /**
+   * MPN naast SKU. Google's verkopersvermeldingen willen een
+   * fabrikant-identificatie; zonder `gtin` of `mpn` blijft daar een
+   * niet-kritieke waarschuwing staan. Villa Happ laat de stukken onder eigen
+   * merk maken en is dus zelf de fabrikant, dus het eigen artikelnummer ís
+   * het onderdeelnummer. Geen `gtin`: daar bestaan geen echte barcodes voor
+   * en een verzonnen GTIN is erger dan geen.
+   */
+  ...(product.variants[0]?.sku ? { mpn: product.variants[0].sku } : {}),
   ...(hasVariants
     ? {
         productGroupID: product.slug,
@@ -111,6 +120,7 @@ const productLd = {
           '@type': 'Product',
           name: `${displayTitle} — maat ${v.size}`,
           sku: v.sku,
+          ...(v.sku ? { mpn: v.sku } : {}),
           size: v.size,
           offers: {
             '@type': 'Offer',

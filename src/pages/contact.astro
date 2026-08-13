@@ -5,7 +5,7 @@ import Base from '../layouts/Base.astro';
 import { BUSINESS } from '../lib/business';
 import '../styles/shop.css';
 
-const visit = BUSINESS.visitingAddress;
+const registered = BUSINESS.registeredAddress;
 ---
 <Base title="Contact · Villa Happ" description="Vragen over je bestelling, een stuk of het merk? Neem contact op met Villa Happ. We reageren binnen 1 tot 2 werkdagen.">
   <section class="vh-page">
@@ -75,17 +75,24 @@ const visit = BUSINESS.visitingAddress;
             <h2 class="vh-trust-group-title">Snel een antwoord</h2>
             <p class="vh-prose">Veel vragen over maten, verzending en retour beantwoorden we al in de <a href="/faq">veelgestelde vragen</a>.</p>
           </div>
+          {/* Villa Happ is een online merk zonder bezoekadres. Hier stond
+              eerder "Bezoek op afspraak" bij het retouradres — twee keer mis:
+              er is geen locatie waar klanten terechtkunnen, en het getoonde
+              adres was het retourpunt, niet de vestiging. Retouren gaan naar
+              Vijzelweg, de inschrijving staat op Besoyensestraat. */}
           <div class="vh-trust-group">
-            <h2 class="vh-trust-group-title">Bezoek- en postadres</h2>
+            <h2 class="vh-trust-group-title">Vestigingsadres</h2>
             <p class="vh-prose">
               {BUSINESS.legalName}<br />
-              {visit.street}<br />
-              {visit.postalCode} {visit.city}<br />
+              {registered.street}<br />
+              {registered.postalCode} {registered.city}<br />
               {BUSINESS.countryName}
             </p>
             <p class="vh-prose" style="margin-top:10px;font-size:14px;">
-              Bezoek op afspraak. Het merk begon in 1945 in Tilburg; vandaag
-              zit Villa Happ in Waalwijk.
+              Villa Happ is een online merk; er is geen winkel of bezoekadres.
+              Stuur retouren niet hierheen maar naar het retouradres op de
+              <a href="/retourneren">retourpagina</a>. Het merk begon in 1945 in
+              Tilburg; vandaag zit Villa Happ in Waalwijk.
             </p>
           </div>
           <div class="vh-trust-group">

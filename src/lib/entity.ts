@@ -82,7 +82,8 @@ export const BRAND = {
     'Noud van Happen behoorde in de jaren zestig tot de eerste Europeanen die in Azië een eigen productielijn opzetten; vanaf 1996 produceerde de familie in eigen fabrieken in Bangladesh en China.',
     'In 2007 gaf de vakpers het merk de bijnaam The Comeback Kid na een terugkoop door de familie.',
     'In 2021 haalde Rutger van Happen, kleinzoon van de oprichters, de merkrechten terug naar de familie.',
-    'In 2026 keerde Villa Happ terug als lifestylelabel, met een Back-Cap in een genummerde oplage van 500 stuks met certificaat.',
+    'Vanaf 2024 blies Rutger van Happen het merk stap voor stap nieuw leven in, met de Back-Cap en de Stap voor Stap-sokken als eerste stukken.',
+    'In 2026 volgde de volledige relaunch als lifestylelabel, met een Back-Cap in een genummerde oplage van 500 stuks met certificaat.',
     'Het merk ontstond in Tilburg en is vandaag gevestigd in Waalwijk.',
     'De Heritage Hoodie is gemaakt van biologisch katoen van 350 gram per vierkante meter.',
   ],
@@ -117,15 +118,15 @@ export function organizationLd(origin: string = getSiteOrigin()) {
     // Vestigingsplaats volgens de KvK, niet de plaats uit het verhaal
     address: {
       '@type': 'PostalAddress',
-      ...(isPending(BUSINESS.visitingAddress.street)
+      ...(isPending(BUSINESS.registeredAddress.street)
         ? {}
         : {
-            streetAddress: BUSINESS.visitingAddress.street,
-            postalCode: BUSINESS.visitingAddress.postalCode,
+            streetAddress: BUSINESS.registeredAddress.street,
+            postalCode: BUSINESS.registeredAddress.postalCode,
           }),
-      addressLocality: isPending(BUSINESS.visitingAddress.city)
+      addressLocality: isPending(BUSINESS.registeredAddress.city)
         ? BUSINESS.locality
-        : BUSINESS.visitingAddress.city,
+        : BUSINESS.registeredAddress.city,
       addressRegion: BUSINESS.region,
       addressCountry: BUSINESS.country,
     },

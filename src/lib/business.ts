@@ -50,19 +50,32 @@ export const BUSINESS = {
 
   /* ---------- Adressen ---------- */
   /**
-   * Bezoekadres. Art. 3:15d BW vraagt om een geografisch adres; een
-   * postbus telt daar formeel niet voor. Het woonadres van de eigenaar
-   * gaat hier bewust niet op, dus hier hoort een zakelijk adres.
+   * Het KvK-inschrijvingsadres. Art. 3:15d BW vraagt om een geografisch
+   * adres; een postbus telt daar formeel niet voor.
+   *
+   * Heette eerder `visitingAddress` en voerde Vijzelweg 18E. Beide klopten
+   * niet: er is géén bezoekadres — klanten kunnen nergens langskomen — en
+   * Vijzelweg is uitsluitend het retouradres. Voor de vindbaarheid is dit
+   * het adres dat telt: elke zakelijke gids (telefoonboek.nl, Compadex,
+   * Datanyze) leest de KvK uit, dus een schema dat iets anders beweert
+   * levert een NAP-conflict op dat Google en AI-modellen niet kunnen rijmen.
+   *
+   * St. Antoniusstraat 102 is de oude inschrijving van vóór de verhuizing;
+   * die komt extern nog voor en hoort daar opgeschoond te worden.
    */
-  visitingAddress: {
-    street: 'Vijzelweg 18E',
-    postalCode: '5145 NK',
+  registeredAddress: {
+    street: 'Besoyensestraat 90',
+    postalCode: '5141 AL',
     city: 'Waalwijk',
   },
-  /** Postadres. Mag wél een postbus zijn; hier gelijk aan het bezoekadres. */
+  /**
+   * Postadres. Mag wél een postbus zijn; hier gelijk aan de KvK-inschrijving.
+   * Wordt alleen gebruikt als terugval in `addressLine()` zolang het
+   * geregistreerde adres ontbreekt, dus in de praktijk nooit zichtbaar.
+   */
   postalAddress: {
-    line: 'Vijzelweg 18E',
-    postalCode: '5145 NK',
+    line: 'Besoyensestraat 90',
+    postalCode: '5141 AL',
     city: 'Waalwijk',
   },
   /** Vestigingsplaats volgens de KvK; voedt het Organization-schema. */
@@ -71,8 +84,11 @@ export const BUSINESS = {
   country: 'NL',
   countryName: 'Nederland',
   /**
-   * Waar retourzendingen heen gaan. Staat los van het bezoekadres: dit
-   * kan ook een retourpunt of afhaaladres zijn.
+   * Waar retourzendingen heen gaan. Staat bewust los van het
+   * KvK-inschrijvingsadres: dit is een retourpunt, geen vestiging. Dit is
+   * het enige adres waar een consument iets naartoe stuurt, dus het moet
+   * op de retour- en herroepingspagina's blijven staan — een herroeping
+   * naar het verkeerde adres geldt als niet ontvangen.
    */
   returnAddress: {
     name: 'Villa Happ Nederland',
@@ -131,9 +147,9 @@ interface PendingField {
 
 const PENDING_CANDIDATES: PendingField[] = [
   { path: 'vatId', label: 'Btw-identificatienummer', why: 'Verplicht op de site en op facturen (art. 3:15d BW).' },
-  { path: 'visitingAddress.street', label: 'Bezoekadres — straat en nummer', why: 'Geografisch adres is verplicht voor een webshop.' },
-  { path: 'visitingAddress.postalCode', label: 'Bezoekadres — postcode', why: 'Hoort bij het bezoekadres.' },
-  { path: 'visitingAddress.city', label: 'Bezoekadres — plaats', why: 'Hoort bij het bezoekadres.' },
+  { path: 'registeredAddress.street', label: 'Vestigingsadres — straat en nummer', why: 'Geografisch adres is verplicht voor een webshop.' },
+  { path: 'registeredAddress.postalCode', label: 'Vestigingsadres — postcode', why: 'Hoort bij het vestigingsadres.' },
+  { path: 'registeredAddress.city', label: 'Vestigingsadres — plaats', why: 'Hoort bij het vestigingsadres.' },
   { path: 'returnAddress.name', label: 'Retouradres — tenaamstelling', why: 'Klanten moeten weten naar wie ze terugsturen.' },
   { path: 'returnAddress.street', label: 'Retouradres — straat en nummer', why: 'Zonder retouradres kan niemand retourneren.' },
   { path: 'returnAddress.postalCode', label: 'Retouradres — postcode', why: 'Hoort bij het retouradres.' },
@@ -153,9 +169,9 @@ export function pendingFields(): PendingField[] {
 
 /* ---------- Afgeleide weergaves ---------- */
 
-/** Bezoekadres op één regel, of het postadres zolang dat ontbreekt. */
+/** Vestigingsadres op één regel, of het postadres zolang dat ontbreekt. */
 export function addressLine(): string {
-  const v = BUSINESS.visitingAddress;
+  const v = BUSINESS.registeredAddress;
   if (!isPending(v.street) && !isPending(v.postalCode) && !isPending(v.city)) {
     return `${v.street}, ${v.postalCode} ${v.city}`;
   }
