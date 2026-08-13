@@ -108,8 +108,22 @@ export const BUSINESS = {
   supportEmail: 'contact@villa-happ.nl',
   /** Aparte AVG-postbus is netjes maar niet verplicht bij een eenmanszaak. */
   privacyEmail: 'contact@villa-happ.nl',
-  phone: PENDING,
-  /** Openingstijden of reactietermijn telefonisch. */
+  /**
+   * Eén nummer voor de hele vindbaarheid. Moet TEKEN VOOR TEKEN gelijk zijn
+   * aan wat in het Google Business Profile en op LinkedIn staat: Google en
+   * AI-engines koppelen een bedrijf op een exacte match van naam, adres en
+   * telefoonnummer. Twee varianten van hetzelfde nummer verzwakken die
+   * koppeling in plaats van hem te versterken.
+   *
+   * Spaties mogen: de `tel:`-links strippen ze (zie LegalLayout), en het
+   * schema geeft de waarde door zoals hij hier staat.
+   */
+  phone: '+31 6 19848002',
+  /**
+   * Openingstijden of reactietermijn telefonisch. Wordt nergens gerenderd
+   * zolang hij op PENDING staat; vullen zodra de bereikbaarheid vaststaat,
+   * en dan ook gelijktrekken met het Google Business Profile.
+   */
   phoneHours: PENDING,
 
   /* ---------- Beleid (moet matchen met de praktijk) ---------- */
