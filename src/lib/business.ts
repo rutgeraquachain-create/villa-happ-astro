@@ -119,12 +119,6 @@ export const BUSINESS = {
    * schema geeft de waarde door zoals hij hier staat.
    */
   phone: '+31 6 19848002',
-  /**
-   * Openingstijden of reactietermijn telefonisch. Wordt nergens gerenderd
-   * zolang hij op PENDING staat; vullen zodra de bereikbaarheid vaststaat,
-   * en dan ook gelijktrekken met het Google Business Profile.
-   */
-  phoneHours: PENDING,
 
   /* ---------- Beleid (moet matchen met de praktijk) ---------- */
   /** Wettelijk minimum is 14 dagen; wij geven er meer. */
@@ -169,7 +163,6 @@ const PENDING_CANDIDATES: PendingField[] = [
   { path: 'returnAddress.postalCode', label: 'Retouradres — postcode', why: 'Hoort bij het retouradres.' },
   { path: 'returnAddress.city', label: 'Retouradres — plaats', why: 'Hoort bij het retouradres.' },
   { path: 'phone', label: 'Telefoonnummer', why: 'Niet strikt verplicht, wel een sterk vertrouwenssignaal in een webshop.' },
-  { path: 'phoneHours', label: 'Telefonische bereikbaarheid', why: 'Alleen nodig als er een telefoonnummer komt.' },
 ];
 
 function readPath(path: string): string {
