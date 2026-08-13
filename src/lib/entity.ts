@@ -85,6 +85,7 @@ export const BRAND = {
     'Vanaf 2024 blies Rutger van Happen het merk stap voor stap nieuw leven in, met de Back-Cap en de Stap voor Stap-sokken als eerste stukken.',
     'In 2026 volgde de volledige relaunch als lifestylelabel, met een Back-Cap in een genummerde oplage van 500 stuks met certificaat.',
     'Het merk ontstond in Tilburg en is vandaag gevestigd in Waalwijk.',
+    'Villa Happ verkoopt rechtstreeks aan consumenten via de eigen webshop en levert daarnaast als groothandel aan winkels, webshops en marktplaatsen in Europa.',
     'De Heritage Hoodie is gemaakt van biologisch katoen van 350 gram per vierkante meter.',
   ],
   /** Onderwerpen waar het merk geloofwaardig over is (knowsAbout in schema) */
