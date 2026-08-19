@@ -3,6 +3,7 @@ export const prerender = true;
 
 import Base from '../../layouts/Base.astro';
 import { RETURN_SENTENCE } from '../../lib/legal';
+import { BUSINESS } from '../../lib/business';
 import '../../styles/shop.css';
 ---
 <Base
@@ -107,10 +108,7 @@ import '../../styles/shop.css';
             <a href="/herroeping">Modelformulier voor herroeping</a>.
           </p>
           <div class="vh-pay-methods" aria-label="Betaalmethoden">
-            <span class="vh-pay-chip">iDEAL</span>
-            <span class="vh-pay-chip">Bancontact</span>
-            <span class="vh-pay-chip">Mastercard</span>
-            <span class="vh-pay-chip">VISA</span>
+            {BUSINESS.paymentMethods.map((m) => <span class="vh-pay-chip">{m}</span>)}
           </div>
           <p class="vh-pay-note">🔒 Versleutelde betaling via Mollie. Je gegevens blijven van jou.</p>
         </aside>

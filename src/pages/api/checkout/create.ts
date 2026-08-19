@@ -25,6 +25,25 @@ import { logGebeurtenis } from '../../../lib/order-events';
 
 export const prerender = false;
 
+/**
+ * Taal van het Mollie-betaalscherm, afgeleid uit het verzendland.
+ *
+ * Stond eerder vast op `nl_NL` terwijl de winkel naar België en Duitsland
+ * verstuurt. Een Duitse klant kreeg dus een Nederlands scherm op het moment
+ * dat hij zijn geld overmaakt. De beschikbare betaalmethoden veranderen hier
+ * niet door; die komen van het Mollie-profiel.
+ *
+ * België krijgt `nl_BE` en niet `fr_BE`: de winkel is verder volledig
+ * Nederlandstalig, dus een Frans betaalscherm zou het enige Franse scherm in
+ * de hele bestelling zijn. Komt er ooit een Franse versie van de site, dan
+ * is dit de plek waar die keuze bij hoort.
+ */
+const LOCALE_PER_LAND = {
+  NL: Locale.nl_NL,
+  BE: Locale.nl_BE,
+  DE: Locale.de_DE,
+} as const;
+
 export const POST: APIRoute = async ({ request }) => {
   const limiet = await begrens('checkout', clientSleutel(request), 10);
   if (!limiet.toegestaan) return teVeelVerzoeken(limiet);
@@ -175,7 +194,7 @@ export const POST: APIRoute = async ({ request }) => {
       cancelUrl: `${siteUrl}/checkout/cancelled?order=${order.order_number}`,
       webhookUrl: `${siteUrl}/api/checkout/webhook`,
       metadata: { order_id: order.id, order_number: order.order_number },
-      locale: Locale.nl_NL,
+      locale: LOCALE_PER_LAND[body.shipping.country] ?? Locale.nl_NL,
     });
   } catch (err) {
     console.error('[checkout] Mollie payment create faalde:', err);

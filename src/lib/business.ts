@@ -100,14 +100,19 @@ export const BUSINESS = {
   /* ---------- Contact ---------- */
   /**
    * Eén adres voor de hele site. Dit staat op ruim tien plekken, waaronder
-   * de wettelijk verplichte contactgegevens en de herroepingspagina — een
-   * herroeping naar een bouncend adres geldt als niet ontvangen. Wijzig dit
-   * dus pas nadat het postvak of de alias in Microsoft 365 bestaat.
+   * de wettelijk verplichte contactgegevens en de herroepingspagina. Een
+   * herroeping naar een bouncend adres geldt als niet ontvangen, dus dit
+   * adres mag pas wijzigen nadat het postvak of de alias in Microsoft 365
+   * bestaat en er aantoonbaar post op binnenkomt.
+   *
+   * Sinds de domeinverhuizing staat hier `@villahapp.nl`. De oude adressen
+   * op `@villa-happ.nl` blijven als alias op hetzelfde postvak bestaan, want
+   * die staan in bestelbevestigingen die al de deur uit zijn.
    */
-  orderEmail: 'contact@villa-happ.nl',
-  supportEmail: 'contact@villa-happ.nl',
+  orderEmail: 'contact@villahapp.nl',
+  supportEmail: 'contact@villahapp.nl',
   /** Aparte AVG-postbus is netjes maar niet verplicht bij een eenmanszaak. */
-  privacyEmail: 'contact@villa-happ.nl',
+  privacyEmail: 'contact@villahapp.nl',
   /**
    * Eén nummer voor de hele vindbaarheid. Moet TEKEN VOOR TEKEN gelijk zijn
    * aan wat in het Google Business Profile en op LinkedIn staat: Google en
@@ -119,6 +124,19 @@ export const BUSINESS = {
    * schema geeft de waarde door zoals hij hier staat.
    */
   phone: '+31 6 19848002',
+
+  /* ---------- Betalen ---------- */
+  /**
+   * De methoden die we op de site noemen, in de volgorde waarin ze
+   * verschijnen. Dit is uitsluitend wat de site vertélt: de checkout stuurt
+   * géén methodelijst mee naar Mollie (zie api/checkout/create.ts), dus wat
+   * een klant werkelijk ziet komt van het Mollie-profiel. Zet je daar iets
+   * aan of uit, dan is dit de enige plek in de code die mee moet.
+   *
+   * Stond eerder vijf keer los in de sjablonen, met Apple Pay nergens erbij
+   * terwijl het al maanden aanstond bij Mollie.
+   */
+  paymentMethods: ['iDEAL', 'Bancontact', 'Apple Pay', 'Mastercard', 'Visa'],
 
   /* ---------- Beleid (moet matchen met de praktijk) ---------- */
   /** Wettelijk minimum is 14 dagen; wij geven er meer. */

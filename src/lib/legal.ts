@@ -102,6 +102,25 @@ export const RETURN_SENTENCE =
   `${RETURN_FEE_SENTENCE} ${RETURN_SHIPPING_REFUND_SENTENCE} ` +
   `${RETURN_SHIPPING_CORRECTION_SENTENCE} ${RETURN_CONDITION_SENTENCE}`;
 
+/**
+ * Betaalmethoden, afgeleid uit business.ts. De opsomming met "en" ervoor is
+ * bedoeld voor lopende tekst (FAQ, voorwaarden); de puntenreeks voor
+ * trustregels onder een knop.
+ */
+const METHODS = BUSINESS.paymentMethods;
+
+/** "iDEAL, Bancontact, Apple Pay, Mastercard en Visa" */
+export const PAYMENT_LIST =
+  METHODS.length > 1
+    ? `${METHODS.slice(0, -1).join(', ')} en ${METHODS[METHODS.length - 1]}`
+    : METHODS[0];
+
+/** Eén zin voor de FAQ, de voorwaarden en de productpagina. */
+export const PAYMENT_SENTENCE = `Betalen doe je veilig via Mollie, met ${PAYMENT_LIST}.`;
+
+/** Korte trustregel voor het mandje en de productpagina. */
+export const PAYMENT_SHORT = `Veilig betalen via Mollie · ${METHODS.join(', ')}`;
+
 /** Zin over btw. Alle prijzen op de site zijn consumentenprijzen. */
 export const VAT_SENTENCE = `Alle prijzen zijn in euro's en inclusief ${BUSINESS.vatRate}% btw.`;
 

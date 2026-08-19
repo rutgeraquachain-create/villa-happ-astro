@@ -21,7 +21,7 @@ daadwerkelijk misging.
 | Vercel-eigenaar | account `rutgeraquachain-7642` |
 | DNS | **Strato** (`shades13.rzone.de` / `docks15.rzone.de`) |
 | Mail | Microsoft 365 |
-| Transactiemail | Resend, via subdomein `send.villa-happ.nl` |
+| Transactiemail | Resend, via subdomein `send.villahapp.nl` |
 | Database | Supabase, project `Villa-Happ` (`xnlsuindjegvbcpmusnp`) |
 
 > **Valkuil 1 — twee repositories.**
@@ -360,12 +360,9 @@ Werk ze bij wanneer ze veranderen; dit is de enige plek waar ze staan.
 
 - **Supabase** — uitgerold 2 augustus 2026. 16 tabellen met RLS, 10 functies, 5 gepubliceerde producten met 15 varianten en voorraad. De adviseur meldt tienmaal `rls_enabled_no_policy` op INFO-niveau; dat is het ontwerp, niet een probleem: RLS aan zonder policies betekent dicht voor de publieke sleutel, en alleen de servercode komt erbij met de service-role key.
 - **Bedrijfsgegevens** — btw-id, bezoekadres, postadres en retouradres staan in `business.ts`. Alleen het telefoonnummer is nog `PENDING`.
-- **Resend** — domein geverifieerd, DKIM op `resend._domainkey`, SPF op subdomein `send`. DMARC op `p=none` met rapportage naar `contact@villa-happ.nl`; verzwaren naar `p=quarantine` zodra de rapporten schoon zijn.
-- **Mailadres** — `contact@villa-happ.nl` bestaat en `MAIL_FROM` staat er in Vercel op.
-  Bewust nog op het oude domein: de site draait al op `villahapp.nl`, maar de
-  postvakken op `@villahapp.nl` bestaan nog niet. Verhuist mee zodra Microsoft
-  365 het nieuwe domein heeft geverifieerd; zie `docs/domeinmigratie.md` stap 6.
-- **Mollie** — sleutel staat op `live_`. Zet in het Mollie-dashboard iDEAL, Bancontact, Mastercard en Visa aan; dat zijn precies de vier die de site toont. De webhook-URL is `https://villahapp.nl/api/checkout/webhook`.
+- **Resend** — `villahapp.nl` geverifieerd, DKIM op `resend._domainkey`, SPF en bounce-MX op subdomein `send`. DMARC op `p=none` met rapportage naar `rutger@villahapp.nl`; verzwaren naar `p=quarantine` zodra de rapporten schoon zijn. Het oude domein is uit Resend verwijderd (het gratis plan houdt er één), maar de DNS-records van `villa-happ.nl` staan er nog: dat is de weg terug als het nieuwe domein ooit stukloopt.
+- **Mailadres** — `contact@villahapp.nl` als alias op het bestaande postvak, met `@villahapp.nl` als primair adres. De adressen op `@villa-happ.nl` blijven als alias bestaan: die staan in bestelbevestigingen die al verstuurd zijn. `MAIL_FROM` in Vercel moet meeveranderen, en Astro bakt die waarde bij de build in, dus een redeploy hoort erbij.
+- **Mollie** — sleutel staat op `live_`. De checkout stuurt géén methodelijst mee, dus Mollie toont alles wat op het profiel aanstaat. Wat de site erover zegt staat in `BUSINESS.paymentMethods`; zet je bij Mollie iets aan of uit, pas dan die ene lijst aan. De webhook-URL is `https://villahapp.nl/api/checkout/webhook`.
 - **Domein** — `villahapp.nl` live op Vercel, `www` doet een 308 naar de apex, HSTS actief. `villa-happ.nl` verwijst permanent door; zie `docs/domeinmigratie.md`.
 
 ### Eerste echte bestelling

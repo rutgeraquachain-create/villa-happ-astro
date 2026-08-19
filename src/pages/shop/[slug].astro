@@ -12,6 +12,7 @@ import {
   SHIPPING_SENTENCE, SHIPPING_TABLE, FREE_SHIPPING_SHORT,
   RETURN_FEE_TEXT, RETURN_FEE_FROM_DAY, RETURN_SHIPPING_REFUND_SENTENCE,
   RETURN_SHIPPING_CORRECTION_SENTENCE, RETURN_CONDITION_SENTENCE,
+  PAYMENT_SHORT,
 } from '../../lib/legal';
 import '../../styles/shop.css';
 
@@ -436,7 +437,7 @@ const pdpData = {
             <span><i>✦</i> {FREE_SHIPPING_SHORT}</span>
             <span><i>✦</i> {RETURN_SHORT}</span>
             {edition && <span><i>✦</i> Genummerd · geleverd met certificaat van echtheid</span>}
-            <span><i>✦</i> Veilig betalen via Mollie · iDEAL, Bancontact, creditcard</span>
+            <span><i>✦</i> {PAYMENT_SHORT}</span>
           </div>
           <p class="vh-pdp-vat">{VAT_SENTENCE}</p>
 

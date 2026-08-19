@@ -7,6 +7,7 @@ import {
   RETURN_SENTENCE, DELIVERY_SENTENCE, VAT_SENTENCE, SHIPPING_SENTENCE,
   RETURN_FEE_SENTENCE, RETURN_SHIPPING_REFUND_SENTENCE,
   RETURN_SHIPPING_CORRECTION_SENTENCE, RETURN_CONDITION_SENTENCE,
+  PAYMENT_SENTENCE,
 } from '../lib/legal';
 import '../styles/shop.css';
 
@@ -14,7 +15,7 @@ const groups = [
   {
     title: 'Bestellen & betalen',
     items: [
-      { q: 'Welke betaalmethoden kan ik gebruiken?', a: 'Je betaalt veilig via Mollie met iDEAL, Bancontact of creditcard (Mastercard en Visa).' },
+      { q: 'Welke betaalmethoden kan ik gebruiken?', a: PAYMENT_SENTENCE },
       { q: 'Is online betalen veilig?', a: 'Ja. Alle betalingen lopen versleuteld via Mollie. Wij slaan zelf geen betaalgegevens op.' },
       { q: 'Kan ik mijn bestelling nog wijzigen?', a: 'Zolang je bestelling nog niet is verzonden, passen we hem graag aan. Reageer zo snel mogelijk op je bevestigingsmail.' },
       { q: 'Zijn de prijzen inclusief btw?', a: `${VAT_SENTENCE} Verzendkosten zie je apart voordat je afrekent.` },

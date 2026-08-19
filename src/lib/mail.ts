@@ -21,7 +21,16 @@ export function vatFromGross(grossCents: number, rate = BUSINESS.vatRate): numbe
 }
 
 const RESEND_API_KEY = import.meta.env.RESEND_API_KEY;
-const MAIL_FROM = import.meta.env.MAIL_FROM || 'Villa Happ <contact@villa-happ.nl>';
+/**
+ * Afzender. De standaardwaarde leest `BUSINESS.orderEmail` in plaats van een
+ * eigen letterlijk adres: stond hier eerder een tweede kopie van het adres,
+ * en bij de domeinverhuizing is precies zo'n kopie het adres dat achterblijft.
+ *
+ * In Vercel staat `MAIL_FROM` expliciet; die wint. Let op dat Astro deze
+ * waarde bij de build in de servercode bakt, dus een wijziging vraagt een
+ * redeploy, niet alleen een opgeslagen variabele.
+ */
+const MAIL_FROM = import.meta.env.MAIL_FROM || `Villa Happ <${BUSINESS.orderEmail}>`;
 
 interface OrderForMail {
   order_number: string;

@@ -3,7 +3,7 @@ export const prerender = true;
 
 import LegalLayout from '../components/legal/LegalLayout.astro';
 import { BUSINESS, returnAddressLines } from '../lib/business';
-import { LEGAL_UPDATED, SHIPPING_TABLE, VAT_SENTENCE, DELIVERY_SENTENCE, FREE_SHIPPING_TEXT, RETURN_FEE_TEXT, RETURN_FEE_FROM_DAY, eur } from '../lib/legal';
+import { LEGAL_UPDATED, SHIPPING_TABLE, VAT_SENTENCE, DELIVERY_SENTENCE, FREE_SHIPPING_TEXT, RETURN_FEE_TEXT, RETURN_FEE_FROM_DAY, eur, PAYMENT_SENTENCE } from '../lib/legal';
 
 const returnLines = returnAddressLines();
 ---
@@ -63,9 +63,9 @@ const returnLines = returnAddressLines();
     <h2>Artikel 4: Prijzen en betaling</h2>
     <p>{VAT_SENTENCE} Verzendkosten worden apart getoond voordat je afrekent.</p>
     <p>
-      Betalen doe je via Mollie, met iDEAL, Bancontact of creditcard. Wij
-      ontvangen en bewaren zelf geen betaalgegevens. Prijzen kunnen wijzigen,
-      maar nooit nadat je bestelling tot stand is gekomen.
+      {PAYMENT_SENTENCE} Wij ontvangen en bewaren zelf geen betaalgegevens.
+      Prijzen kunnen wijzigen, maar nooit nadat je bestelling tot stand is
+      gekomen.
     </p>
   </section>
 
