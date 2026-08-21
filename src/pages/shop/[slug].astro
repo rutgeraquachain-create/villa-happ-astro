@@ -128,9 +128,20 @@ const returnPolicyLd = [
     returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
     merchantReturnDays: BUSINESS.returnDays,
     returnMethod: 'https://schema.org/ReturnByMail',
-    returnFees: 'https://schema.org/ReturnFeesCustomerResponsibility',
-    // De klant regelt de retourzending zelf, dus geen vast retourtarief
-    // van ons; de verwerkingskosten staan apart als restockingFee.
+    /**
+     * `returnFees` is bij Google één enkele waarde, en in dit venster gelden
+     * er twee kosten tegelijk: de klant betaalt de retourzending én er gaan
+     * verwerkingskosten af. Hier stond `ReturnFeesCustomerResponsibility`
+     * terwijl er een `restockingFee` naast hing, en dat is de combinatie die
+     * Google's model niet kent. `RestockingFees` is de waarde die bij die
+     * eigenschap hoort, dus die wint.
+     *
+     * Daarmee vertelt de enum niet langer dat de klant de retourzending zelf
+     * betaalt. Dat feit staat daarom nu expliciet in de omschrijving: het mag
+     * niet uit dit blok verdwijnen, want dan belooft het schema iets ruimers
+     * dan de voorwaarden.
+     */
+    returnFees: 'https://schema.org/RestockingFees',
     restockingFee: {
       '@type': 'MonetaryAmount',
       value: (BUSINESS.returnFeeCents / 100).toFixed(2),
@@ -138,7 +149,8 @@ const returnPolicyLd = [
     },
     description:
       `Melding op dag ${RETURN_FEE_FROM_DAY} tot en met ${BUSINESS.returnDays}: ` +
-      `${RETURN_FEE_TEXT} verwerkingskosten. ${RETURN_SHIPPING_REFUND_SENTENCE} ` +
+      `${RETURN_FEE_TEXT} verwerkingskosten. De retourzending regel en betaal je zelf. ` +
+      `${RETURN_SHIPPING_REFUND_SENTENCE} ` +
       `${RETURN_SHIPPING_CORRECTION_SENTENCE} ${RETURN_CONDITION_SENTENCE}`,
   },
 ];
