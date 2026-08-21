@@ -97,6 +97,78 @@ const displayTitle = colourIsDistinct ? `${product.name} ${product.color}` : pro
 // van de eerste maat verzweeg de rest voor Google.
 const hasVariants = product.variants.length > 1;
 
+/**
+ * Retourbeleid als losse constante, want zowel het aanbod van de groep als
+ * dat van elke variant heeft hem nodig.
+ *
+ * Twee beleidsregels, want het retourvenster kent twee tarieven. Binnen de
+ * wettelijke bedenktijd zijn er geen verwerkingskosten; de dagen die wij er
+ * vrijwillig bovenop geven kennen een restockingFee. De klant betaalt in
+ * beide gevallen de retourzending zelf, dus nooit FreeReturn: dat zou een
+ * belofte zijn die we niet waarmaken.
+ */
+const returnPolicyLd = [
+  {
+    '@type': 'MerchantReturnPolicy',
+    name: `Wettelijke bedenktijd — dag 1 tot en met ${BUSINESS.statutoryReturnDays}`,
+    applicableCountry: ['NL', 'BE', 'DE'],
+    returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+    merchantReturnDays: BUSINESS.statutoryReturnDays,
+    returnMethod: 'https://schema.org/ReturnByMail',
+    returnFees: 'https://schema.org/ReturnFeesCustomerResponsibility',
+    refundType: 'https://schema.org/FullRefund',
+    description:
+      `Melding binnen ${BUSINESS.statutoryReturnDays} dagen: geen verwerkingskosten. ` +
+      `${RETURN_SHIPPING_REFUND_SENTENCE} ${RETURN_SHIPPING_CORRECTION_SENTENCE} ${RETURN_CONDITION_SENTENCE}`,
+  },
+  {
+    '@type': 'MerchantReturnPolicy',
+    name: `Verlengde bedenktijd — dag ${RETURN_FEE_FROM_DAY} tot en met ${BUSINESS.returnDays}`,
+    applicableCountry: ['NL', 'BE', 'DE'],
+    returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+    merchantReturnDays: BUSINESS.returnDays,
+    returnMethod: 'https://schema.org/ReturnByMail',
+    returnFees: 'https://schema.org/ReturnFeesCustomerResponsibility',
+    // De klant regelt de retourzending zelf, dus geen vast retourtarief
+    // van ons; de verwerkingskosten staan apart als restockingFee.
+    restockingFee: {
+      '@type': 'MonetaryAmount',
+      value: (BUSINESS.returnFeeCents / 100).toFixed(2),
+      currency: 'EUR',
+    },
+    description:
+      `Melding op dag ${RETURN_FEE_FROM_DAY} tot en met ${BUSINESS.returnDays}: ` +
+      `${RETURN_FEE_TEXT} verwerkingskosten. ${RETURN_SHIPPING_REFUND_SENTENCE} ` +
+      `${RETURN_SHIPPING_CORRECTION_SENTENCE} ${RETURN_CONDITION_SENTENCE}`,
+  },
+];
+
+/**
+ * Eén aanbod-vorm voor de groep én voor elke variant.
+ *
+ * Google erft niets van een ProductGroup naar zijn varianten: elk
+ * hasVariant-item wordt als een los product beoordeeld. Stonden er eerder
+ * alleen naam, sku, maat en prijs in, en dat leverde vier meldingen op in
+ * Search Console, waarvan "Ontbrekend veld 'image'" als kritieke. Kritiek
+ * betekent hier dat de verkopersvermelding helemaal niet getoond wordt.
+ */
+function offerLd(availability: string) {
+  return {
+    '@type': 'Offer',
+    url: productUrl,
+    priceCurrency: 'EUR',
+    price: (product.price_cents / 100).toFixed(2),
+    priceValidUntil,
+    availability,
+    itemCondition: 'https://schema.org/NewCondition',
+    shippingDetails: shippingDetailsLd,
+    hasMerchantReturnPolicy: returnPolicyLd,
+  };
+}
+
+const IN_STOCK = 'https://schema.org/InStock';
+const OUT_OF_STOCK = 'https://schema.org/OutOfStock';
+
 const productLd = {
   '@context': 'https://schema.org',
   '@type': hasVariants ? 'ProductGroup' : 'Product',
@@ -120,70 +192,19 @@ const productLd = {
         hasVariant: product.variants.map((v) => ({
           '@type': 'Product',
           name: `${displayTitle} — maat ${v.size}`,
+          // Beeld en omschrijving van het product zelf. Er is geen foto per
+          // maat, en die hoeft ook niet: de variant verschilt alleen in maat.
+          image: absImages,
+          description: product.short_desc,
           sku: v.sku,
           ...(v.sku ? { mpn: v.sku } : {}),
           size: v.size,
-          offers: {
-            '@type': 'Offer',
-            url: productUrl,
-            priceCurrency: 'EUR',
-            price: (product.price_cents / 100).toFixed(2),
-            availability: v.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-          },
+          offers: offerLd(v.stock > 0 ? IN_STOCK : OUT_OF_STOCK),
         })),
       }
     : {}),
   brand: { '@type': 'Brand', name: 'Villa Happ' },
-  offers: {
-    '@type': 'Offer',
-    url: productUrl,
-    priceCurrency: 'EUR',
-    price: (product.price_cents / 100).toFixed(2),
-    priceValidUntil,
-    availability: soldOut ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
-    itemCondition: 'https://schema.org/NewCondition',
-    shippingDetails: shippingDetailsLd,
-    // Twee beleidsregels, want het retourvenster kent twee tarieven.
-    // Binnen de wettelijke bedenktijd zijn er geen verwerkingskosten; de
-    // dagen die wij er vrijwillig bovenop geven kennen een restockingFee.
-    // De klant betaalt in beide gevallen de retourzending zelf, dus nooit
-    // FreeReturn: dat zou een belofte zijn die we niet waarmaken.
-    hasMerchantReturnPolicy: [
-      {
-        '@type': 'MerchantReturnPolicy',
-        name: `Wettelijke bedenktijd — dag 1 tot en met ${BUSINESS.statutoryReturnDays}`,
-        applicableCountry: ['NL', 'BE', 'DE'],
-        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
-        merchantReturnDays: BUSINESS.statutoryReturnDays,
-        returnMethod: 'https://schema.org/ReturnByMail',
-        returnFees: 'https://schema.org/ReturnFeesCustomerResponsibility',
-        refundType: 'https://schema.org/FullRefund',
-        description:
-          `Melding binnen ${BUSINESS.statutoryReturnDays} dagen: geen verwerkingskosten. ` +
-          `${RETURN_SHIPPING_REFUND_SENTENCE} ${RETURN_SHIPPING_CORRECTION_SENTENCE} ${RETURN_CONDITION_SENTENCE}`,
-      },
-      {
-        '@type': 'MerchantReturnPolicy',
-        name: `Verlengde bedenktijd — dag ${RETURN_FEE_FROM_DAY} tot en met ${BUSINESS.returnDays}`,
-        applicableCountry: ['NL', 'BE', 'DE'],
-        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
-        merchantReturnDays: BUSINESS.returnDays,
-        returnMethod: 'https://schema.org/ReturnByMail',
-        returnFees: 'https://schema.org/ReturnFeesCustomerResponsibility',
-        // De klant regelt de retourzending zelf, dus geen vast retourtarief
-        // van ons; de verwerkingskosten staan apart als restockingFee.
-        restockingFee: {
-          '@type': 'MonetaryAmount',
-          value: (BUSINESS.returnFeeCents / 100).toFixed(2),
-          currency: 'EUR',
-        },
-        description:
-          `Melding op dag ${RETURN_FEE_FROM_DAY} tot en met ${BUSINESS.returnDays}: ` +
-          `${RETURN_FEE_TEXT} verwerkingskosten. ${RETURN_SHIPPING_REFUND_SENTENCE} ` +
-          `${RETURN_SHIPPING_CORRECTION_SENTENCE} ${RETURN_CONDITION_SENTENCE}`,
-      },
-    ],
-  },
+  offers: offerLd(soldOut ? OUT_OF_STOCK : IN_STOCK),
 };
 
 const breadcrumbLd = {
