@@ -759,7 +759,11 @@
 	left: 50%;
 	transform: translateX(-50%);
 	font-family: var(--vh-font-serif);
-	font-size: clamp(34px, 5vw, 74px);
+	/* Was clamp(34px, 5vw, 74px): puur breedtegebaseerd. Op een breed maar
+	   laag scherm bleef de titel dus 74px terwijl er verticaal geen ruimte
+	   was, en liep hij in het beeld. De 8vh-tak laat hem meekrimpen met de
+	   hoogte. */
+	font-size: clamp(34px, min(5vw, 8vh), 74px);
 	font-weight: 400;
 	letter-spacing: -0.03em;
 	white-space: nowrap;
@@ -768,9 +772,18 @@
 }
 .vh-cine-media {
 	position: relative;
-	/* Hoogte-gebaseerd en gecentreerd: houdt de titel bovenaan vrij en laat
-	   de takeover-scale intact (blijft vanuit het schermmidden groeien). */
-	height: clamp(300px, 44vh, 540px);
+	/* Hoogte-gebaseerd en gecentreerd: de takeover schaalt het kaartje vanuit
+	   zijn eigen middelpunt naar fullscreen, dus het moet gecentreerd blijven.
+	   Daardoor is de vrije ruimte erboven altijd (100vh - hoogte) / 2, en die
+	   moet minstens zo groot zijn als het kopblok (titelpositie + regelhoogte
+	   + lucht). Anders schuift het beeld over de titel heen zodra het venster
+	   laag wordt; dat gebeurde vanaf ongeveer 640px hoogte. De tweede tak van
+	   de min() legt die ondergrens vast, zodat het beeld krimpt in plaats van
+	   overlapt. */
+	height: min(
+		clamp(300px, 44vh, 540px),
+		calc(100vh - 2 * (clamp(92px, 14vh, 150px) + clamp(34px, min(5vw, 8vh), 74px) * 1.2 + 20px))
+	);
 	width: auto;
 	aspect-ratio: 4/5;
 	border-radius: 14px;
@@ -841,9 +854,15 @@
 		text-align: center;
 		width: 92vw;
 		top: clamp(84px, 14svh, 150px);
-		font-size: clamp(32px, 9.5vw, 54px);
+		font-size: clamp(32px, min(9.5vw, 8svh), 54px);
 	}
-	.vh-cine-media { height: clamp(240px, 40svh, 400px); width: auto; }
+	.vh-cine-media {
+		height: min(
+			clamp(240px, 40svh, 400px),
+			calc(100svh - 2 * (clamp(84px, 14svh, 150px) + clamp(32px, min(9.5vw, 8svh), 54px) * 1.25 + 16px))
+		);
+		width: auto;
+	}
 	.vh-cine-overlay {
 		padding-left: 6vw;
 		padding-right: 6vw;
