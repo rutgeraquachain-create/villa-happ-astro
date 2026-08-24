@@ -2,7 +2,37 @@
 export const prerender = true;
 
 import Base from '../layouts/Base.astro';
+import Pic from '../components/Pic.astro';
 import { BRAND, organizationLd } from '../lib/entity';
+
+/**
+ * Srcset-breedtes, afgekapt op de echte bestandsbreedte. Identiek aan de
+ * helper in components/home/HeritageScroll.astro; beide pagina's tonen dezelfde
+ * scans en die lopen van 624 tot 2000 px.
+ *
+ * De waarden moeten uit IMG_WIDTHS komen: `nearestWidth` in lib/img.ts rondt
+ * naar bóven af, dus een eigen getal doorgeven levert juist de upscale op die
+ * je wilde vermijden. De marge van vijf procent haalt een bestand dat vlak
+ * onder een trap ligt er alsnog bij.
+ *
+ * Deze pagina serveerde de scans eerder onbewerkt, tot 257 kB per stuk. Met de
+ * Elzenweg erbij liep dat richting 1,3 MB.
+ */
+const srcsetWidths = (intrinsic: number) =>
+  [480, 640, 768, 1080, 1440].filter((w) => w <= intrinsic * 1.05);
+
+/**
+ * Afmetingen voor het width/height-attribuut, teruggeschaald naar maximaal
+ * 1080 px met behoud van de verhouding.
+ *
+ * Pic gebruikt `width` voor twee dingen tegelijk: het attribuut dat de
+ * verhouding vastlegt én de breedte van de terugval-`src`. De volle 2000 px
+ * doorgeven laat de optimizer daardoor een variant van 1920 px klaarzetten
+ * voor een kader van hooguit zevenhonderd. De verhouding blijft gelijk, dus
+ * voor CLS en aspect-ratio verandert er niets.
+ */
+const displayBox = (w: number, h: number) =>
+  w <= 1080 ? { w, h } : { w: 1080, h: Math.round((h / w) * 1080) };
 
 const siteOrigin = Astro.site?.origin || Astro.url.origin;
 
@@ -56,6 +86,7 @@ const chapters = [
     title: 'Heuvelstraat 85',
     img: '/img/heritage/1945-heuvelstraat-85-gaillard-kuijsters.webp',
     alt: 'De winkel Gaillard Kuijsters aan de Heuvelstraat 85 in Tilburg, met twee etalages vol kinderwagens, wiegjes en babygoed.',
+    w: 2000, h: 1436,
     paras: [
       'Vijf dagen na de bevrijding openen Tony Kuijsters en haar man Bas Gaillard hun eerste winkel aan de Heuvelstraat 85 in Tilburg. De zaak heet Gaillard Kuijsters.',
       'Die winkel heeft een voorgeschiedenis. De ouders van Bas maakten rieten manden in een productiebedrijf aan de Noordstraat. Ze vlochten wiegjes en kinderwagenmanden, het babygoed van een tijd waarin dat nog handwerk was.',
@@ -73,6 +104,7 @@ const chapters = [
     title: 'Babyparadijs',
     img: '/img/heritage/babyparadijs-heuvelstraat.webp',
     alt: 'Babyparadijs aan de Heuvelstraat 85 in Tilburg, met de winkelpui en voorbijgangers op straat.',
+    w: 1156, h: 800,
     paras: [
       'Halverwege de jaren vijftig gaat het pand aan de Heuvelstraat 85 tegen de vlakte. Er komt een modern gebouw met drie etages voor in de plaats, het eerste in zijn soort in Tilburg en een gebouw waar de stad naar kwam kijken. Het staat er nog steeds. Wie het centrum van Tilburg kent, kent het als de Bakker Bart.',
       'In diezelfde periode krijgt Tony Kuijsters een relatie met Noud van Happen. Samen openen ze op datzelfde adres een winkel onder een nieuwe naam: Babyparadijs. Ze verkopen babykleding, kinderwagens en alles voor de kinderkamer.',
@@ -81,12 +113,21 @@ const chapters = [
     ],
   },
   {
-    breed: false,
+    // Liggende opname, dus breed. In het staande 4/5-kader snijdt
+    // `object-fit: cover` de vrachtwagen links weg, en die is het onderwerp.
+    //
+    // Let op de datering: de foto is van 1972 en dit hoofdstuk gaat over de
+    // jaren zestig. Het archief heeft geen opname uit dat decennium, en Rutger
+    // koos ervoor dit beeld hier te tonen omdat het laat zien wat de gok van
+    // Noud opleverde. De alinea's hieronder noemen daarom geen jaartal bij het
+    // beeld, en hoofdstuk 04 blijft de plek waar 1972 wél expliciet valt.
+    breed: true,
     num: 'Hoofdstuk 03',
     year: 'Jaren zestig',
     title: 'De eerste die ging',
-    img: null,
-    alt: '',
+    img: '/img/heritage/1972-elzenweg-33-waalwijk.webp',
+    alt: 'Het bedrijfspand aan de Elzenweg 33 in Waalwijk met een vrachtwagen van Van Happen, met op de zijkant "van happen internationale confectie industrie".',
+    w: 2000, h: 1426,
     paras: [
       'In de jaren zestig wordt er in België ingekocht en geproduceerd, en daar lopen de prijzen op. Noud ziet zich genoodzaakt verder over de grens te kijken en reist met zijn laatste zakcenten naar het Verre Oosten om daar een eigen productielijn op te zetten. Hij hoort bij de eersten in Europa die dat aandurven. Er is op dat moment niemand die hem kan vertellen hoe zoiets werkt.',
       'Het is een gok met alles wat hij heeft, en die pakt goed uit.',
@@ -105,6 +146,9 @@ const chapters = [
     // blijft op de homepage staan, in de tijdlijn en de carrousel.
     img: '/img/heritage/1991-james-wattlaan-7-drunen.webp',
     alt: 'Het hoofdkantoor van Van Happen Fashion aan de James Wattlaan in Drunen, 1991, met een bedrijfssculptuur op het gazon ervoor.',
+    // Staand, 4/5, dus dit past exact in het standaardkader zonder bijsnede.
+    // Wel de kleinste scan van de reeks; een grotere is welkom.
+    w: 624, h: 780,
     paras: [
       'Babyparadijs groeit uit tot de Van Happen Fashion Groep en wordt in de jaren tachtig een van de grootste leveranciers van private label en white label kinderkleding in Europa. Op de labels staan Nederlandse namen als Wibra, Zeeman, HEMA, V&D, C&A en Prénatal. Daarbuiten gaat het naar Carrefour, Otto en de Metro-groep (bekend van Makro). Is er ruimte over in de fabrieken, dan worden daar ook merken als Replay en Diesel geproduceerd. Daarnaast draaien de eigen merken VHF en Artoni op volle toeren.',
       'Wie in die jaren een kind aankleedde, had grote kans dat er iets van deze familie in de kast hing. Op het label stond alleen nooit hun naam.',
@@ -119,6 +163,7 @@ const chapters = [
     title: 'Een eigen naam in de Koopgoot',
     img: '/img/heritage/villa-happ-winkel.webp',
     alt: 'Een Villa Happ winkel met het logo boven de etalages, kinderkleding in de vitrines en Arjo the Rat bij de ingang.',
+    w: 1280, h: 857,
     paras: [
       'Halverwege de jaren negentig verandert de markt en verliest het bedrijf terrein, maar het vakmanschap blijft.',
       'In 1999 krijgt het familieverhaal een eigen merk: Villa Happ. Het concept is een kinderkledingwinkel die inspeelt op de verbeelding en de beleving van kinderen. De eerste winkel opent in de Beurstraverse in de Rotterdamse Koopgoot, en het is Rutger die hem opent, dertien jaar oud. Hij is ook de eerste Arjo the Rat, de mascotte van het merk. Winkel nummer twee volgt al snel in de Marikenstraat in Nijmegen.',
@@ -131,8 +176,12 @@ const chapters = [
     num: 'Hoofdstuk 06',
     year: 'Eind 2004 tot 2011',
     title: 'The Comeback Kid',
+    // Wacht op scans uit de vakpers van deze periode. Tot die er zijn blijft
+    // het jaartal-vlak staan; knipsels namaken over een echt bedrijf is geen
+    // optie. Zelfde gat in HeritageScroll.astro, hoofdstuk 06.
     img: null,
     alt: '',
+    w: 0, h: 0,
     paras: [
       'Eind 2004 wordt de keten verkocht aan een investeringsmaatschappij. Binnen een jaar gaat het mis. In november 2005 koopt de familie het bedrijf terug en maakt een doorstart. In juni 2006 verhuist het kantoor naar Kasteel Zwijnsbergen in Helvoirt, een sprookjesachtig kasteel in Brabant. De ambities reiken dan verder dan Nederland: een internationaal kantoor in Dubai, plannen voor Düsseldorf, Athene en Istanboel. In 2007 geeft de vakpers Villa Happ een bijnaam die blijft hangen: The Comeback Kid.',
       'In 2009 koopt Villa Happ alle franchisenemers uit. De lening die daarvoor nodig is, wordt uiteindelijk te zwaar om te dragen. In 2010 zijn de onderhandelingen over een doorstart vergevorderd, er is serieuze interesse vanuit de retail en de financiering is zo goed als rond. Op het laatste moment loopt het stuk op de overdracht van de merkrechten. Drie winkels draaien nog door tot in 2011, maar ook die redden het niet. Villa Happ verdwijnt helaas uit het straatbeeld.',
@@ -146,6 +195,7 @@ const chapters = [
     title: 'De derde generatie',
     img: '/img/heritage/calle-artoni-85-25.webp',
     alt: 'Twee opnamen van dezelfde plek in Spanje, in elkaar overlopend: links Rogér van Happen bij het bord C. Artoni in februari 1985, rechts Rutger van Happen op dezelfde hoek in februari 2025.',
+    w: 1160, h: 800,
     paras: [
       'Tien jaar na de val worden de merkrechten van Villa Happ niet gecontinueerd. Ze vervallen, en Rutger van Happen, kleinzoon van Tony en Noud, haalt ze terug naar de familie. Jarenlang onderzoekt hij hoe de comeback eruit moet zien. De coronapandemie vertraagt de plannen.',
       'In Spanje ligt een straat die naar Noud & Tony is vernoemd. In februari 1985 stond Rogér daar op de foto. Veertig jaar later stond zijn zoon Rutger op dezelfde plek.',
@@ -184,15 +234,19 @@ const chapters = [
           <h2 class="st-chapter-title">{ch.title}</h2>
           {ch.paras.map((p) => <p class="st-chapter-para">{p}</p>)}
         </div>
-        <div class={`st-chapter-media${ch.img ? '' : ' is-placeholder'}`}>
+        <div
+          class={`st-chapter-media${ch.img ? '' : ' is-placeholder'}`}
+          style={ch.breed ? `--st-media-ratio: ${ch.w} / ${ch.h};` : undefined}
+        >
           {ch.img
-            ? <img
+            ? <Pic
                 src={ch.img}
                 alt={ch.alt}
-                width={ch.breed ? 1160 : 900}
-                height={ch.breed ? 800 : 1125}
+                width={displayBox(ch.w, ch.h).w}
+                height={displayBox(ch.w, ch.h).h}
+                widths={srcsetWidths(ch.w)}
+                sizes={ch.breed ? '(max-width: 820px) 92vw, 58vw' : '(max-width: 820px) 92vw, 46vw'}
                 loading="lazy"
-                decoding="async"
               />
             : <span>{ch.year}</span>}
         </div>
@@ -289,7 +343,10 @@ const chapters = [
    */
   .st-chapter--breed { grid-template-columns: 5fr 7fr; }
   .st-chapter--breed .st-chapter-media {
-    aspect-ratio: 1160 / 800;
+    /* Per hoofdstuk meegegeven, want de liggende scans lopen niet gelijk:
+       1156/800 en 1160/800 voor de twee oudste, 2000/1426 voor de Elzenweg.
+       Stond eerder vast op 1160/800, wat die laatste licht zou bijsnijden. */
+    aspect-ratio: var(--st-media-ratio, 1160 / 800);
     transform: translateY(clamp(0px, 6vw, 78px));
   }
   /* Onder elkaar heeft die verschuiving geen betekenis meer. */

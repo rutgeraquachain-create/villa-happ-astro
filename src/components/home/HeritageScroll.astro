@@ -1,6 +1,18 @@
 ---
 // Horizontale pinned timeline, het echte verhaal in zeven hoofdstukken.
 // Volledige versie staat op /story.
+//
+// Hoofdstukken, beeld en titels lopen één op één met /story. Dat was eerder
+// niet zo: hoofdstuk 04 toonde hier de vrachtwagens en daar het hoofdkantoor,
+// en hoofdstuk 07 hier Rutger alleen en daar de diptiek. Wie van de homepage
+// doorklikte kreeg twee keer een ander verhaal. Wijzig je hier een hoofdstuk,
+// wijzig het dan ook in `src/pages/story.astro`.
+//
+// `breed` is voor liggende opnamen. Het standaardkader is bijna vierkant
+// (halve kolom bij 70vh hoog) en `object-fit: cover` snijdt daar een liggend
+// beeld tot een strook van ruim zestig procent van de breedte. Bij de diptiek
+// valt Rutger dan buiten beeld, bij de Elzenweg de vrachtwagen. Zie
+// `.vh-heritage-panel--breed` in src/styles/home.css.
 import Pic from '../Pic.astro';
 const steps = [
   {
@@ -8,58 +20,121 @@ const steps = [
     year: '1945',
     title: 'Heuvelstraat 85',
     text: 'Het land is vijf dagen vrij als Tony Kuijsters en haar man Bas Gaillard hun winkel openen aan de Heuvelstraat. Vier kinderen later is Bas er niet meer; de jongste is twee maanden oud. Tony doet de volgende ochtend gewoon weer open. En de ochtend daarna ook.',
+    breed: false,
     img: '/img/heritage/1945-heuvelstraat-85-gaillard-kuijsters.webp',
     alt: 'De winkel Gaillard Kuijsters aan de Heuvelstraat 85 in Tilburg, met twee etalages vol kinderwagens, wiegjes en babygoed.',
+    w: 2000, h: 1436,
   },
   {
     num: 'Hoofdstuk 02 · Babyparadijs',
     year: "Jaren '50",
-    title: 'Een nieuwe naam op dezelfde plek',
+    title: 'Babyparadijs',
     text: 'Jaren staat ze er alleen voor. Het oude pand gaat tegen de vlakte en er komt een modern gebouw voor terug, het eerste in zijn soort in Tilburg. Op datzelfde adres beginnen Tony en Noud van Happen opnieuw, onder een naam die je niet vergeet: Babyparadijs. Er komen nog drie kinderen bij, van wie Rogér de jongste is.',
+    breed: false,
     img: '/img/heritage/babyparadijs-heuvelstraat.webp',
     alt: 'Babyparadijs aan de Heuvelstraat 85 in Tilburg, met de winkelpui en voorbijgangers op straat.',
+    w: 1156, h: 800,
   },
   {
     num: 'Hoofdstuk 03 · De gok',
     year: "Jaren '60",
     title: 'De eerste die ging',
     text: 'De prijzen in België blijven stijgen en Noud rekent uit dat het anders kan. Hij pakt zijn laatste zakcenten en vertrekt naar het Verre Oosten om er zelf te laten produceren. Hij hoort bij de eersten in Europa die dat aandurven, dus niemand kan hem vertellen hoe het moet. Die gok wordt het fundament onder alles.',
-    img: null,
-    alt: '',
+    // Bewuste keuze van Rutger: het archief heeft geen opname uit de jaren
+    // zestig, en dit is de vroegste foto waarop je ziet wat die gok opleverde.
+    // De opname is van 1972. Daarom noemt de alt-tekst wel het pand en de
+    // vrachtwagen, maar geen jaartal: het beeld illustreert het hoofdstuk, het
+    // dateert het niet. Hoofdstuk 04 op /story noemt 1972 wél bij naam, dus
+    // vervang dit zodra er echt jaren-zestig-materiaal boven water komt.
+    breed: true,
+    img: '/img/heritage/1972-elzenweg-33-waalwijk.webp',
+    alt: 'Het bedrijfspand aan de Elzenweg 33 in Waalwijk met een vrachtwagen van Van Happen, met op de zijkant "van happen internationale confectie industrie".',
+    w: 2000, h: 1426,
   },
   {
     num: 'Hoofdstuk 04 · De stille jaren',
-    year: "'80s",
+    // Was "'80s", terwijl /story hier drie decennia beslaat. Het hoofdstuk gaat
+    // over de hele periode als marktleider, niet over één decennium.
+    year: "'70/'90",
     title: 'De marktleider die je niet zag',
     text: 'Dertig jaar lang kleedt deze familie half Europa, zonder dat iemand het weet. Op de labels staan Wibra, Zeeman, HEMA, V&D, C&A en Prénatal. Grote kans dat jij het droeg, of je moeder. De grootste order uit de geschiedenis van het bedrijf valt op 12 juni 1986. Diezelfde avond wordt Rutger geboren.',
-    img: '/img/heritage/1980-industrieweg-74-76-waalwijk.webp',
-    alt: 'Het bedrijfspand van Van Happen aan de Industrieweg in Waalwijk, met twee vrachtwagens op het terrein.',
+    // Het hoofdkantoor met "van happen fashion" op de gevel, hetzelfde beeld als
+    // op /story. De Industrieweg-foto met de vrachtwagens blijft in de
+    // filmstrook staan.
+    breed: false,
+    img: '/img/heritage/1991-james-wattlaan-7-drunen.webp',
+    alt: 'Het hoofdkantoor van Van Happen Fashion aan de James Wattlaan in Drunen, 1991, met een bedrijfssculptuur op het gazon ervoor.',
+    // De scan is maar 624 px breed. `widths` wordt hieronder op de echte
+    // breedte afgekapt, want grotere varianten opvragen levert alleen een
+    // opgeblazen, zachte upscale op. Een betere scan is welkom.
+    w: 624, h: 780,
   },
   {
     num: 'Hoofdstuk 05 · Het gezicht',
     year: '1999',
     title: 'Een eigen naam in de Koopgoot',
     text: 'Na decennia van andermans labels komt er eindelijk een eigen naam: Villa Happ. De eerste winkel opent in de Koopgoot, en het lint wordt doorgeknipt door een jongen van dertien. Diezelfde jongen kruipt daarna in het pak van Arjo the Rat. Er volgen tachtig winkels door Europa, geleid vanuit het hoofdkantoor aan de James Wattlaan in Drunen, met ambities tot Dubai aan toe.',
+    breed: false,
     img: '/img/heritage/villa-happ-winkel.webp',
     alt: 'Een Villa Happ winkel met het logo boven de etalages, kinderkleding in de vitrines en Arjo the Rat bij de ingang.',
+    w: 1280, h: 857,
   },
   {
     num: 'Hoofdstuk 06 · De val, twee keer',
-    year: '2×',
+    // Stond op "2×". Mooi als typografie, maar het plaatste het hoofdstuk
+    // nergens in de tijd, terwijl /story hier "Eind 2004 tot 2011" zegt.
+    year: "'04/'11",
     title: 'The Comeback Kid',
     text: 'Verkocht, gevallen, teruggekocht, weer opgebouwd. De vakpers geeft het merk in 2007 een bijnaam die blijft plakken. In 2010 ligt er opnieuw een doorstart klaar en is de financiering zo goed als rond, tot het stukloopt op de overdracht van de merkrechten. Drie winkels draaien nog door tot in 2011. Daar houdt het op.',
+    // Wacht op scans van de vakpers uit deze periode. Tot die er zijn blijft
+    // het jaartal-vlak staan; verzonnen knipsels over een echt bedrijf horen
+    // hier niet. Zelfde gat op /story, hoofdstuk 06.
+    breed: false,
     img: null,
     alt: '',
+    w: 0, h: 0,
   },
   {
     num: 'Hoofdstuk 07 · Nu',
     year: '2026',
     title: 'De derde generatie',
     text: 'Tien jaar later vervallen die merkrechten alsnog, en Rutger haalt ze terug naar de familie. In Spanje ligt een straat die naar zijn opa en oma is vernoemd; zijn vader stond daar in 1985 op de foto, hij veertig jaar later op dezelfde plek. Hoofdstuk drie begint. Stap voor stap.',
-    img: '/img/heritage/2025-calle-artoni-rutger.webp',
-    alt: 'Rutger van Happen bij het straatnaambord Calle Artoni in Spanje, de straat die naar zijn grootouders Noud en Tony is vernoemd.',
+    // De diptiek, gelijk aan /story. De alinea hiernaast noemt vader én zoon,
+    // dus één van de twee tonen laat de helft van de zin onbewezen.
+    breed: true,
+    img: '/img/heritage/calle-artoni-85-25.webp',
+    alt: 'Twee opnamen van dezelfde plek in Spanje, in elkaar overlopend: links Rogér van Happen bij het bord C. Artoni in februari 1985, rechts Rutger van Happen op dezelfde hoek in februari 2025.',
+    w: 1160, h: 800,
   },
 ];
+
+/**
+ * Srcset-breedtes, afgekapt op wat het bestand werkelijk aankan. De scans
+ * lopen van 624 tot 2000 px breed en één vaste reeks past daar niet op: bij de
+ * kleinste vraag je varianten op die de optimizer alleen kan opblazen.
+ *
+ * De waarden moeten uit IMG_WIDTHS komen, want `nearestWidth` in lib/img.ts
+ * rondt naar bóven af naar de eerstvolgende toegestane trap. Een eigen getal
+ * doorgeven werkt daardoor averechts: 1156 wordt 1440, precies de upscale die
+ * je wilde vermijden. Vandaar filteren op de ladder zelf.
+ *
+ * De marge van vijf procent houdt de trap net boven een bestand binnenboord
+ * als die er vlak boven ligt: de scan van 624 px krijgt zo alsnog 640 mee,
+ * goed voor een retinascherm en praktisch geen opschaling. 1440 is het
+ * plafond; het mediakader is nooit breder dan ongeveer 700 css-px.
+ */
+const srcsetWidths = (intrinsic: number) =>
+  [480, 640, 768, 1080, 1440].filter((w) => w <= intrinsic * 1.05);
+
+/**
+ * Afmetingen voor het width/height-attribuut, teruggeschaald naar maximaal
+ * 1080 px met behoud van de verhouding. Pic gebruikt `width` zowel voor het
+ * attribuut als voor de breedte van de terugval-`src`; de volle 2000 px
+ * doorgeven zet daar een variant van 1920 px neer voor een kader van hooguit
+ * zevenhonderd. Zie dezelfde helper in src/pages/story.astro.
+ */
+const displayBox = (w: number, h: number) =>
+  w <= 1080 ? { w, h } : { w: 1080, h: Math.round((h / w) * 1080) };
 ---
 <section class="vh-heritage">
   <div class="vh-heritage-track">
@@ -77,16 +152,27 @@ const steps = [
 
     <!-- Timeline panels -->
     {steps.map((step) => (
-      <div class="vh-heritage-panel">
+      <div class={`vh-heritage-panel${step.breed ? ' vh-heritage-panel--breed' : ''}`}>
         <div class="vh-heritage-text-col">
           <p class="vh-heritage-step-num vh-mono">{step.num}</p>
           <p class="vh-heritage-year">{step.year}</p>
           <h3 class="vh-heritage-step-title">{step.title}</h3>
           <p class="vh-heritage-step-text">{step.text}</p>
         </div>
-        <div class={`vh-heritage-media${step.img ? '' : ' vh-heritage-media--placeholder'}`}>
+        <div
+          class={`vh-heritage-media${step.img ? '' : ' vh-heritage-media--placeholder'}${step.breed ? ' vh-heritage-media--breed' : ''}`}
+          style={step.breed ? `--vh-media-ratio: ${step.w} / ${step.h};` : undefined}
+        >
           {step.img
-            ? <Pic src={step.img} alt={step.alt} width={800} height={600} widths={[480, 640, 768, 1080]} sizes="(max-width: 700px) 90vw, 45vw" loading="lazy" />
+            ? <Pic
+                src={step.img}
+                alt={step.alt}
+                width={displayBox(step.w, step.h).w}
+                height={displayBox(step.w, step.h).h}
+                widths={srcsetWidths(step.w)}
+                sizes={step.breed ? '(max-width: 700px) 90vw, 55vw' : '(max-width: 700px) 90vw, 45vw'}
+                loading="lazy"
+              />
             : <span>{step.year}</span>
           }
         </div>
