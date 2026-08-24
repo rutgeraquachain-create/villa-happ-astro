@@ -155,13 +155,24 @@ export async function verstuurDirect(to: string, subject: string, html: string, 
 
 /* ---------- Back-in-stock ---------- */
 
+/**
+ * Deze mail gaat naar élk product waarvoor iemand een melding aanvroeg, dus
+ * ook naar hoodies en sokken. Er stond eerst "het gaat om een genummerde
+ * oplage" en daarna "we maken in beperkte oplage". Allebei onwaar voor deze
+ * producten: alleen de caps zijn genummerd en gelimiteerd, de rest wordt per
+ * serie gemaakt en kan terugkomen.
+ *
+ * Deze tekst doet daarom geen enkele uitspraak over schaarste. Wil je die hier
+ * ooit wel doen, dan moet het oplagegegeven van het product mee de functie in;
+ * in een vaste tekst is het per definitie fout voor de helft van de catalogus.
+ */
 export function renderBackInStock(productName: string, size: string, productUrl: string): { subject: string; html: string } {
   const sizeLabel = size && size !== 'One size' ? ` in maat ${escapeHtml(size)}` : '';
   const html = `
   <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#F7F3EC;padding:32px;color:#2B2620;">
     <p style="font-style:italic;font-size:22px;margin:0 0 4px;">Villa Happ</p>
     <h1 style="font-size:26px;margin:0 0 16px;">Hij is er weer.</h1>
-    <p style="margin:0 0 24px;line-height:1.6;">Je vroeg ons je te mailen zodra <b>${escapeHtml(productName)}</b>${sizeLabel} terug op voorraad is. Dat moment is nu. Let op: het gaat om een genummerde oplage, dus op is echt op.</p>
+    <p style="margin:0 0 24px;line-height:1.6;">Je vroeg ons je te mailen zodra <b>${escapeHtml(productName)}</b>${sizeLabel} terug op voorraad is. Dat moment is nu, zolang de voorraad strekt.</p>
     <p style="margin:0 0 24px;">
       <a href="${productUrl}" style="display:inline-block;background:#2B2620;color:#F7F3EC;padding:14px 26px;text-decoration:none;">Bekijk het stuk</a>
     </p>

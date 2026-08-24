@@ -6,7 +6,7 @@ import CartDrawer from '../components/commerce/CartDrawer.astro';
 import ConsentBanner from '../components/layout/ConsentBanner.astro';
 import { isPreviewHost } from '../lib/site';
 import { srcsetFor, optimizedSrc } from '../lib/img';
-import { organizationLd, websiteLd } from '../lib/entity';
+import { organizationLd, websiteLd, BRAND } from '../lib/entity';
 import Analytics from '@vercel/analytics/astro';
 
 // Self-hosted fonts (geen Google Fonts CDN: sneller, geen third-party, AVG-proof)
@@ -60,7 +60,7 @@ const ogImageAbs = new URL(ogImage, canonicalURL).toString();
 const ogSize = ogImage === DEFAULT_OG_IMAGE ? DEFAULT_OG_SIZE : null;
 const ogAlt = ogImageAlt
   ?? (ogImage === DEFAULT_OG_IMAGE
-    ? 'Villa Happ heritage lifestyle: genummerde stukken van zwaar biologisch katoen'
+    ? BRAND.shareImageAlt
     : title);
 // Preview-omgeving (*.vercel.app) mag nooit de index in
 const preview = isPreviewHost(canonicalURL.origin);
