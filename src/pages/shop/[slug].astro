@@ -129,19 +129,25 @@ const returnPolicyLd = [
     merchantReturnDays: BUSINESS.returnDays,
     returnMethod: 'https://schema.org/ReturnByMail',
     /**
-     * `returnFees` is bij Google één enkele waarde, en in dit venster gelden
-     * er twee kosten tegelijk: de klant betaalt de retourzending én er gaan
-     * verwerkingskosten af. Hier stond `ReturnFeesCustomerResponsibility`
-     * terwijl er een `restockingFee` naast hing, en dat is de combinatie die
-     * Google's model niet kent. `RestockingFees` is de waarde die bij die
-     * eigenschap hoort, dus die wint.
+     * Google accepteert voor `returnFees` maar drie waarden: `FreeReturn`,
+     * `ReturnFeesCustomerResponsibility` en `ReturnShippingFees`.
+     * `RestockingFees` bestaat wel bij schema.org maar valt buiten dat
+     * drietal, en leverde daarom "Ongeldige enum-waarde in veld returnFees"
+     * op in Search Console, op alle vijf de hoodie-varianten en op de cap.
      *
-     * Daarmee vertelt de enum niet langer dat de klant de retourzending zelf
-     * betaalt. Dat feit staat daarom nu expliciet in de omschrijving: het mag
-     * niet uit dit blok verdwijnen, want dan belooft het schema iets ruimers
-     * dan de voorwaarden.
+     * Hier stond eerder dat `returnFees` en `restockingFee` elkaar zouden
+     * tegenspreken. Dat is niet zo: het zijn losse eigenschappen zonder
+     * onderlinge eis. `returnFees` zegt wie de retourzending betaalt,
+     * `restockingFee` is een aparte inhouding op de terugbetaling. De enige
+     * eigenschap met zo'n koppeling is `returnShippingFeesAmount`, en die
+     * mag alleen bij `ReturnShippingFees`; wij gebruiken hem niet.
+     *
+     * De klant betaalt de retourzending zelf, dus dit blijft
+     * `ReturnFeesCustomerResponsibility`. De verwerkingskosten staan er
+     * gewoon naast in `restockingFee`, en worden daarnaast met zoveel
+     * woorden in de omschrijving genoemd.
      */
-    returnFees: 'https://schema.org/RestockingFees',
+    returnFees: 'https://schema.org/ReturnFeesCustomerResponsibility',
     restockingFee: {
       '@type': 'MonetaryAmount',
       value: (BUSINESS.returnFeeCents / 100).toFixed(2),
