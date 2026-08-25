@@ -248,7 +248,10 @@ const faqItems = [
   { q: 'Kan ik retourneren?', a: RETURN_SENTENCE },
   { q: 'Is dit een origineel Villa Happ stuk?', a: edition
       ? `Ja. Dit komt uit een genummerde oplage van ${edition} stuks en wordt geleverd met een certificaat van echtheid.`
-      : 'Ja. Elk stuk wordt in Waalwijk ontworpen en met zorg gemaakt, in beperkte oplage.' },
+      // Geen oplage: dan ook geen schaarstebelofte. Alleen de caps zijn
+      // genummerd en gelimiteerd; hoodies en sokken worden per serie gemaakt
+      // en kunnen terugkomen.
+      : 'Ja. Elk stuk wordt in Waalwijk ontworpen en met zorg gemaakt, van zwaar biologisch katoen.' },
 ];
 
 const faqLd = {

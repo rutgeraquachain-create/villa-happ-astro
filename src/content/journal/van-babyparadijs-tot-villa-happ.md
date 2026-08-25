@@ -29,7 +29,7 @@ Wie de familie kent, weet dat het daar niet eindigt. Twee keer vallen betekent h
 
 ## Hoofdstuk drie
 
-Villa Happ vandaag is de derde generatie, en werkt vanuit Waalwijk in plaats van Tilburg. De schaal is bewust kleiner: [beperkte oplages](/journal/zo-ontstaat-een-genummerde-oplage), biologisch katoen, ontwerpen die pas de deur uitgaan als ze kloppen. Er wordt niet overgeproduceerd. Als een oplage op is, komt hij niet terug.
+Villa Happ vandaag is de derde generatie, en werkt vanuit Waalwijk in plaats van Tilburg. De schaal is bewust kleiner: biologisch katoen, ontwerpen die pas de deur uitgaan als ze kloppen, en series die we maken op wat er nodig is. De caps gaan een stap verder en verschijnen in een [genummerde oplage](/journal/zo-ontstaat-een-genummerde-oplage). Als die op is, komt hij niet terug.
 
 Dat is de les van tachtig jaar. Een merk blijft bestaan door iets te maken dat mensen willen doorgeven. Precies daarom staat op elk stuk een nummer: het is er één uit een verhaal dat al drie generaties duurt.
 

@@ -75,6 +75,16 @@ export const BRAND = {
     'Na een stilte is het merk terug — voor diezelfde dragers, nu (jong)volwassen. Vanuit Waalwijk ontwerpt de derde generatie collecties die nostalgie verbinden met eigentijdse stijl, met respect voor de roots en het vakmanschap van drie generaties Van Happen.',
     'Villa Happ — voor de dragers van toen.',
   ],
+  /**
+   * Alt-tekst bij het sitebrede deelbeeld. Staat hier en niet in Base.astro,
+   * omdat het een merkclaim is en geen opmaak.
+   *
+   * Hier stond "genummerde stukken van zwaar biologisch katoen". Dat noemt de
+   * hele collectie genummerd, en dat is onjuist: alleen de caps krijgen een
+   * nummer en een certificaat. Deze fout is nu tweemaal gemaakt, dus hij is
+   * vastgelegd in tests/merkclaims.test.ts.
+   */
+  shareImageAlt: 'Villa Happ heritage lifestyle: zwaar biologisch katoen uit Waalwijk',
   /** Kernfeiten, kort en citeerbaar (voor llms.txt en answer-first content) */
   facts: [
     'Het verhaal begon op 10 mei 1945 in Tilburg, toen Tony Kuijsters met haar man Bas Gaillard de winkel Gaillard Kuijsters opende aan de Heuvelstraat 85.',

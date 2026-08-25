@@ -27,6 +27,6 @@ Vouw de hoodie op in plaats van hem maandenlang aan een dunne hanger te laten ha
 
 ## Waarom dit werkt
 
-Een kledingstuk dat jaren meegaat is de duurzaamste keuze die er bestaat, duurzamer dan welk label ook. Daarom maken we alles in [beperkte oplage](/journal/zo-ontstaat-een-genummerde-oplage) en schrijven we deze gids erbij: we maken liever één hoodie die tien jaar blijft dan drie die na één winter op zijn. Twijfel je over je maat of zit je met een onderhoudsvraag? Stuur ons een bericht via de [contactpagina](/contact), we denken graag mee.
+Een kledingstuk dat jaren meegaat is de duurzaamste keuze die er bestaat, duurzamer dan welk label ook. Daarom schrijven we deze gids erbij: we maken liever één hoodie die tien jaar blijft dan drie die na één winter op zijn. Twijfel je over je maat of zit je met een onderhoudsvraag? Stuur ons een bericht via de [contactpagina](/contact), we denken graag mee.
 
 De hoodie is er in [olijfgroen](/shop/organic-cotton-hoodie-olijfgroen) en [navy](/shop/organic-cotton-hoodie-navy).
