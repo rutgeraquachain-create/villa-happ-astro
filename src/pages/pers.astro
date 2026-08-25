@@ -5,6 +5,7 @@ import Base from '../layouts/Base.astro';
 import Pic from '../components/Pic.astro';
 import { BUSINESS } from '../lib/business';
 import { BRAND } from '../lib/entity';
+import { persOpDatum } from '../lib/pers-archief';
 import '../styles/shop.css';
 
 /**
@@ -85,6 +86,37 @@ const assets = [
           </p>
         </div>
 
+        {/**
+          * Archief van vermeldingen in de vakpers. Geen citaten uit de stukken
+          * en geen screenshots: alleen kop, uitgever, datum en een link naar
+          * het origineel. Zo blijft het bij verwijzen, en leest de bezoeker het
+          * artikel bij de bron die het geschreven heeft.
+          *
+          * Dit is ook de onderbouwing van de bijnaam die op /story staat. Een
+          * merk dat over zichzelf zegt dat de pers hem The Comeback Kid noemde,
+          * hoort te kunnen laten zien waar dat staat.
+          */}
+        <div class="vh-trust-group">
+          <h2 class="vh-trust-group-title">Villa Happ in de pers</h2>
+          <p class="vh-prose" style="margin-bottom:18px;">
+            De opkomst en de val zijn destijds door de vakpers gevolgd. Deze
+            stukken zijn van de betreffende redacties, niet van ons; ze staan
+            hier als vindplaats. De bijnaam The Comeback Kid komt uit het
+            artikel van FashionUnited van 1 juni 2007.
+          </p>
+          <ol class="vh-pers-lijst" role="list">
+            {persOpDatum().map((p) => (
+              <li class="vh-pers-item">
+                <a href={p.url} target="_blank" rel="noopener noreferrer">{p.kop}</a>
+                <span class="vh-pers-meta vh-mono">
+                  {p.bron}<span aria-hidden="true"> · </span>
+                  <time datetime={p.datum}>{p.datumTekst}</time>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+
         <div class="vh-trust-group">
           <h2 class="vh-trust-group-title">Beeldmateriaal</h2>
           <p class="vh-prose" style="margin-bottom:18px;">
@@ -143,6 +175,37 @@ const assets = [
       margin-top: 10px;
     }
     .vh-press-item .vh-mono { font-size: 11px; color: var(--vh-ink-muted); }
+
+    /* Persarchief. Genummerd omdat de volgorde de tijdlijn ís. */
+    .vh-pers-lijst {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-width: 760px;
+      border-top: 1px solid var(--vh-ink-hairline, rgba(28, 24, 19, 0.14));
+    }
+    .vh-pers-item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 4px 20px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--vh-ink-hairline, rgba(28, 24, 19, 0.14));
+    }
+    .vh-pers-item a {
+      font-size: 15.5px;
+      line-height: 1.45;
+      /* Ruimte laten voor de metaregel ernaast, maar op smal scherm mag de kop
+         de volle breedte pakken en zakt de bron eronder. */
+      flex: 1 1 22ch;
+    }
+    .vh-pers-meta {
+      font-size: 11px;
+      color: var(--vh-ink-muted);
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
   </style>
 </Base>
 

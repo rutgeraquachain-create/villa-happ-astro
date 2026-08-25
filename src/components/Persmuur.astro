@@ -1,0 +1,117 @@
+---
+/**
+ * Persmuur voor hoofdstuk 06, "The Comeback Kid".
+ *
+ * Dat hoofdstuk had als enige geen beeld en toonde een leeg jaartalvlak. Er
+ * bestaat ook geen archieffoto uit die periode. Wat er wél is, is de vakpers:
+ * de val, de comeback en de tweede val zijn destijds allemaal opgeschreven.
+ * Die koppen zijn het beeld geworden.
+ *
+ * Geen screenshots. Zie de toelichting in src/lib/pers-archief.ts: dit zijn
+ * citaten met bronvermelding, gezet in onze eigen letters, niet andermans
+ * artikelpagina's als plaatje.
+ *
+ * De koppen zijn bewust geen links. Dit staat midden in een verhaal en op de
+ * homepage zelfs in een gepinde horizontale scroll; daar wil je de lezer niet
+ * wegklikken. Het volledige archief mét links staat op /pers.
+ *
+ * `toon` regelt alleen de kleuren: `donker` voor de espresso-achtergrond van
+ * de homepage, `licht` voor de papieren achtergrond van /story.
+ */
+import { persMuur } from '../lib/pers-archief';
+
+interface Props {
+  toon?: 'donker' | 'licht';
+}
+const { toon = 'donker' } = Astro.props;
+const items = persMuur();
+---
+<div class={`vh-persmuur vh-persmuur--${toon}`}>
+  <p class="vh-persmuur-label vh-mono">Wat de vakpers schreef</p>
+  <ul class="vh-persmuur-lijst" role="list">
+    {items.map((p) => (
+      <li class="vh-persmuur-item">
+        <p class="vh-persmuur-kop">{p.kop}</p>
+        <p class="vh-persmuur-bron vh-mono">
+          <span>{p.bron}</span>
+          <span aria-hidden="true"> · </span>
+          <time datetime={p.datum}>{p.datumTekst}</time>
+        </p>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<style>
+  /**
+   * Twee tonen, één opzet. De kleuren komen uit variabelen die per toon worden
+   * gezet, zodat de rest van de regels maar één keer bestaat.
+   */
+  .vh-persmuur {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(14px, 2.2vh, 26px);
+    padding: clamp(22px, 4%, 44px);
+    container-type: inline-size;
+  }
+  .vh-persmuur--donker {
+    --pm-kop: rgba(244, 238, 227, 0.92);
+    --pm-bron: rgba(244, 238, 227, 0.5);
+    --pm-lijn: rgba(244, 238, 227, 0.14);
+    --pm-label: var(--vh-accent);
+  }
+  .vh-persmuur--licht {
+    --pm-kop: var(--vh-ink);
+    --pm-bron: var(--vh-ink-muted);
+    --pm-lijn: var(--vh-ink-hairline, rgba(28, 24, 19, 0.14));
+    --pm-label: var(--vh-accent);
+  }
+
+  .vh-persmuur-label {
+    color: var(--pm-label);
+    margin: 0 0 clamp(4px, 1vh, 10px);
+    font-size: clamp(9px, 1.6cqw, 11px);
+  }
+
+  .vh-persmuur-lijst {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 2vh, 22px);
+  }
+  .vh-persmuur-item + .vh-persmuur-item {
+    border-top: 1px solid var(--pm-lijn);
+    padding-top: clamp(12px, 2vh, 22px);
+  }
+
+  /**
+   * De kop schaalt op containerbreedte, niet op viewportbreedte. Dit blok zit
+   * in een mediakolom van soms 350 en soms 700 px; met `vw` zou de tekst op een
+   * breed scherm in een smalle kolom alsnog uit zijn jasje groeien.
+   */
+  .vh-persmuur-kop {
+    font-family: var(--vh-font-serif);
+    font-size: clamp(15px, 5.2cqw, 27px);
+    line-height: 1.16;
+    letter-spacing: -0.015em;
+    color: var(--pm-kop);
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  .vh-persmuur-bron {
+    color: var(--pm-bron);
+    font-size: clamp(9px, 2.4cqw, 12px);
+    margin: 0;
+  }
+
+  /* Zonder container-queries valt hij terug op vaste maten die overal passen. */
+  @supports not (container-type: inline-size) {
+    .vh-persmuur-kop { font-size: 19px; }
+    .vh-persmuur-bron { font-size: 11px; }
+    .vh-persmuur-label { font-size: 10px; }
+  }
+</style>

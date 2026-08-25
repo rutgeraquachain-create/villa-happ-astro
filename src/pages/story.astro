@@ -3,6 +3,7 @@ export const prerender = true;
 
 import Base from '../layouts/Base.astro';
 import Pic from '../components/Pic.astro';
+import Persmuur from '../components/Persmuur.astro';
 import { BRAND, organizationLd } from '../lib/entity';
 
 /**
@@ -81,6 +82,7 @@ const breadcrumbLd = {
 const chapters = [
   {
     breed: false,
+    pers: false,
     num: 'Hoofdstuk 01',
     year: '10 mei 1945',
     title: 'Heuvelstraat 85',
@@ -99,6 +101,7 @@ const chapters = [
     // de blinde zijmuur van het buurpand over. Voor een hoofdstuk dat
     // Babyparadijs heet, moet je Babyparadijs kunnen lezen.
     breed: true,
+    pers: false,
     num: 'Hoofdstuk 02',
     year: 'Midden jaren vijftig',
     title: 'Babyparadijs',
@@ -122,6 +125,7 @@ const chapters = [
     // Noud opleverde. De alinea's hieronder noemen daarom geen jaartal bij het
     // beeld, en hoofdstuk 04 blijft de plek waar 1972 wél expliciet valt.
     breed: true,
+    pers: false,
     num: 'Hoofdstuk 03',
     year: 'Jaren zestig',
     title: 'De eerste die ging',
@@ -136,6 +140,7 @@ const chapters = [
   },
   {
     breed: false,
+    pers: false,
     num: 'Hoofdstuk 04',
     year: "Jaren '70, '80, '90",
     title: 'De marktleider die je niet zag',
@@ -158,6 +163,7 @@ const chapters = [
   },
   {
     breed: false,
+    pers: false,
     num: 'Hoofdstuk 05',
     year: '1999',
     title: 'Een eigen naam in de Koopgoot',
@@ -173,12 +179,13 @@ const chapters = [
   },
   {
     breed: false,
+    pers: true,
     num: 'Hoofdstuk 06',
     year: 'Eind 2004 tot 2011',
     title: 'The Comeback Kid',
-    // Wacht op scans uit de vakpers van deze periode. Tot die er zijn blijft
-    // het jaartal-vlak staan; knipsels namaken over een echt bedrijf is geen
-    // optie. Zelfde gat in HeritageScroll.astro, hoofdstuk 06.
+    // Geen archieffoto uit deze periode, wel de vakpers die de val, de comeback
+    // en de tweede val destijds vastlegde. Die koppen zijn hier het beeld.
+    // Zelfde blok in HeritageScroll.astro, hoofdstuk 06.
     img: null,
     alt: '',
     w: 0, h: 0,
@@ -190,6 +197,7 @@ const chapters = [
   },
   {
     breed: true,
+    pers: false,
     num: 'Hoofdstuk 07',
     year: '2021 tot nu',
     title: 'De derde generatie',
@@ -235,10 +243,12 @@ const chapters = [
           {ch.paras.map((p) => <p class="st-chapter-para">{p}</p>)}
         </div>
         <div
-          class={`st-chapter-media${ch.img ? '' : ' is-placeholder'}`}
+          class={`st-chapter-media${ch.img || ch.pers ? '' : ' is-placeholder'}${ch.pers ? ' st-chapter-media--pers' : ''}`}
           style={ch.breed ? `--st-media-ratio: ${ch.w} / ${ch.h};` : undefined}
         >
-          {ch.img
+          {ch.pers
+            ? <Persmuur toon="licht" />
+            : ch.img
             ? <Pic
                 src={ch.img}
                 alt={ch.alt}
@@ -389,6 +399,16 @@ const chapters = [
     color: var(--vh-accent);
   }
 
+  /**
+   * Hoofdstuk 06 toont de persmuur in plaats van een foto. Een vaste
+   * verhouding werkt daar niet: beeld laat zich bijsnijden, tekst niet. Op
+   * 360 px vroeg de muur 356 px in een kader van 337 px, en omdat dit kader
+   * `overflow: hidden` heeft groeit het niet vanzelf mee maar knipt het af.
+   * Dus hier de hoogte door de inhoud laten bepalen. Het vlak en de ronding
+   * blijven, die zetten het blok af tegen de papieren achtergrond.
+   */
+  .st-chapter-media--pers { aspect-ratio: auto; }
+
   .st-chapter-media {
     aspect-ratio: 4/5;
     border-radius: var(--vh-radius-md);
@@ -447,6 +467,7 @@ const chapters = [
     .st-chapter--flip .st-chapter-text { order: 1; }
     .st-chapter--flip .st-chapter-media { order: 2; }
     .st-chapter-media { max-height: 52vh; }
+    .st-chapter-media--pers { max-height: none; }
   }
   @media (prefers-reduced-motion: reduce) {
     .st-reveal { opacity: 1; transform: none; }
