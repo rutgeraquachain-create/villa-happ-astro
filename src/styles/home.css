@@ -44,6 +44,7 @@
    breed beeld zonder JavaScript alsnog een vaste hoogte en een bijsnede.
    Zie `.vh-heritage-media--breed` verderop voor het waarom. */
 .no-js .vh-heritage-media--breed { height: auto; max-height: 50vh; }
+.no-js .vh-heritage-media--pers { height: auto; max-height: none; }
 .no-js .vh-heritage-progress { display: none; }
 /* Reduced motion: alleen op desktop verticaal stapelen (geen pin-scrub).
    Op mobiel blijft de swipe-carousel: swipen is gebruikersgestuurd,
@@ -65,6 +66,7 @@
 	}
 	.vh-reduced .vh-heritage-media { height: 50vh; }
 	.vh-reduced .vh-heritage-media--breed { height: auto; max-height: 50vh; }
+	.vh-reduced .vh-heritage-media--pers { height: auto; max-height: none; }
 	.vh-reduced .vh-heritage-progress { display: none; }
 }
 
@@ -653,6 +655,15 @@
  * per stap via --vh-media-ratio. De hoogte blijft onder 70vh zodat een breed
  * paneel het pinned scherm niet uitrekt.
  */
+/**
+ * Hoofdstuk 06 heeft geen foto maar de persmuur. Tekst laat zich niet
+ * bijsnijden zoals een beeld: past hij niet, dan valt er een kop weg. Gemeten
+ * op 390 px vroeg de muur 301 px in een kader van 249 px, en werd de laatste
+ * kop afgeknipt. Vandaar een kader dat met de inhoud meegroeit in plaats van
+ * een vaste hoogte.
+ */
+.vh-heritage-media--pers { height: auto; min-height: 70vh; background: transparent; }
+
 .vh-heritage-panel--breed { grid-template-columns: 5fr 7fr; }
 .vh-heritage-media--breed {
 	height: auto;
@@ -727,6 +738,10 @@
 	}
 	.vh-heritage-media--breed img { transform: none; }
 	.vh-heritage-media--placeholder { height: 26vh; }
+	/* Zie de toelichting bij `.vh-heritage-media--pers` hierboven. Deze regel
+	   staat later in het bestand en telt evenveel klassen, dus zonder deze
+	   herhaling wint `height: 36vh` van de kaart alsnog. */
+	.vh-heritage-media--pers { height: auto; min-height: 0; }
 	.vh-heritage-text-col { padding: 0 20px 26px; }
 	/* Jaartal valt over de onderrand van de foto heen */
 	.vh-heritage-year {

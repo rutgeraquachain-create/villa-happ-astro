@@ -14,6 +14,7 @@
 // valt Rutger dan buiten beeld, bij de Elzenweg de vrachtwagen. Zie
 // `.vh-heritage-panel--breed` in src/styles/home.css.
 import Pic from '../Pic.astro';
+import Persmuur from '../Persmuur.astro';
 const steps = [
   {
     num: 'Hoofdstuk 01 · Het begin',
@@ -21,6 +22,7 @@ const steps = [
     title: 'Heuvelstraat 85',
     text: 'Het land is vijf dagen vrij als Tony Kuijsters en haar man Bas Gaillard hun winkel openen aan de Heuvelstraat. Vier kinderen later is Bas er niet meer; de jongste is twee maanden oud. Tony doet de volgende ochtend gewoon weer open. En de ochtend daarna ook.',
     breed: false,
+    pers: false,
     img: '/img/heritage/1945-heuvelstraat-85-gaillard-kuijsters.webp',
     alt: 'De winkel Gaillard Kuijsters aan de Heuvelstraat 85 in Tilburg, met twee etalages vol kinderwagens, wiegjes en babygoed.',
     w: 2000, h: 1436,
@@ -31,6 +33,7 @@ const steps = [
     title: 'Babyparadijs',
     text: 'Jaren staat ze er alleen voor. Het oude pand gaat tegen de vlakte en er komt een modern gebouw voor terug, het eerste in zijn soort in Tilburg. Op datzelfde adres beginnen Tony en Noud van Happen opnieuw, onder een naam die je niet vergeet: Babyparadijs. Er komen nog drie kinderen bij, van wie Rogér de jongste is.',
     breed: false,
+    pers: false,
     img: '/img/heritage/babyparadijs-heuvelstraat.webp',
     alt: 'Babyparadijs aan de Heuvelstraat 85 in Tilburg, met de winkelpui en voorbijgangers op straat.',
     w: 1156, h: 800,
@@ -47,6 +50,7 @@ const steps = [
     // dateert het niet. Hoofdstuk 04 op /story noemt 1972 wél bij naam, dus
     // vervang dit zodra er echt jaren-zestig-materiaal boven water komt.
     breed: true,
+    pers: false,
     img: '/img/heritage/1972-elzenweg-33-waalwijk.webp',
     alt: 'Het bedrijfspand aan de Elzenweg 33 in Waalwijk met een vrachtwagen van Van Happen, met op de zijkant "van happen internationale confectie industrie".',
     w: 2000, h: 1426,
@@ -62,6 +66,7 @@ const steps = [
     // op /story. De Industrieweg-foto met de vrachtwagens blijft in de
     // filmstrook staan.
     breed: false,
+    pers: false,
     img: '/img/heritage/1991-james-wattlaan-7-drunen.webp',
     alt: 'Het hoofdkantoor van Van Happen Fashion aan de James Wattlaan in Drunen, 1991, met een bedrijfssculptuur op het gazon ervoor.',
     // De scan is maar 624 px breed. `widths` wordt hieronder op de echte
@@ -75,6 +80,7 @@ const steps = [
     title: 'Een eigen naam in de Koopgoot',
     text: 'Na decennia van andermans labels komt er eindelijk een eigen naam: Villa Happ. De eerste winkel opent in de Koopgoot, en het lint wordt doorgeknipt door een jongen van dertien. Diezelfde jongen kruipt daarna in het pak van Arjo the Rat. Er volgen tachtig winkels door Europa, geleid vanuit het hoofdkantoor aan de James Wattlaan in Drunen, met ambities tot Dubai aan toe.',
     breed: false,
+    pers: false,
     img: '/img/heritage/villa-happ-winkel.webp',
     alt: 'Een Villa Happ winkel met het logo boven de etalages, kinderkleding in de vitrines en Arjo the Rat bij de ingang.',
     w: 1280, h: 857,
@@ -86,10 +92,11 @@ const steps = [
     year: "'04/'11",
     title: 'The Comeback Kid',
     text: 'Verkocht, gevallen, teruggekocht, weer opgebouwd. De vakpers geeft het merk in 2007 een bijnaam die blijft plakken. In 2010 ligt er opnieuw een doorstart klaar en is de financiering zo goed als rond, tot het stukloopt op de overdracht van de merkrechten. Drie winkels draaien nog door tot in 2011. Daar houdt het op.',
-    // Wacht op scans van de vakpers uit deze periode. Tot die er zijn blijft
-    // het jaartal-vlak staan; verzonnen knipsels over een echt bedrijf horen
-    // hier niet. Zelfde gat op /story, hoofdstuk 06.
+    // Het enige hoofdstuk zonder archieffoto, want die bestaat niet van deze
+    // periode. In plaats daarvan de koppen uit de vakpers die de val, de
+    // comeback en de tweede val destijds vastlegden. Zelfde blok op /story.
     breed: false,
+    pers: true,
     img: null,
     alt: '',
     w: 0, h: 0,
@@ -102,6 +109,7 @@ const steps = [
     // De diptiek, gelijk aan /story. De alinea hiernaast noemt vader én zoon,
     // dus één van de twee tonen laat de helft van de zin onbewezen.
     breed: true,
+    pers: false,
     img: '/img/heritage/calle-artoni-85-25.webp',
     alt: 'Twee opnamen van dezelfde plek in Spanje, in elkaar overlopend: links Rogér van Happen bij het bord C. Artoni in februari 1985, rechts Rutger van Happen op dezelfde hoek in februari 2025.',
     w: 1160, h: 800,
@@ -160,10 +168,12 @@ const displayBox = (w: number, h: number) =>
           <p class="vh-heritage-step-text">{step.text}</p>
         </div>
         <div
-          class={`vh-heritage-media${step.img ? '' : ' vh-heritage-media--placeholder'}${step.breed ? ' vh-heritage-media--breed' : ''}`}
+          class={`vh-heritage-media${step.img || step.pers ? '' : ' vh-heritage-media--placeholder'}${step.breed ? ' vh-heritage-media--breed' : ''}${step.pers ? ' vh-heritage-media--pers' : ''}`}
           style={step.breed ? `--vh-media-ratio: ${step.w} / ${step.h};` : undefined}
         >
-          {step.img
+          {step.pers
+            ? <Persmuur toon="donker" />
+            : step.img
             ? <Pic
                 src={step.img}
                 alt={step.alt}
