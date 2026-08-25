@@ -108,9 +108,16 @@ pagina's, het schema, de footer en de transactiemails lezen daar. Ontbrekende
 waarden staan op de sentinel `PENDING`, waardoor pagina's "volgt" tonen in plaats
 van een halve zin. Zet nooit een verzonnen waarde in de plaats.
 
-Let op het onderscheid: `registeredAddress` is de KvK-inschrijving en gaat het
-schema in, `returnAddress` is waar consumenten retouren heen sturen. Er is geen
-bezoekadres.
+Let op de twee adresvelden. `businessAddress` is wat de site publiceert als
+vestiging en gaat het schema in, `returnAddress` is waar consumenten retouren
+heen sturen. Sinds 25 augustus 2026 voeren ze dezelfde waarde, Vijzelweg 18E,
+maar ze blijven gescheiden omdat hun rollen verschillen. Er is geen bezoekadres.
+
+Het veld heette eerder `registeredAddress` en voerde de KvK-inschrijving,
+Besoyensestraat 90. Dat is het woonadres van de eigenaar en hoort niet op een
+webshop. De site wijkt daarmee bewust af van het Handelsregister zolang dat niet
+is bijgewerkt. Zet dat niet terug om de bronnen te laten matchen; de toelichting
+staat in `src/lib/business.ts` en in `docs/vindbaarheid-vermeldingen.md`.
 
 **`src/lib/entity.ts` is de enige bron voor merkfeiten**: de canonieke definitie,
 het merkverhaal, de kernfeiten, `sameAs`. Die voedt het Organization-schema,

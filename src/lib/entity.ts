@@ -141,15 +141,15 @@ export function organizationLd(origin: string = getSiteOrigin()) {
     // Vestigingsplaats volgens de KvK, niet de plaats uit het verhaal
     address: {
       '@type': 'PostalAddress',
-      ...(isPending(BUSINESS.registeredAddress.street)
+      ...(isPending(BUSINESS.businessAddress.street)
         ? {}
         : {
-            streetAddress: BUSINESS.registeredAddress.street,
-            postalCode: BUSINESS.registeredAddress.postalCode,
+            streetAddress: BUSINESS.businessAddress.street,
+            postalCode: BUSINESS.businessAddress.postalCode,
           }),
-      addressLocality: isPending(BUSINESS.registeredAddress.city)
+      addressLocality: isPending(BUSINESS.businessAddress.city)
         ? BUSINESS.locality
-        : BUSINESS.registeredAddress.city,
+        : BUSINESS.businessAddress.city,
       addressRegion: BUSINESS.region,
       addressCountry: BUSINESS.country,
     },

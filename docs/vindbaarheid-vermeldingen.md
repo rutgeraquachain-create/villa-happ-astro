@@ -43,6 +43,17 @@ volgende scrape je correcties gewoon terug.
 | Bron | Wat er staat | Actie |
 |---|---|---|
 | KvK Handelsregister | Besoyensestraat 90, 5141 AL Waalwijk. Postadres Postbus 1, 5140 AA. SBI 46421. | Controleer of KvK een website- en e-mailveld heeft en of daar `villahapp.nl` staat |
+
+> **De site wijkt hier bewust van af, sinds 25 augustus 2026.**
+> Besoyensestraat 90 is het woonadres van Rutger. Dat hoort niet op een webshop
+> en niet in een schema dat elke bedrijvengids overneemt. De site voert daarom
+> Vijzelweg 18E als vestigingsadres, het adres waar het werk gebeurt.
+>
+> Dat betekent dat de site en het register nu uiteenlopen, en met het KvK-nummer
+> erbij is dat na te trekken. Juridisch is het te verdedigen: de wet vraagt het
+> adres waar de onderneming feitelijk gevestigd is. Zet dit dus **niet** terug
+> naar Besoyensestraat om de bronnen te laten matchen. Wordt het register
+> bijgewerkt, dan lost het zichzelf op.
 | Google Business Profile | **bestaat en is geclaimd**, Knowledge Graph-id `/g/11yfcnmv6h`. Categorie "Kledingwinkel", website `https://www.villahapp.nl/`, telefoon 06 19848002, geen adres (servicegebied NL/BE/LU) | Bedrijfsomschrijving herschrijven, zie hieronder. Categorie en website-URL bijstellen |
 
 ### De omschrijving in het bedrijfsprofiel is feitelijk onjuist
@@ -80,9 +91,10 @@ het merk nu weg als kinderkledingwinkel.
 | LinkedIn `/company/villa-happ` | oude keten, "The Kids' Fashion House" | Opheffen of samenvoegen als je er toegang toe hebt |
 
 Let op het postadres. De KvK-afgeleiden noemen **Postbus 1, 5140 AA Waalwijk**,
-terwijl `business.ts` als `postalAddress` de Besoyensestraat aanhoudt. Eén van
-de twee klopt niet. Dit staat niet op de site, dus het is geen zichtbare fout,
-maar het is wel een verschil tussen wat de code zegt en wat het register zegt.
+terwijl `business.ts` als `postalAddress` sinds 25 augustus 2026 Vijzelweg 18E
+aanhoudt. Dat veld is alleen een terugval zolang het vestigingsadres ontbreekt
+en komt in de praktijk nergens op de site, dus het is geen zichtbare fout. Wil
+je die postbus in de code, vul hem dan daar in; hij mag wél een postbus zijn.
 
 ## Categorie B: zakelijke gidsen
 

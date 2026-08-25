@@ -50,45 +50,66 @@ export const BUSINESS = {
 
   /* ---------- Adressen ---------- */
   /**
-   * Het KvK-inschrijvingsadres. Art. 3:15d BW vraagt om een geografisch
-   * adres; een postbus telt daar formeel niet voor.
+   * Het adres dat de site publiceert als vestiging. Art. 3:15d BW vraagt om
+   * een geografisch adres waar de onderneming gevestigd is; een postbus telt
+   * daar formeel niet voor.
    *
-   * Heette eerder `visitingAddress` en voerde Vijzelweg 18E. Beide klopten
-   * niet: er is géén bezoekadres — klanten kunnen nergens langskomen — en
-   * Vijzelweg is uitsluitend het retouradres. Voor de vindbaarheid is dit
-   * het adres dat telt: elke zakelijke gids (telefoonboek.nl, Compadex,
-   * Datanyze) leest de KvK uit, dus een schema dat iets anders beweert
-   * levert een NAP-conflict op dat Google en AI-modellen niet kunnen rijmen.
+   * HEET BEWUST `businessAddress` EN NIET `registeredAddress`.
+   * Dit veld voerde eerder Besoyensestraat 90, het KvK-inschrijvingsadres, met
+   * als argument dat zakelijke gidsen het register uitlezen en een afwijkend
+   * schema een NAP-conflict oplevert. Dat argument klopt nog steeds, maar er
+   * staat iets zwaarders tegenover: Besoyensestraat 90 is het woonadres van
+   * Rutger, en dat hoort niet op een webshop, in een schema en in elke
+   * bedrijvengids die dat overneemt.
    *
-   * St. Antoniusstraat 102 is de oude inschrijving van vóór de verhuizing;
-   * die komt extern nog voor en hoort daar opgeschoond te worden.
+   * Dus vanaf 25 augustus 2026 Vijzelweg 18E, het adres waar het werk gebeurt.
+   * De oude naam zou daarmee liegen zolang het register nog Besoyensestraat
+   * aanhoudt, vandaar de hernoeming. `businessAddress` blijft ook kloppen
+   * nadat de KvK is bijgewerkt.
+   *
+   * Let op bij het narekenen: de KvK-inschrijving staat nog op Besoyensestraat
+   * 90. Zolang dat zo is wijkt de site af van het register, en omdat het
+   * KvK-nummer op de site staat is dat na te trekken. Dat is geen fout in de
+   * code: de wet vraagt het adres waar de onderneming feitelijk gevestigd is,
+   * en dat is Vijzelweg. Wordt het register bijgewerkt, dan vallen de twee weer
+   * samen en hoeft hier niets te veranderen.
+   *
+   * St. Antoniusstraat 102 is een nog oudere inschrijving die extern rondzwerft
+   * en daar opgeschoond hoort te worden.
    */
-  registeredAddress: {
-    street: 'Besoyensestraat 90',
-    postalCode: '5141 AL',
+  businessAddress: {
+    street: 'Vijzelweg 18E',
+    postalCode: '5145 NK',
     city: 'Waalwijk',
   },
   /**
-   * Postadres. Mag wél een postbus zijn; hier gelijk aan de KvK-inschrijving.
-   * Wordt alleen gebruikt als terugval in `addressLine()` zolang het
-   * geregistreerde adres ontbreekt, dus in de praktijk nooit zichtbaar.
+   * Postadres. Mag wél een postbus zijn. Wordt alleen gebruikt als terugval in
+   * `addressLine()` zolang het vestigingsadres ontbreekt, dus in de praktijk
+   * nooit zichtbaar. Stond op Besoyensestraat en is meeverhuisd: een woonadres
+   * hoort ook niet in de broncode van een openbare repository te blijven staan.
    */
   postalAddress: {
-    line: 'Besoyensestraat 90',
-    postalCode: '5141 AL',
+    line: 'Vijzelweg 18E',
+    postalCode: '5145 NK',
     city: 'Waalwijk',
   },
-  /** Vestigingsplaats volgens de KvK; voedt het Organization-schema. */
+  /** Vestigingsplaats; voedt het Organization-schema. */
   locality: 'Waalwijk',
   region: 'Noord-Brabant',
   country: 'NL',
   countryName: 'Nederland',
   /**
-   * Waar retourzendingen heen gaan. Staat bewust los van het
-   * KvK-inschrijvingsadres: dit is een retourpunt, geen vestiging. Dit is
-   * het enige adres waar een consument iets naartoe stuurt, dus het moet
-   * op de retour- en herroepingspagina's blijven staan — een herroeping
-   * naar het verkeerde adres geldt als niet ontvangen.
+   * Waar retourzendingen heen gaan. Sinds 25 augustus 2026 hetzelfde adres als
+   * `businessAddress`, en dat blijft een apart veld met een eigen reden.
+   *
+   * De rollen verschillen namelijk. Het vestigingsadres staat er omdat de wet
+   * een geografisch adres eist; dit adres staat er omdat een consument er een
+   * pakket heen stuurt, met een tenaamstelling erbij. Verhuist het bedrijf en
+   * blijft het retourpunt, of andersom, dan lopen ze weer uiteen. Ze samen in
+   * één veld duwen omdat ze vandaag gelijk zijn, kost dan meer dan het oplevert.
+   *
+   * Een herroeping naar het verkeerde adres geldt als niet ontvangen, dus dit
+   * adres moet op de retour- en herroepingspagina's blijven staan.
    */
   returnAddress: {
     name: 'Villa Happ Nederland',
@@ -173,9 +194,9 @@ interface PendingField {
 
 const PENDING_CANDIDATES: PendingField[] = [
   { path: 'vatId', label: 'Btw-identificatienummer', why: 'Verplicht op de site en op facturen (art. 3:15d BW).' },
-  { path: 'registeredAddress.street', label: 'Vestigingsadres — straat en nummer', why: 'Geografisch adres is verplicht voor een webshop.' },
-  { path: 'registeredAddress.postalCode', label: 'Vestigingsadres — postcode', why: 'Hoort bij het vestigingsadres.' },
-  { path: 'registeredAddress.city', label: 'Vestigingsadres — plaats', why: 'Hoort bij het vestigingsadres.' },
+  { path: 'businessAddress.street', label: 'Vestigingsadres — straat en nummer', why: 'Geografisch adres is verplicht voor een webshop.' },
+  { path: 'businessAddress.postalCode', label: 'Vestigingsadres — postcode', why: 'Hoort bij het vestigingsadres.' },
+  { path: 'businessAddress.city', label: 'Vestigingsadres — plaats', why: 'Hoort bij het vestigingsadres.' },
   { path: 'returnAddress.name', label: 'Retouradres — tenaamstelling', why: 'Klanten moeten weten naar wie ze terugsturen.' },
   { path: 'returnAddress.street', label: 'Retouradres — straat en nummer', why: 'Zonder retouradres kan niemand retourneren.' },
   { path: 'returnAddress.postalCode', label: 'Retouradres — postcode', why: 'Hoort bij het retouradres.' },
@@ -196,7 +217,7 @@ export function pendingFields(): PendingField[] {
 
 /** Vestigingsadres op één regel, of het postadres zolang dat ontbreekt. */
 export function addressLine(): string {
-  const v = BUSINESS.registeredAddress;
+  const v = BUSINESS.businessAddress;
   if (!isPending(v.street) && !isPending(v.postalCode) && !isPending(v.city)) {
     return `${v.street}, ${v.postalCode} ${v.city}`;
   }

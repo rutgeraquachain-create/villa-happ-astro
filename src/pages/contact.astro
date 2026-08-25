@@ -5,7 +5,7 @@ import Base from '../layouts/Base.astro';
 import { BUSINESS } from '../lib/business';
 import '../styles/shop.css';
 
-const registered = BUSINESS.registeredAddress;
+const registered = BUSINESS.businessAddress;
 ---
 <Base title="Contact · Villa Happ" description="Vragen over je bestelling, een stuk of het merk? Neem contact op met Villa Happ. We reageren binnen 1 tot 2 werkdagen.">
   <section class="vh-page">
@@ -76,10 +76,14 @@ const registered = BUSINESS.registeredAddress;
             <p class="vh-prose">Veel vragen over maten, verzending en retour beantwoorden we al in de <a href="/faq">veelgestelde vragen</a>.</p>
           </div>
           {/* Villa Happ is een online merk zonder bezoekadres. Hier stond
-              eerder "Bezoek op afspraak" bij het retouradres — twee keer mis:
-              er is geen locatie waar klanten terechtkunnen, en het getoonde
-              adres was het retourpunt, niet de vestiging. Retouren gaan naar
-              Vijzelweg, de inschrijving staat op Besoyensestraat. */}
+              eerder "Bezoek op afspraak", en dat kan niet: er is geen locatie
+              waar klanten terechtkunnen.
+
+              Daarna stond er "stuur retouren niet hierheen maar naar het
+              retouradres". Die zin klopte toen de vestiging nog op een ander
+              adres stond. Sinds het vestigingsadres Vijzelweg is, wijst hij de
+              klant van het juiste adres weg. Vandaar de omkering: hetzelfde
+              adres, en de retourpagina blijft de plek voor de voorwaarden. */}
           <div class="vh-trust-group">
             <h2 class="vh-trust-group-title">Vestigingsadres</h2>
             <p class="vh-prose">
@@ -90,9 +94,9 @@ const registered = BUSINESS.registeredAddress;
             </p>
             <p class="vh-prose" style="margin-top:10px;font-size:14px;">
               Villa Happ is een online merk; er is geen winkel of bezoekadres.
-              Stuur retouren niet hierheen maar naar het retouradres op de
-              <a href="/retourneren">retourpagina</a>. Het merk begon in 1945 in
-              Tilburg; vandaag zit Villa Happ in Waalwijk.
+              Retouren gaan naar ditzelfde adres, maar meld ze eerst aan volgens
+              de stappen op de <a href="/retourneren">retourpagina</a>. Het merk
+              begon in 1945 in Tilburg; vandaag zit Villa Happ in Waalwijk.
             </p>
           </div>
           <div class="vh-trust-group">
