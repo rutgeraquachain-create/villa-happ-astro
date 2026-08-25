@@ -39,6 +39,11 @@
 	gap: 32px;
 }
 .no-js .vh-heritage-media { height: 50vh; }
+/* Liggende opnamen houden ook hier hun verhouding. Deze selector telt twee
+   klassen, net als de regel erboven, dus zonder deze uitzondering krijgt een
+   breed beeld zonder JavaScript alsnog een vaste hoogte en een bijsnede.
+   Zie `.vh-heritage-media--breed` verderop voor het waarom. */
+.no-js .vh-heritage-media--breed { height: auto; max-height: 50vh; }
 .no-js .vh-heritage-progress { display: none; }
 /* Reduced motion: alleen op desktop verticaal stapelen (geen pin-scrub).
    Op mobiel blijft de swipe-carousel: swipen is gebruikersgestuurd,
@@ -59,6 +64,7 @@
 		gap: 32px;
 	}
 	.vh-reduced .vh-heritage-media { height: 50vh; }
+	.vh-reduced .vh-heritage-media--breed { height: auto; max-height: 50vh; }
 	.vh-reduced .vh-heritage-progress { display: none; }
 }
 
@@ -633,6 +639,26 @@
 	font-size: clamp(80px, 14vw, 200px);
 	color: rgba(244,238,227,0.08);
 }
+/**
+ * Liggende opnamen in de tijdlijn.
+ *
+ * Het standaardkader is een halve kolom bij 70vh hoog, dus bijna vierkant, en
+ * `object-fit: cover` houdt van een liggend beeld nog ruim zestig procent van
+ * de breedte over. Gemeten op de twee beelden die het raakt: bij de diptiek
+ * Calle Artoni verdwijnt Rutger rechts uit beeld, terwijl de alinea ernaast
+ * juist vader én zoon noemt; bij de Elzenweg verdwijnt de vrachtwagen links.
+ *
+ * Dus dezelfde oplossing als `.st-chapter--breed` op /story: de mediakolom
+ * krijgt meer breedte en het beeld houdt zijn eigen verhouding, aangeleverd
+ * per stap via --vh-media-ratio. De hoogte blijft onder 70vh zodat een breed
+ * paneel het pinned scherm niet uitrekt.
+ */
+.vh-heritage-panel--breed { grid-template-columns: 5fr 7fr; }
+.vh-heritage-media--breed {
+	height: auto;
+	aspect-ratio: var(--vh-media-ratio, 3 / 2);
+	max-height: 70vh;
+}
 .vh-heritage-progress {
 	position: absolute;
 	bottom: 40px; left: clamp(40px, 8vw, 160px);
@@ -689,6 +715,17 @@
 		background: rgba(244, 238, 227, 0.06);
 	}
 	.vh-heritage-media img { will-change: transform; transform: scale(1.12); }
+	/* Zelfde reden als op desktop, en let op de volgorde: de regel hierboven
+	   staat later in het bestand dan `.vh-heritage-media--breed`, dus zonder
+	   deze override wint `height: 36vh` alsnog van de aspect-ratio.
+	   De opschaling gaat er hier af: die snijdt nog eens elf procent van de
+	   randen, en juist aan de randen van de diptiek staan het bord en Rutger. */
+	.vh-heritage-media--breed {
+		height: auto;
+		aspect-ratio: var(--vh-media-ratio, 3 / 2);
+		max-height: 36vh;
+	}
+	.vh-heritage-media--breed img { transform: none; }
 	.vh-heritage-media--placeholder { height: 26vh; }
 	.vh-heritage-text-col { padding: 0 20px 26px; }
 	/* Jaartal valt over de onderrand van de foto heen */
