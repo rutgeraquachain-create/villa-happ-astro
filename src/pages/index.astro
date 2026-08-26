@@ -23,15 +23,33 @@ import '../styles/home.css';
 ---
 
 <Base bodyClass="vh-home" title="Villa Happ · Heritage lifestyle, gemaakt voor nu" preloadImage="/img/products/hoodie-olijfgroen-lifestyle.webp">
+  {/**
+    * DEZE VOLGORDE IS EEN KEUZE, GEEN TOEVAL.
+    *
+    * Aangepast op 25 augustus 2026 op verzoek van Rutger. De pagina opende
+    * eerder met het manifest en het verhaal, en kwam pas laat bij de producten
+    * uit. Nu staat de collectie meteen na het jaartalblok en schuift het
+    * verhaal naar achteren.
+    *
+    * De genummerde labels in de secties lopen mee met deze volgorde, dus
+    * `01 / De collectie` staat bovenaan en `04 / Het verhaal` verderop.
+    * Verplaats je hier een sectie, pas dan ook het nummer in dat component
+    * aan; anders leest de pagina van boven naar beneden als 04, 03, 01 en
+    * oogt dat als een fout.
+    *
+    * De drie blokken zonder nummer horen bij hun buur en reizen mee:
+    * Marquee bij de hero, ParallaxColumns bij het archief (zelfde beelden),
+    * KineticWordmark als aanloop naar de merkenfamilie.
+    */}
   <Loader />
   <Hero />
   <Marquee />
-  <Manifesto />
   <YearMask />
-  <HeritageScroll />
-  <Campaign />
-  <DropSpotlight />
   <ShopGrid />
+  <DropSpotlight />
+  <Manifesto />
+  <Campaign />
+  <HeritageScroll />
   <ParallaxColumns />
   <Lookbook />
   <KineticWordmark />
