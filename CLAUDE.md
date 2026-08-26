@@ -58,11 +58,31 @@ wat je raakte:
   DOM niet raakt.
 - **Altijd:** de geraakte kernflow, niet alleen het nieuwe stukje.
 
-De browserpane rapporteert in deze omgeving met enige regelmaat een viewport van
-0 bij 0, en dan zijn DOM-metingen daar waardeloos. Headless Chrome met
-`--window-size` en `--dump-dom` is het betrouwbare alternatief. Let op dat
-`--window-size` de browserchrome meetelt: de werkelijke viewport is ongeveer
-honderd pixels lager dan wat je opgeeft.
+> **De homepage bewijs je alleen door hem echt te scrollen.** Een gemeten
+> DOM-volgorde zegt dat de secties op de juiste plek stáán, niet dat de pagina
+> goed leest. Gemeten 26 augustus 2026: na een herschikking klopte de volgorde,
+> waren er nul overloop en evenveel pins als daarvoor, en stond er tóch een
+> leeg scherm van bijna twee schermhoogtes midden in de pagina. Dat is live
+> gegaan. Loop de pagina van boven naar beneden af en kijk per schermhoogte of
+> er inhoud staat.
+
+Verifiëren op deze site is lastiger dan elders, want er zit Lenis (smooth
+scroll) en GSAP met gepinde secties op. Wat niet werkt:
+
+- **De browserpane** rapporteert hier vaak 0 bij 0, en als de pane niet
+  zichtbaar is rendert hij geen frames. Dan draait er geen rAF, beweegt Lenis
+  niet, en meet je een pagina waarvan de pins nog niet berekend zijn.
+- **`--virtual-time-budget` met `--dump-dom`** spoelt timers vooruit maar laat
+  die rAF-lus niet meelopen. Synthetische wheel-events komen dan niet aan.
+- **`window.scrollTo`** wordt door Lenis teruggedraaid.
+- **`--window-size`** klemt op ongeveer 500 css-px, dus een test op "390 px"
+  draait in werkelijkheid op 500.
+
+Wat wél werkt is Chrome aansturen via het DevTools-protocol: echte
+muiswiel-events die Lenis wel oppikt, `Page.captureScreenshot` voor een echt
+beeld, en `Emulation.setDeviceMetricsOverride` voor een exacte viewport. Het
+script staat in de scriptbibliotheek onder `cdp-scrollpagina`. Let op de vlag
+`--remote-allow-origins=*`, zonder die weigert Chrome de websocket.
 
 ## Poort 3: deploy
 
@@ -148,6 +168,16 @@ eis over `returnFees`; alleen `returnShippingFeesAmount` heeft zo'n koppeling.
 **Schema-wijzigingen raken de varianten apart.** Google erft niets van een
 `ProductGroup` naar zijn `hasVariant`-items: elk item wordt als los product
 beoordeeld. Controleer je markup dus op de groep én op elke variant.
+
+**Gepinde secties moeten verversen in paginavolgorde, niet in codevolgorde.**
+ScrollTrigger ververst triggers in de volgorde waarin je ze aanmaakt. Staat er
+een pin bóven je die later wordt geïnitialiseerd, dan rekent jouw pin met een
+pagina waarin die spacer nog ontbreekt en eindigt hij te vroeg. Gemeten: door
+het cine-blok boven de tijdlijn te zetten liet die tijdlijn 1572 px te vroeg
+los, ongeveer de pin-duur van het cine-blok, met een leeg scherm als gevolg.
+`pinPrioriteit()` in `src/lib/motion.ts` leidt de `refreshPriority` af uit de
+plek in het document, zodat herschikken van de homepage dit niet opnieuw breekt.
+Voeg je een nieuwe gepinde sectie toe, geef hem die `refreshPriority` mee.
 
 **Absoluut gepositioneerde koppen naast gecentreerde media.** In `src/styles/home.css` liep
 de drop-titel over het cap-beeld zodra het venster laag werd, omdat beide hun

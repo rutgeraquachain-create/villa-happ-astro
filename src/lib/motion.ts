@@ -29,6 +29,35 @@ if (reduce) document.documentElement.classList.add('vh-reduced');
 
 let lenis: Lenis | null = null;
 
+/**
+ * Verversvolgorde voor gepinde secties.
+ *
+ * ScrollTrigger ververst standaard in de volgorde waarin je de triggers
+ * aanmaakt. Bij pinnen moet dat de volgorde op de pagina zijn, want een pin
+ * boven je zet een spacer neer en duwt alles eronder omlaag. Ververst een
+ * lager gepinde sectie eerst, dan rekent hij met een pagina waarin die spacer
+ * nog ontbreekt en eindigt zijn pin te vroeg.
+ *
+ * GEMETEN, 26 augustus 2026. Bij het naar voren halen van de collectie en de
+ * drop kwam het cine-blok bóven de tijdlijn te staan, terwijl `initHeritage`
+ * in dit bestand eerder draait dan `initCinematic`. De tijdlijn liet daardoor
+ * 1572 px te vroeg los, ongeveer de pin-duur van het cine-blok. Wat de
+ * bezoeker zag: het verhaal, dan een volledig leeg scherm, dan het laatste
+ * hoofdstuk opnieuw. In de oude volgorde viel de code- en paginavolgorde
+ * toevallig samen en viel het niet op.
+ *
+ * De prioriteit komt daarom uit de plek in het document en niet uit een vast
+ * getal: hoger ververst eerder, en een volgende herschikking van de homepage
+ * kan dit niet opnieuw breken.
+ */
+function pinPrioriteit(el: Element | null): number {
+  if (!el) return 0;
+  const sectie = el.closest('section');
+  if (!sectie) return 0;
+  const index = Array.from(document.querySelectorAll('section')).indexOf(sectie);
+  return index < 0 ? 0 : -index;
+}
+
 /* ---------- Lenis ---------- */
 function initLenis() {
   if (reduce) return;
@@ -133,6 +162,7 @@ function initHeroCinema() {
         end: '+=110%',
         anticipatePin: 1,
         invalidateOnRefresh: true,
+        refreshPriority: pinPrioriteit(hero),
         onUpdate: (self) => { if (self.progress > 0.02) clearEntrance(); },
       },
     });
@@ -162,6 +192,7 @@ function initHeroCinema() {
       end: '+=130%',
       anticipatePin: 1,
       invalidateOnRefresh: true,
+      refreshPriority: pinPrioriteit(hero),
     },
   });
 
@@ -224,6 +255,7 @@ function initHeritage() {
       scrub: 1,
       end: () => '+=' + getScrollAmount(),
       invalidateOnRefresh: true,
+      refreshPriority: pinPrioriteit(section),
       onUpdate: (self) => {
         if (progress) progress.style.width = self.progress * 100 + '%';
       },
@@ -338,6 +370,7 @@ function initCinematic() {
       end: isDesktop ? '+=180%' : '+=150%',
       anticipatePin: 1,
       invalidateOnRefresh: true,
+      refreshPriority: pinPrioriteit(section),
       onUpdate: (self) => {
         overlay?.classList.toggle('is-on', self.progress > 0.8);
       },
