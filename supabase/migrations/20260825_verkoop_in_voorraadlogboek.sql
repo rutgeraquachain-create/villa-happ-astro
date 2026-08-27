@@ -14,13 +14,23 @@
 -- niet vanuit de applicatie. Zo kan een verkoop niet doorgaan terwijl de regel
 -- wegvalt, en telt het ook mee als iemand de functie ooit rechtstreeks aanroept.
 
-CREATE OR REPLACE FUNCTION finalize_inventory(v_id UUID, qty INT) RETURNS BOOLEAN AS $$
+-- LET OP: `SET search_path TO ''` en de `public.`-prefixen zijn geen franje.
+-- De live functie draagt ze al, maar het migratiebestand van 20260704 niet:
+-- die hardening is later toegevoegd en nooit teruggeschreven naar de repo.
+-- Zonder deze regel zou dit bestand die beveiliging stilletjes terugdraaien.
+-- Met een lege search_path moet elke tabelnaam gekwalificeerd zijn, anders
+-- faalt de functie bij de eerste aanroep.
+CREATE OR REPLACE FUNCTION public.finalize_inventory(v_id UUID, qty INT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SET search_path TO ''
+AS $$
 DECLARE
   nieuwe_stand INT;
 BEGIN
   IF qty <= 0 THEN RETURN FALSE; END IF;
 
-  UPDATE inventory
+  UPDATE public.inventory
   SET quantity = GREATEST(0, quantity - qty),
       reserved = GREATEST(0, reserved - qty),
       updated_at = NOW()
@@ -38,12 +48,12 @@ BEGIN
 
   RETURN TRUE;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- Terugbetalen zet voorraad terug. Dat gebeurt vandaag nog met de hand via
 -- /beheer/voorraad, en die route logt al. Komt er ooit een automatische
 -- retourboeking, geef die dan reden 'retour' zodat verkoop en retour in het
 -- logboek uit elkaar te houden blijven.
 
-COMMENT ON FUNCTION finalize_inventory(UUID, INT) IS
+COMMENT ON FUNCTION public.finalize_inventory(UUID, INT) IS
   'Zet een reservering om in verkoop en schrijft de mutatie in voorraad_mutaties (reden: verkoop).';
