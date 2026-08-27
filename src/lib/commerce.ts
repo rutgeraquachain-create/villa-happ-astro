@@ -75,6 +75,18 @@ export async function getAllDrops(): Promise<Drop[]> {
 }
 
 /**
+ * Btw-bedrag dat in een brutobedrag zit.
+ *
+ * Prijzen op de site zijn consumentenprijzen inclusief btw, dus rekenen we
+ * terug in plaats van erbij op te tellen. Stond eerder alleen in mail.ts, maar
+ * de checkout heeft hem net zo hard nodig: `orders.tax_cents` bewaarde nul
+ * terwijl de bevestigingsmail wél een btw-bedrag toonde.
+ */
+export function vatFromGross(grossCents: number, rate: number): number {
+  return Math.round((grossCents * rate) / (100 + rate));
+}
+
+/**
  * Currency formatting helper.
  */
 export function formatPrice(cents: number, currency = 'EUR'): string {

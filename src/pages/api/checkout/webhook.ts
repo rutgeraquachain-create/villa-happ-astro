@@ -53,9 +53,15 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response('', { status: 503 });
   }
 
+  /**
+   * De twee beeldjoins voeden de thumbnail in de orderbevestiging. De variant
+   * gaat voor: bij de hoodies verschilt de foto per kleur, en `products` voert
+   * alleen het hoofdbeeld. Faalt de join of staat er niets, dan rendert de
+   * regel zonder foto (zie `mailBeeld` in lib/mail.ts).
+   */
   const { data: order } = await sb
     .from('orders')
-    .select('*, order_items(*)')
+    .select('*, order_items(*, product_variants(image_url), products(image_url))')
     .eq('mollie_payment_id', paymentId)
     .single();
 
@@ -136,8 +142,18 @@ export const POST: APIRoute = async ({ request }) => {
 
     const portaalUrl = `${origin}/bestelling/${maakOrderToken(order.id, 'portaal')}`;
 
+    /**
+     * De beeldpaden uit de joins plat op de regel zetten, zodat het sjabloon
+     * niets van de databasevorm hoeft te weten. De variantfoto gaat voor de
+     * productfoto: bij de hoodies verschilt het beeld per kleur.
+     */
+    const regelsMetBeeld = (order.order_items || []).map((regel: any) => ({
+      ...regel,
+      image_url: regel.product_variants?.image_url || regel.products?.image_url || null,
+    }));
+
     // Bevestiging aan de klant
-    const bevestiging = renderOrderConfirmation({ ...order, portaalUrl });
+    const bevestiging = renderOrderConfirmation({ ...order, order_items: regelsMetBeeld, portaalUrl });
     await zetInWachtrij({
       soort: 'orderbevestiging',
       ontvanger: order.customer_email,

@@ -41,3 +41,6 @@ pnpm-debug.log*
 # Tussenversies van de archieffoto's: afgeleide van docs/archief-express/,
 # reproduceerbaar met ffmpeg. Alleen de bronnen horen in de repo.
 docs/archief-klaar/
+
+# Gerenderde mailpreviews (scripts/mail-preview.mjs), lokaal hulpmiddel
+.mailpreview/

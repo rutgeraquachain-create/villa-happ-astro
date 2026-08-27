@@ -18,6 +18,8 @@ import type { Payment } from '@mollie/api-client';
 import { getSupabaseAdmin } from '../../../lib/supabase';
 import { getMollie } from '../../../lib/mollie';
 import { CheckoutSchema, shippingCost } from '../../../lib/checkout-logic';
+import { vatFromGross } from '../../../lib/commerce';
+import { BUSINESS } from '../../../lib/business';
 import { reserveInventory, releaseInventory } from '../../../lib/inventory';
 import { begrens, clientSleutel, teVeelVerzoeken } from '../../../lib/rate-limit-db';
 import { maakOrderToken, authSecretOntbreekt } from '../../../lib/order-token';
@@ -107,8 +109,17 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const shipping = shippingCost(body.shipping.country, subtotal);
-  const tax = 0; // BTW is al verwerkt in prijs (Dutch BTW-inclusief gebruikelijk)
-  const total = subtotal + shipping + tax;
+  /**
+   * Prijzen zijn consumentenprijzen inclusief btw, dus het totaal is gewoon
+   * artikelen plus verzending. De btw telt er niet bovenop, hij zit er al in.
+   *
+   * `tax_cents` bewaart wél het bedrag dat erin zit, en stond eerder op nul.
+   * Klantgericht viel dat niet op, want de bevestigingsmail rekent zelf terug.
+   * Voor een boekhoudexport is een kolom die nul zegt terwijl er 21% in zit
+   * een valstrik voor wie hem ooit uitleest.
+   */
+  const total = subtotal + shipping;
+  const tax = vatFromGross(total, BUSINESS.vatRate);
 
   // 3. Reserveer voorraad atomair; bij tekort alle eerdere reserveringen terugdraaien
   const reserved: { variant_id: string; quantity: number; product_name: string }[] = [];
