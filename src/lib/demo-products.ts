@@ -56,7 +56,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
       '/img/products/hoodie-olijfgroen-front.webp',
       '/img/products/hoodie-olijfgroen-back.webp',
       '/img/products/hoodie-olijfgroen-lifestyle.webp',
-      '/img/products/hoodie-logo-detail.webp',
+      '/img/products/hoodie-embleem-detail.webp',
     ],
     meta: 'Olijfgroen · Unisex',
     note: 'Biologisch katoen, embleem geborduurd, niet geprint.',
@@ -143,8 +143,13 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
       'Ook als 5-pack verkrijgbaar',
       'Ontworpen in Waalwijk',
     ],
+    // Dezelfde beelden als in Supabase. Stond hier eerder het merklogo als
+    // plaatshouder, waardoor een build zonder database de sokken toonde met een
+    // logo en je de echte foto's lokaal nooit zag. Daarmee kon CI, die zonder
+    // sleutels bouwt, een kapot beeldpad ook niet opmerken.
     images: [
-      '/img/brand/villa-happ-logo.webp',
+      '/img/products/sokken-front-v2.webp',
+      '/img/products/sokken-plat-v2.webp',
     ],
     meta: 'Sokken · 2 maten',
     note: 'De sokken waarmee de comeback begon.',
@@ -168,7 +173,9 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
       'Ontworpen in Waalwijk',
     ],
     images: [
-      '/img/brand/villa-happ-logo.webp',
+      '/img/products/sokken-5-pack-v2.webp',
+      '/img/products/sokken-plat-v2.webp',
+      '/img/products/sokken-front-v2.webp',
     ],
     meta: '5-pack · 2 maten',
     note: 'Vijf paar, voor elke stap een nieuwe.',
