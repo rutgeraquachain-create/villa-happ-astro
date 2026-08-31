@@ -196,7 +196,7 @@ export async function sendOrderConfirmation(order: OrderForMail): Promise<boolea
     return false;
   }
   const { subject, html } = renderOrderConfirmation(order);
-  return verstuurDirect(order.customer_email, subject, html);
+  return (await verstuurDirect(order.customer_email, subject, html)).ok;
 }
 
 /**
@@ -207,7 +207,21 @@ export async function sendOrderConfirmation(order: OrderForMail): Promise<boolea
  * hapering bij Resend geen orderbevestiging meer laat verdampen. Deze functie
  * is de laatste stap van de outbox zelf.
  */
-export async function verstuurDirect(to: string, subject: string, html: string, replyTo?: string): Promise<boolean> {
+export interface VerzendUitslag {
+  ok: boolean;
+  /**
+   * De id die Resend teruggeeft. Bewaren is niet optioneel: het is de enige
+   * sleutel waarmee een webhook-gebeurtenis aan de juiste rij te koppelen is.
+   * Zonder dit veld moet je matchen op ontvanger plus tijdstip, en dat gokt
+   * zodra dezelfde ontvanger twee mails vlak na elkaar krijgt.
+   */
+  id?: string;
+  fout?: string;
+}
+
+export async function verstuurDirect(
+  to: string, subject: string, html: string, replyTo?: string,
+): Promise<VerzendUitslag> {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -223,10 +237,23 @@ export async function verstuurDirect(to: string, subject: string, html: string, 
     }),
   });
   if (!res.ok) {
-    console.error('[mail] Resend gaf status', res.status, await res.text().catch(() => ''));
-    return false;
+    const tekst = await res.text().catch(() => '');
+    console.error('[mail] Resend gaf status', res.status, tekst);
+    return { ok: false, fout: `Resend ${res.status}: ${tekst}`.slice(0, 500) };
   }
-  return true;
+  // Het antwoord ontleden mag nooit de verzending ongedaan maken. De mail is
+  // op dit punt aangenomen; kunnen we de id niet lezen, dan verliezen we
+  // alleen de koppeling met de webhook en dat is geen reden om opnieuw te
+  // versturen. Anders zou een wijziging in hun antwoordformaat dubbele mail
+  // opleveren.
+  let id: string | undefined;
+  try {
+    const body = await res.json();
+    if (body && typeof body.id === 'string') id = body.id;
+  } catch {
+    console.warn('[mail] Resend gaf 2xx zonder leesbare id; webhook kan deze mail niet koppelen');
+  }
+  return { ok: true, id };
 }
 
 /* ---------- Back-in-stock ---------- */
@@ -264,7 +291,7 @@ export async function sendBackInStock(to: string, productName: string, size: str
     return false;
   }
   const { subject, html } = renderBackInStock(productName, size, productUrl);
-  return verstuurDirect(to, subject, html);
+  return (await verstuurDirect(to, subject, html)).ok;
 }
 
 /* ---------- Verzendbevestiging ---------- */
@@ -318,7 +345,7 @@ export async function sendShippingConfirmation(order: ShipmentForMail): Promise<
     return false;
   }
   const { subject, html } = renderShippingConfirmation(order);
-  return verstuurDirect(order.customer_email, subject, html);
+  return (await verstuurDirect(order.customer_email, subject, html)).ok;
 }
 
 /* ---------- Contactformulier ---------- */
@@ -377,7 +404,7 @@ export async function sendContactMessage(m: ContactMessage, to: string): Promise
     return false;
   }
   const { subject, html } = renderContactMessage(m);
-  return verstuurDirect(to, subject, html, m.email);
+  return (await verstuurDirect(to, subject, html, m.email)).ok;
 }
 
 function escapeHtml(s: string): string {
@@ -437,6 +464,65 @@ export function renderNieuweBestelling(order: OrderForMail, beheerUrl: string): 
     origin: getSiteOrigin(),
   });
   return { subject: `Nieuwe bestelling ${order.order_number} · ${formatPrice(order.total_cents)}`, html };
+}
+
+/* ---------- Alarm: mail kwam niet aan ---------- */
+
+/**
+ * Melding aan een tweede adres wanneer een mail bounced of als spam is
+ * gemarkeerd.
+ *
+ * Gaat bewust NIET naar `BUSINESS.orderEmail`. Dat is het adres dat de storing
+ * kan hebben, en een alarm dat in dezelfde postbus verdwijnt als het probleem
+ * is geen alarm. Het adres staat in `MAIL_ALARM_NAAR`.
+ *
+ * Sober gehouden: geen knop naar de klant, geen productbeelden. Dit is een
+ * operationeel bericht dat in één oogopslag moet zeggen wát er niet aankwam en
+ * bij wie, zodat je weet of je iemand moet bellen.
+ */
+export function renderMailAlarm(m: {
+  aflevering: string;
+  ontvanger: string;
+  onderwerp: string;
+  detail: string | null;
+  beheerUrl: string;
+}): { subject: string; html: string } {
+  const uitleg: Record<string, string> = {
+    gebounced: 'De ontvangende server heeft dit bericht geweigerd. Het is niet aangekomen en komt ook niet alsnog aan.',
+    spamklacht: 'De ontvanger heeft dit bericht als spam gemarkeerd. Het is wel aangekomen, maar niet goed terechtgekomen.',
+  };
+
+  const regel = (label: string, waarde: string) => `
+    <tr>
+      <td style="padding:0 0 6px;font-family:${LETTERTYPE};font-size:13px;color:${KLEUR.zacht};width:96px;vertical-align:top;">${label}</td>
+      <td style="padding:0 0 6px;font-family:${LETTERTYPE};font-size:15px;line-height:1.5;color:${KLEUR.ink};">${waarde}</td>
+    </tr>`;
+
+  const inhoud = `
+    ${titel('Mail niet aangekomen', escapeHtml(m.ontvanger))}
+    ${alinea(uitleg[m.aflevering] || 'Deze mail is niet goed terechtgekomen.')}
+
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:0 0 20px;">
+      ${regel('Onderwerp', escapeHtml(m.onderwerp))}
+      ${regel('Ontvanger', escapeHtml(m.ontvanger))}
+      ${regel('Wat', escapeHtml(m.aflevering))}
+      ${m.detail ? regel('Reden', escapeHtml(m.detail)) : ''}
+    </table>
+
+    ${lijn('0 0 18px')}
+
+    ${alinea('Ging dit over een bestelling, neem dan zelf contact op met de klant. Het systeem probeert het niet opnieuw: bij een weigering door de ontvangende server heeft dat geen zin.')}
+
+    <div style="margin:0 0 4px;">${knop(m.beheerUrl, 'Open het beheerportaal')}</div>`;
+
+  const html = shell({
+    preheader: `${m.aflevering}: ${m.onderwerp} aan ${m.ontvanger}.`,
+    inhoud,
+    voet: 'Je krijgt dit bericht omdat er mail niet is aangekomen. Het gaat naar een ander adres dan contact@, zodat een storing daar dit bericht niet meeneemt.',
+    origin: getSiteOrigin(),
+  });
+
+  return { subject: `Mail niet aangekomen: ${m.onderwerp}`, html };
 }
 
 /* ---------- Terugbetaling ---------- */

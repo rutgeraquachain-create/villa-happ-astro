@@ -111,9 +111,12 @@ async function probeerEen(
 
   let fout: string | null = null;
   let gelukt = false;
+  let providerId: string | undefined;
   try {
-    gelukt = await verstuurDirect(ontvanger, onderwerp, html, replyTo ?? undefined);
-    if (!gelukt) fout = 'Resend gaf geen bevestiging';
+    const uitslag = await verstuurDirect(ontvanger, onderwerp, html, replyTo ?? undefined);
+    gelukt = uitslag.ok;
+    providerId = uitslag.id;
+    if (!gelukt) fout = uitslag.fout || 'Resend gaf geen bevestiging';
   } catch (err) {
     fout = err instanceof Error ? err.message : String(err);
   }
@@ -121,7 +124,19 @@ async function probeerEen(
   if (gelukt) {
     await sb
       .from('uitgaande_mail')
-      .update({ status: 'verzonden', verzonden_op: new Date().toISOString(), geclaimd_op: null })
+      .update({
+        status: 'verzonden',
+        verzonden_op: new Date().toISOString(),
+        geclaimd_op: null,
+        // LET OP het verschil tussen deze twee kolommen. `status` zegt dat de
+        // mail de deur uit is; `aflevering` zegt wat de ontvangende server
+        // ermee deed. Hier zetten we alleen de eerste, plus de koppelsleutel
+        // waarmee de webhook straks de tweede invult. Ze hier allebei op
+        // "goed" zetten is precies de fout die zes dagen zoeken kostte bij
+        // VH-2026-00001.
+        provider_id: providerId ?? null,
+        aflevering: 'verstuurd',
+      })
       .eq('id', id);
     return true;
   }
@@ -156,13 +171,21 @@ export interface OutboxUitslag {
   wachtendVooraf: number;
   oudsteSecondenVooraf: number;
   opgegeven: number;
+  /**
+   * Mail die wél de deur uit ging en aantoonbaar niet is aangekomen: gebounced
+   * of als spam gemarkeerd. Staat los van `mislukt`, want dat telt alleen
+   * mislukte verzendpogingen. Dit onderscheid bestaat sinds de webhook er is;
+   * daarvoor was zulke mail onzichtbaar en telde hij mee als geslaagd.
+   */
+  nietAfgeleverd: number;
 }
 
 /** Verwerkt de wachtrij. Aangeroepen door de cron en door het beheerportaal. */
 export async function verwerkWachtrij(): Promise<OutboxUitslag> {
   const start = Date.now();
   const leeg: OutboxUitslag = {
-    verzonden: 0, mislukt: 0, wachtendVooraf: 0, oudsteSecondenVooraf: 0, opgegeven: 0,
+    verzonden: 0, mislukt: 0, wachtendVooraf: 0, oudsteSecondenVooraf: 0,
+    opgegeven: 0, nietAfgeleverd: 0,
   };
 
   const sb = getSupabaseAdmin();
@@ -197,12 +220,13 @@ async function leesAchterstand(sb: SupabaseClient) {
     wachtendVooraf: Number(rij?.wachtend ?? 0),
     oudsteSecondenVooraf: Number(rij?.oudste_seconden ?? 0),
     opgegeven: Number(rij?.opgegeven ?? 0),
+    nietAfgeleverd: Number(rij?.niet_afgeleverd ?? 0),
   };
 }
 
 /** Status voor het beheerportaal, zonder iets te verwerken. */
 export async function wachtrijStatus() {
   const sb = getSupabaseAdmin();
-  if (!sb) return { wachtendVooraf: 0, oudsteSecondenVooraf: 0, opgegeven: 0 };
+  if (!sb) return { wachtendVooraf: 0, oudsteSecondenVooraf: 0, opgegeven: 0, nietAfgeleverd: 0 };
   return leesAchterstand(sb);
 }

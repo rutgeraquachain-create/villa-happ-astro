@@ -29,7 +29,7 @@ const pagina = Number(Astro.url.searchParams.get('p') || '1');
 
 let lijst = { rijen: [] as any[], totaal: 0, pagina: 1, paginas: 1 };
 let cijfers = { teVerzenden: 0, onderweg: 0, wachtOpBetaling: 0, omzet30: 0 };
-let outbox = { wachtendVooraf: 0, oudsteSecondenVooraf: 0, opgegeven: 0 };
+let outbox = { wachtendVooraf: 0, oudsteSecondenVooraf: 0, opgegeven: 0, nietAfgeleverd: 0 };
 
 if (ingelogd && sb) {
   [lijst, cijfers, outbox] = await Promise.all([
@@ -92,6 +92,25 @@ const datum = (iso: string) =>
           {outbox.opgegeven > 0 && `${outbox.opgegeven} mail is definitief opgegeven, die moet je handmatig oppakken`}
           {'. '}
           <button type="button" class="bh-knop bh-knop--zacht" id="bh-outbox-nu" style="margin-left:6px;">Nu verwerken</button>
+        </p>
+      )}
+
+      {/**
+        * Aparte melding, bewust niet samengevoegd met die hierboven.
+        *
+        * Die gaat over de wachtrij: mail die nog moet vertrekken, en de knop
+        * lost dat op. Deze gaat over mail die wél is vertrokken en aantoonbaar
+        * niet is aangekomen. Daar helpt opnieuw verzenden niet tegen; iemand
+        * moet de klant bellen. Precies dat onderscheid ontbrak bij bestelling
+        * VH-2026-00001, waar 'verzonden' zes dagen lang als 'aangekomen' werd
+        * gelezen. Twee soorten problemen, twee meldingen.
+        */}
+      {outbox.nietAfgeleverd > 0 && (
+        <p class="bh-melding is-fout" id="bh-aflevering-melding">
+          {outbox.nietAfgeleverd === 1
+            ? '1 mail is niet aangekomen (geweigerd of als spam gemarkeerd).'
+            : `${outbox.nietAfgeleverd} mails zijn niet aangekomen (geweigerd of als spam gemarkeerd).`}
+          {' '}Opnieuw verzenden helpt hier niet. Ging het over een bestelling, neem dan zelf contact op met de klant.
         </p>
       )}
 
