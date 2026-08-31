@@ -162,7 +162,27 @@
     },
     {
       "source": "/img/products/hoodie-logo-detail-v2.webp",
-      "destination": "/img/products/hoodie-logo-detail.webp",
+      "destination": "/img/products/hoodie-embleem-detail.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/hoodie-logo-detail.webp",
+      "destination": "/img/products/hoodie-embleem-detail.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/sokken-front.webp",
+      "destination": "/img/products/sokken-front-v2.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/sokken-plat.webp",
+      "destination": "/img/products/sokken-plat-v2.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/sokken-5-pack.webp",
+      "destination": "/img/products/sokken-5-pack-v2.webp",
       "permanent": true
     },
     {

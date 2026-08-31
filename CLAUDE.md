@@ -122,6 +122,26 @@ database in hetzelfde ritme bij, en doe dat vóór je de branch pusht. Anders wi
 de eerste productiebuild naar bestanden die niet meer bestaan. Zet er 301's bij in
 `vercel.json` voor de oude paden, want die kunnen in Google Afbeeldingen staan.
 
+**Vervang de inhoud van een beeld nooit op hetzelfde pad.** `/img/(.*)` staat in
+`vercel.json` op `max-age=31536000, immutable`. Wie de oude versie al heeft
+gezien, krijgt hem daarna een jaar lang uit zijn cache, en `/_vercel/image` houdt
+zijn afgeleide varianten net zo lang vast. Een verbeterd beeld krijgt dus een
+nieuwe bestandsnaam plus een 301 vanaf de oude, precies zoals bij hernoemen. De
+301's dekken meteen het gat tussen de database-update en de merge af, want een
+build met oude paden landt dan alsnog op het nieuwe bestand.
+
+**Er hangt een tweede beeldset aan `public/img/products/`.** `mailBeeld()` in
+`src/lib/mail.ts` vertaalt elk productpad naar `/img/mail/<zelfde naam>.jpg`,
+want Outlook rendert geen WebP. Hernoem je een productfoto, draai dan
+`node scripts/mail-assets.mjs` en ruim de wees-JPG's op, anders staat er een
+kapot icoontje in de bestelbevestiging.
+
+**`src/lib/demo-products.ts` moet dezelfde beelden voeren als Supabase.** CI
+bouwt zonder sleutels en valt dus op deze demo-data terug. Wijkt die af, dan
+bewijst een groene CI-build niets over de echte beeldpaden. Gemeten 31 augustus
+2026: de sokken hadden hier het merklogo als plaatshouder, waardoor de sokfoto's
+in geen enkele lokale build of CI-controle voorkwamen.
+
 **`src/lib/business.ts` is de enige bron voor bedrijfs- en juridische gegevens**:
 KvK, btw-id, adressen, retouradres, telefoon, retourtermijnen. De juridische
 pagina's, het schema, de footer en de transactiemails lezen daar. Ontbrekende
@@ -178,6 +198,26 @@ los, ongeveer de pin-duur van het cine-blok, met een leeg scherm als gevolg.
 `pinPrioriteit()` in `src/lib/motion.ts` leidt de `refreshPriority` af uit de
 plek in het document, zodat herschikken van de homepage dit niet opnieuw breekt.
 Voeg je een nieuwe gepinde sectie toe, geef hem die `refreshPriority` mee.
+
+**Filmkorrel op een beeld dat nog lossy gecodeerd wordt, werkt averechts.** Bij
+de sokbeelden is korrel toegevoegd zodat de gerekende achtergrond niet gladder
+zou zijn dan het onderwerp. Twee fouten. Ten eerste kwam het getal (sigma 4,2)
+uit een meting op de bronfoto op volle resolutie, terwijl de uitsnede daarna naar
+het doek verkleind wordt en verkleinen ruis uitmiddelt: het onderwerp mat op
+canvasformaat nog maar sigma 0,82, dus de achtergrond kreeg vijf keer zoveel
+korrel als de sok. Ten tweede overleeft fijne korrel een webp-encode niet. De
+encoder kan hem niet vasthouden, besteedt er wel bits aan, en levert
+laagfrequente vlekken op. Het 5-pack woog 128 kB/MP tegen 65 voor een beeld
+zonder korrel, en oogde korrelig. Meet de ruis van het onderwerp op de maat
+waarop het geplaatst wordt, en houd de korrel daar gelijk aan of net onder.
+
+**Een 323 px bron in een slot van 1080 px.** `hoodie-logo-detail.webp` was
+323×432 en werd door `Pic` met `widths={[480,640,768,1080]}` en de lightbox op
+1920 tot ruim drie- en zesvoudig opgeschaald. Dat leest als korrel maar is
+opschaling. Er valt niets aan te repareren met compressie: de oplossing was een
+echte uitsnede van 1080×1350 uit `hoodie-olijfgroen-lifestyle-2.webp`. Controleer
+bij een klacht over beeldkwaliteit dus eerst de bronresolutie tegen de grootste
+`widths`-waarde, vóór je naar de encoder kijkt.
 
 **Absoluut gepositioneerde koppen naast gecentreerde media.** In `src/styles/home.css` liep
 de drop-titel over het cap-beeld zodra het venster laag werd, omdat beide hun

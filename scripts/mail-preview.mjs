@@ -43,7 +43,7 @@ const VOORBEELDORDER = {
   order_items: [
     {
       product_name: 'Stap voor Stap sokken', variant_label: 'Villa Happ / 42-46',
-      quantity: 1, total_cents: 895, image_url: '/img/products/sokken-front.webp',
+      quantity: 1, total_cents: 895, image_url: '/img/products/sokken-front-v2.webp',
     },
     {
       product_name: 'Organic Cotton Hoodie', variant_label: 'Olijfgroen / L',

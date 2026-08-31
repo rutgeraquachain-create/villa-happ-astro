@@ -40,7 +40,7 @@ export const VOORBEELD_ORDER = {
       variant_label: 'Villa Happ / 42-46',
       quantity: 1,
       total_cents: 895,
-      image_url: '/img/products/sokken-front.webp',
+      image_url: '/img/products/sokken-front-v2.webp',
     },
     {
       product_name: 'Organic Cotton Hoodie',

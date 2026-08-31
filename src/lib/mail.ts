@@ -67,7 +67,7 @@ interface OrderForMail {
     product_name: string; variant_label?: string; quantity: number; total_cents: number;
     /**
      * Pad naar de productfoto op de site, bijvoorbeeld
-     * `/img/products/sokken-front.webp`. Optioneel: zonder beeld valt de
+     * `/img/products/sokken-front-v2.webp`. Optioneel: zonder beeld valt de
      * thumbnail weg en schuift de tekst door. De webhook haalt hem op via een
      * join op `product_variants` en `products`.
      */

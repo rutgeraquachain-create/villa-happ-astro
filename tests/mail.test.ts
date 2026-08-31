@@ -21,7 +21,7 @@ const MAILS = voorbeeldMails();
 
 describe('mailbeelden', () => {
   it('vertaalt een productpad naar het mailbeeld ernaast', () => {
-    expect(mailBeeld('/img/products/sokken-front.webp')).toBe('/img/mail/sokken-front.jpg');
+    expect(mailBeeld('/img/products/sokken-front-v2.webp')).toBe('/img/mail/sokken-front-v2.jpg');
     expect(mailBeeld('/img/products/back-cap-front.png')).toBe('/img/mail/back-cap-front.jpg');
   });
 
@@ -108,6 +108,6 @@ describe('orderbevestiging: wettelijke inhoud', () => {
   it('toont elke besteldregel met aantal en bedrag', () => {
     expect(bevestiging.html).toContain('Stap voor Stap sokken');
     expect(bevestiging.html).toContain('Organic Cotton Hoodie');
-    expect(bevestiging.html).toContain('/img/mail/sokken-front.jpg');
+    expect(bevestiging.html).toContain('/img/mail/sokken-front-v2.jpg');
   });
 });
