@@ -74,8 +74,19 @@ export function bevestigUrl(origin: string, email: string, nu?: number): string 
  * mailing is stille schade, een klik extra is dat niet.
  */
 export function afmeldUrl(origin: string, email: string, nu?: number): string {
-  const token = maakToken(normaliseerEmail(email), 'afmelding', nu);
-  return `${origin}/nieuwsbrief/afmelden?t=${encodeURIComponent(token)}`;
+  return `${origin}/nieuwsbrief/afmelden?t=${encodeURIComponent(afmeldToken(email, nu))}`;
+}
+
+/**
+ * Het kale uitschrijftoken.
+ *
+ * Bestaat apart omdat er twee bestemmingen zijn met hetzelfde token: de pagina
+ * met de knop (`afmeldUrl`) en het API-adres waar de uitschrijfknop van Gmail
+ * een POST heen stuurt. Die tweede uit de eerste terugrekenen door op "t=" te
+ * splitsen werkte wel, maar breekt zodra er ooit een parameter bij komt.
+ */
+export function afmeldToken(email: string, nu?: number): string {
+  return maakToken(normaliseerEmail(email), 'afmelding', nu);
 }
 
 /** Leest het adres uit een aanmeldings- of afmeldingstoken. Null = ongeldig. */

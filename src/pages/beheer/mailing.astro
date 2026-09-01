@@ -1,0 +1,170 @@
+---
+/**
+ * /beheer/mailing — een mailing naar de lijst sturen
+ *
+ * Een eigen pagina en geen knop tussen de orders, omdat dit de enige
+ * onomkeerbare handeling in het portaal is. Drie stappen die je bewust achter
+ * elkaar zet: kijken wie hem krijgt, hem naar jezelf sturen, en dan pas naar
+ * de lijst.
+ *
+ * De tekst van elke mailing staat in src/content/mailings/ en gaat dus langs
+ * een PR voordat er iets verstuurd kan worden.
+ */
+export const prerender = false;
+
+import { getCollection } from 'astro:content';
+import BeheerLayout from '../../layouts/BeheerLayout.astro';
+import { BEHEER_COOKIE, beheerToegang, beheerGeconfigureerd } from '../../lib/beheer-sessie';
+import { BEHEER_HEADERS } from '../../lib/beheer';
+
+for (const [k, v] of Object.entries(BEHEER_HEADERS)) Astro.response.headers.set(k, v);
+
+const ingelogd = beheerToegang(Astro.cookies.get(BEHEER_COOKIE)?.value);
+const geconfigureerd = beheerGeconfigureerd();
+const mailings = ingelogd ? await getCollection('mailings') : [];
+mailings.sort((a, b) => a.id.localeCompare(b.id));
+---
+
+<BeheerLayout
+  title="Mailing · Villa Happ beheer"
+  ingelogd={ingelogd}
+  geconfigureerd={geconfigureerd}
+  terug={{ href: '/beheer', label: 'Terug naar orders' }}
+>
+  <header class="bh-kop">
+    <h1>Mailing</h1>
+    <p class="bh-sub">
+      De tekst staat in de repo onder <code>src/content/mailings/</code>.
+      Bekijken kan op <a href="/dev/mail">/dev/mail</a> tijdens ontwikkelen.
+    </p>
+  </header>
+
+  {mailings.length === 0 ? (
+    <p class="bh-leeg">Er staan nog geen mailings klaar.</p>
+  ) : (
+    <div class="bh-mailings">
+      {mailings.map((m) => (
+        <article class="bh-mailing" data-slug={m.id}>
+          <div class="bh-mailing-kop">
+            <h2>{m.data.titel}</h2>
+            <span class={`bh-vlag ${m.data.klaar ? 'is-klaar' : 'is-concept'}`}>
+              {m.data.klaar ? 'klaar' : 'concept'}
+            </span>
+          </div>
+          <p class="bh-mailing-onderwerp">{m.data.onderwerp}</p>
+          <p class="bh-mailing-slug"><code>{m.id}</code></p>
+
+          <p class="bh-mailing-stand" data-stand>Stand nog niet opgehaald.</p>
+
+          <div class="bh-mailing-acties">
+            <button type="button" class="bh-knop bh-knop--zacht" data-actie="stand">Wie krijgt hem</button>
+            <button type="button" class="bh-knop bh-knop--zacht" data-actie="proef">Proef naar mijzelf</button>
+            <button
+              type="button"
+              class="bh-knop"
+              data-actie="verstuur"
+              disabled={!m.data.klaar}
+              title={m.data.klaar ? '' : 'Zet klaar: true in het bestand en publiceer opnieuw'}
+            >Verstuur naar de lijst</button>
+          </div>
+
+          <p class="bh-mailing-uitslag" data-uitslag role="status" aria-live="polite"></p>
+        </article>
+      ))}
+    </div>
+  )}
+
+  <p class="bh-voetnoot">
+    Verzenden zet de mail per ontvanger in de wachtrij. De outbox verstuurt ze
+    daarna, met herpogingen bij een hapering. Tweemaal versturen levert geen
+    dubbele mail op: elke ontvanger heeft per mailing één sleutel.
+  </p>
+</BeheerLayout>
+
+<style>
+  .bh-mailings { display: grid; gap: 18px; margin: 24px 0; }
+  .bh-mailing {
+    border: 1px solid var(--bh-lijn, #DCD2C0);
+    padding: 20px 22px;
+    display: grid; gap: 6px;
+  }
+  .bh-mailing-kop { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .bh-mailing-kop h2 { margin: 0; font-size: 19px; }
+  .bh-vlag {
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 2px 8px; border: 1px solid currentColor;
+  }
+  .bh-vlag.is-klaar { color: #2E7D32; }
+  .bh-vlag.is-concept { color: #8A8072; }
+  .bh-mailing-onderwerp { margin: 0; font-size: 15px; }
+  .bh-mailing-slug { margin: 0; font-size: 12px; color: #8A8072; }
+  .bh-mailing-stand { margin: 8px 0 0; font-size: 13px; color: #8A8072; }
+  .bh-mailing-acties { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .bh-mailing-uitslag { margin: 10px 0 0; font-size: 13px; }
+  .bh-mailing-uitslag.is-fout { color: #B3261E; }
+  .bh-voetnoot { font-size: 13px; color: #8A8072; max-width: 62ch; }
+</style>
+
+<script>
+  const csrf = document.body.dataset.csrf || '';
+
+  async function roep(slug: string, actie: string, naar?: string) {
+    const res = await fetch(`/api/beheer/mailing?csrf=${encodeURIComponent(csrf)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug, actie, naar }),
+    });
+    return { ok: res.ok, data: await res.json().catch(() => ({})) };
+  }
+
+  document.querySelectorAll<HTMLElement>('.bh-mailing').forEach((kaart) => {
+    const slug = kaart.dataset.slug!;
+    const stand = kaart.querySelector('[data-stand]')!;
+    const uitslag = kaart.querySelector('[data-uitslag]')!;
+
+    const toon = (tekst: string, fout = false) => {
+      uitslag.textContent = tekst;
+      uitslag.className = `bh-mailing-uitslag${fout ? ' is-fout' : ''}`;
+    };
+
+    kaart.querySelectorAll<HTMLButtonElement>('[data-actie]').forEach((knop) => {
+      knop.addEventListener('click', async () => {
+        const actie = knop.dataset.actie!;
+
+        // Verzenden is onomkeerbaar, dus daar staat een bevestiging voor die
+        // het aantal noemt. Bij "stand" en "proef" zou dat alleen irriteren.
+        let naar: string | undefined;
+        if (actie === 'proef') {
+          naar = prompt('Naar welk adres sturen we de proef?') || undefined;
+          if (!naar) return;
+        }
+        if (actie === 'verstuur') {
+          const { data } = await roep(slug, 'stand');
+          const aantal = data?.lijst ?? '?';
+          if (!confirm(`Deze mailing gaat naar ${aantal} mensen. Doorgaan?`)) return;
+        }
+
+        knop.disabled = true;
+        toon('Bezig...');
+        try {
+          const { ok, data } = await roep(slug, actie, naar);
+          if (!ok) { toon(data.error || 'Er ging iets mis.', true); return; }
+
+          if (actie === 'stand') {
+            stand.textContent =
+              `${data.lijst} op de lijst · ${data.alKlaargezet} klaargezet · ` +
+              `${data.verzonden} verzonden · ${data.mislukt} opgegeven`;
+            toon('');
+          } else if (actie === 'proef') {
+            toon(`Proef naar ${data.naar} in de wachtrij gezet.`);
+          } else {
+            toon(`Klaargezet voor ${data.vastgelegd} van ${data.ontvangers} ontvangers.` +
+              (data.mislukt ? ` ${data.mislukt} mislukt.` : ''));
+          }
+        } finally {
+          knop.disabled = actie === 'verstuur' ? true : false;
+        }
+      });
+    });
+  });
+</script>

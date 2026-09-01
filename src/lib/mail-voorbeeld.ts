@@ -19,6 +19,8 @@ import {
   renderContactMessage,
   renderNieuwsbriefBevestiging,
 } from './mail';
+import { renderMailing } from './mailing-render';
+import { getSiteOrigin } from './site';
 
 export const VOORBEELD_ORDER = {
   order_number: 'VH-2026-00001',
@@ -94,6 +96,30 @@ export function voorbeeldMails(): VoorbeeldMail[] {
       slug: 'winkelier-nieuwe-order',
       naam: 'Melding aan de winkelier',
       ...renderNieuweBestelling(VOORBEELD_ORDER, 'https://villahapp.nl/beheer/order/voorbeeld'),
+    },
+    {
+      slug: 'mailing',
+      naam: 'Mailing naar de lijst',
+      // Dezelfde renderer als een echte zending, met een vaste voorbeeldtekst.
+      // De uitschrijflink staat hier als plaatshouder, precies zoals in de
+      // opgeslagen HTML: hij wordt pas per ontvanger ingevuld.
+      ...renderMailing(
+        {
+          slug: 'voorbeeld',
+          onderwerp: 'Villa Happ is terug, en dit is waarom',
+          preheader: 'Het verhaal achter een merk dat een generatie kleedde.',
+          label: 'Eerste bericht',
+          titel: 'Fijn dat je er bent.',
+          knopTekst: 'Lees het hele verhaal',
+          knopUrl: 'https://villahapp.nl/story',
+          body:
+            'Je hebt je aangemeld voor de nieuwsbrief van Villa Happ. Dit is de eerste, en hij bevat geen aanbieding.\n\n' +
+            '## Waar het begon\n\n' +
+            'Villa Happ begon op 10 mei 1945 in Tilburg, vijf dagen na de bevrijding. Wat daaruit groeide kleedde een generatie.\n\n' +
+            'Grote kans dat **jij** het droeg, of dat je moeder het voor je kocht. Lees [het hele verhaal](https://villahapp.nl/story).',
+        },
+        getSiteOrigin(),
+      ),
     },
     {
       slug: 'nieuwsbrief-bevestiging',
