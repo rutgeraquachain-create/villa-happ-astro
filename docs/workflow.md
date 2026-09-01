@@ -164,6 +164,18 @@ from mail_gebeurtenissen order by ontvangen_op desc limit 10;
 > Preview hoort géén waarde te hebben. `src/lib/site.ts` valt dan terug op
 > het `.vercel.app`-domein, en `isPreviewHost()` zorgt dat `robots.txt` daar
 > `Disallow: /` teruggeeft. Dat is bedoeld gedrag, geen fout.
+>
+> Let op wat dit **niet** dekt. `robots.txt` is geprerenderd en beslist op de
+> waarde tijdens de build, niet op de hostnaam van het verzoek. De
+> productie-alias `villa-happ-astro.vercel.app` serveert dezelfde
+> productiebuild als `villahapp.nl` en dus dezelfde ruime `robots.txt`.
+> Gemeten 31 augustus 2026.
+>
+> Dat is bewust zo gelaten. Op die alias staat `X-Robots-Tag: noindex,
+> nofollow` uit `vercel.json`, die wél per verzoek op hostnaam werkt, plus een
+> canonical naar het echte domein. Een `Disallow` erbij zou schaden: een
+> crawler die niet mag ophalen leest de noindex nooit en kan de URL kaal
+> opnemen.
 
 Het genereren van `AUTH_SECRET` en `ADMIN_PASSWORD_HASH` gaat in één keer:
 

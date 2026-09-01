@@ -177,9 +177,28 @@ het merkverhaal, de kernfeiten, `sameAs`. Die voedt het Organization-schema,
 `llms.txt` en de perspagina. Eén wijziging daar loopt overal in mee, en dat is de
 bedoeling: consistentie over bronnen is precies wat zoek- en AI-engines wegen.
 
-**De preview-guard mag niet omzeild worden.** Op een `*.vercel.app`-host staat
-alles op `noindex` en geeft `robots.txt` een volledige `Disallow`. CI controleert
-dat expliciet.
+**De preview-guard mag niet omzeild worden.** Hij bestaat uit twee delen die op
+een ander moment werken, en dat onderscheid is belangrijker dan het lijkt.
+
+De `X-Robots-Tag: noindex, nofollow` komt uit `vercel.json` en is gekoppeld aan
+de **hostnaam** in het verzoek. Die geldt dus op elke `*.vercel.app`, ook op de
+productie-alias.
+
+`robots.txt` wordt geprerenderd (`src/pages/robots.txt.ts`) en beslist op
+`PUBLIC_SITE_URL` **ten tijde van de build**, niet op de hostnaam van het
+verzoek. Een preview-deploy bouwt zonder die variabele, valt terug op
+`DEFAULT_SITE` en krijgt `Disallow: /`. Dat is wat CI toetst, en dat werkt.
+
+**Maar de productie-alias `villa-happ-astro.vercel.app` serveert de
+productiebuild**, dus daar staat de gewone `robots.txt` met `Allow: /`. Gemeten
+31 augustus 2026. Dat is geen bug om te repareren: `Disallow` op die host zou
+het slechter maken, want een crawler die niet mag ophalen ziet de `noindex`
+nooit en kan de URL alsnog kaal opnemen. Blokkeren en noindex bijten elkaar;
+noindex werkt alleen als de crawler binnen mag. De header plus de canonical naar
+het echte domein doen daar het werk.
+
+Verander `robots.txt.ts` dus niet naar server-rendered om "de host te kunnen
+lezen". Dat is precies de verbetering die de bescherming verzwakt.
 
 **Beloof in schema niets dat de voorwaarden niet waarmaken.** Geen
 `aggregateRating` zonder echte reviews, geen `FreeReturn` terwijl de klant de
@@ -266,3 +285,15 @@ wat de code doet, voegt niets toe.
 | Scroll- en pinanimaties | `src/lib/motion.ts` |
 | CI-poort | `.github/workflows/ci.yml` |
 | Redirects en headers | `vercel.json` |
+
+
+## Als een aanname sneuvelt
+
+Blijkt er tijdens het werk iets anders te zijn dan gedacht (een toets die niets bewees, een oplossing die om een andere reden werkte dan je dacht, een prijs die niemand had benoemd), leg dat dan vast met de skill `lesvastleggen`. Niet bij elk antwoord: alleen als je de zin "ik dacht dat X, en dat was niet zo" met iets concreets kunt invullen.
+
+De les bevat een oplossing die de fout voortaan tegenhoudt. **Is dat een projectregel, zet hem dan ook echt in dit bestand.** Een oplossing die alleen in het dagboek staat, houdt niets tegen.
+
+- De regel: `Jarvis/_canon/Lessendagboek.md`
+- Waaraan zo'n instructie moet voldoen, met sjabloon: `Jarvis/Naslag/Een instructie die een fout tegenhoudt.md`
+
+Een Stop-hook houdt de sessie eenmalig tegen als het lessendagboek rood staat.
