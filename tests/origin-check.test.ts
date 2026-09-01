@@ -31,6 +31,16 @@ describe('herkomstcontrole', () => {
     expect(magDoor({ ...mollieWebhook, pad: '/api/beheer/logout' })).toBe(false);
   });
 
+  it('laat de uitschrijfknop van Gmail en Outlook door', () => {
+    // RFC 8058: op basis van de List-Unsubscribe-header sturen die clients een
+    // form-encoded POST vanaf hun eigen servers, zonder Origin. Zonder deze
+    // vrijstelling krijgt precies die knop een 403 en houdt de ontvanger de
+    // spamknop over als enige uitweg. Het ondertekende token in het verzoek is
+    // hier de bevoegdheid; er is geen sessie die misbruikt kan worden.
+    expect(magDoor({ ...mollieWebhook, pad: '/api/newsletter/afmelden' })).toBe(true);
+  });
+
+
   it('weigert een formulier van een vreemde site', () => {
     expect(magDoor({
       methode: 'POST', pad: '/api/beheer/logout',
@@ -84,6 +94,10 @@ describe('herkomstcontrole', () => {
   it('stelt niet per ongeluk meer paden vrij dan bedoeld', () => {
     // Groeit deze lijst, dan moet daar een bewuste afweging onder liggen:
     // een vrijgesteld pad mag de inhoud van het verzoek niet vertrouwen.
-    expect([...VRIJGESTELDE_PADEN]).toEqual(['/api/checkout/webhook']);
+    // De afweging per pad staat uitgeschreven in src/lib/origin-check.ts.
+    expect([...VRIJGESTELDE_PADEN]).toEqual([
+      '/api/checkout/webhook',
+      '/api/newsletter/afmelden',
+    ]);
   });
 });

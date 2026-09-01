@@ -28,17 +28,39 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
  * het betalen; `portaal` is het lange token in de mails waarmee de klant
  * zijn bestelling blijft volgen.
  */
-export type TokenPubliek = 'status' | 'portaal';
+export type TokenPubliek = 'status' | 'portaal' | 'aanmelding' | 'afmelding';
 
 /**
  * Geldigheid volgt de bedrijfsrealiteit, niet een rond getal.
  * - status: één betaalsessie plus ruime marge voor een trage bank.
  * - portaal: levering (enkele dagen) plus 30 dagen bedenktijd plus de
  *   terugbetaaltermijn, met marge. Daarna heeft de link geen functie meer.
+ * - aanmelding: een week om op een bevestigingsmail te klikken. Daarna is de
+ *   aanmelding vervallen en moet iemand zich opnieuw inschrijven.
+ * - afmelding: tien jaar, wat neerkomt op "verloopt niet". Een uitschrijflink
+ *   die vervalt is geen beveiliging maar een probleem: iemand die een oude mail
+ *   terugvindt moet zich altijd kunnen uitschrijven, anders is de enige uitweg
+ *   een spamklacht.
  */
 const GELDIG_MS: Record<TokenPubliek, number> = {
   status: 24 * 60 * 60 * 1000,
   portaal: 120 * 24 * 60 * 60 * 1000,
+  aanmelding: 7 * 24 * 60 * 60 * 1000,
+  afmelding: 3650 * 24 * 60 * 60 * 1000,
+};
+
+/**
+ * De naamruimte per publiek, waaruit de afgeleide sleutel volgt.
+ *
+ * DE EERSTE TWEE STRINGS MOGEN NOOIT WIJZIGEN. Er lopen tokens rond in mail die
+ * al verstuurd is; een andere naamruimte maakt elke bestaande portaallink in
+ * één klap ongeldig, zonder foutmelding aan onze kant.
+ */
+const NAAMRUIMTE: Record<TokenPubliek, string> = {
+  status: 'villahapp-order:status',
+  portaal: 'villahapp-order:portaal',
+  aanmelding: 'villahapp-nieuwsbrief:aanmelding',
+  afmelding: 'villahapp-nieuwsbrief:afmelding',
 };
 
 function secret(): string {
@@ -67,30 +89,47 @@ export function authSecretOntbreekt(): boolean {
 
 /** Per-publiek afgeleide sleutel. Cross-publiek hergebruik is onmogelijk. */
 function subSleutel(publiek: TokenPubliek): Buffer {
-  return createHmac('sha256', secret()).update(`villahapp-order:${publiek}`).digest();
+  return createHmac('sha256', secret()).update(NAAMRUIMTE[publiek]).digest();
 }
 
 function teken(payload: string, publiek: TokenPubliek): string {
   return createHmac('sha256', subSleutel(publiek)).update(payload).digest('hex');
 }
 
-/** Vorm: "<orderId>:<verlooptOpMs>.<hex-hmac-sha256>" */
+/**
+ * Vorm: "<onderwerp>:<verlooptOpMs>.<hex-hmac-sha256>"
+ *
+ * Het onderwerp is een order-id of een e-mailadres. De dubbele punt is het
+ * scheidingsteken en komt in geen van beide voor, dus splitsen blijft eenduidig.
+ */
+export function maakToken(
+  onderwerp: string,
+  publiek: TokenPubliek,
+  nu: number = Date.now(),
+): string {
+  const payload = `${onderwerp}:${nu + GELDIG_MS[publiek]}`;
+  return `${payload}.${teken(payload, publiek)}`;
+}
+
+/** Bestaande naam, ongewijzigd gedrag. De rest van de code roept deze aan. */
 export function maakOrderToken(
   orderId: string,
   publiek: TokenPubliek,
   nu: number = Date.now(),
 ): string {
-  const payload = `${orderId}:${nu + GELDIG_MS[publiek]}`;
-  return `${payload}.${teken(payload, publiek)}`;
+  return maakToken(orderId, publiek, nu);
 }
 
 export interface TokenInhoud {
+  /** Het order-id of e-mailadres dat in het token zat. */
+  onderwerp: string;
+  /** Alias van `onderwerp`, zodat bestaande aanroepers niet hoeven wijzigen. */
   orderId: string;
   verlooptOp: number;
 }
 
 /** Controleert handtekening én verval. Null = ongeldig, om welke reden dan ook. */
-export function leesOrderToken(
+export function leesToken(
   token: string | undefined | null,
   publiek: TokenPubliek,
   nu: number = Date.now(),
@@ -111,10 +150,19 @@ export function leesOrderToken(
 
   const delen = payload.split(':');
   if (delen.length !== 2) return null;
-  const [orderId, vervalStr] = delen;
-  if (!orderId || !vervalStr) return null;
+  const [onderwerp, vervalStr] = delen;
+  if (!onderwerp || !vervalStr) return null;
   const verlooptOp = Number(vervalStr);
   if (!Number.isFinite(verlooptOp) || nu > verlooptOp) return null;
 
-  return { orderId, verlooptOp };
+  return { onderwerp, orderId: onderwerp, verlooptOp };
+}
+
+/** Bestaande naam, ongewijzigd gedrag. */
+export function leesOrderToken(
+  token: string | undefined | null,
+  publiek: TokenPubliek,
+  nu: number = Date.now(),
+): TokenInhoud | null {
+  return leesToken(token, publiek, nu);
 }

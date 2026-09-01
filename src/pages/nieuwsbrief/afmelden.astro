@@ -1,0 +1,128 @@
+---
+/**
+ * GET /nieuwsbrief/afmelden?t=<token>
+ *
+ * De bestemming van de uitschrijflink onder elke mailing. Deze pagina schrijft
+ * niet zelf uit: ze toont een knop die POST doet naar /api/newsletter/afmelden.
+ *
+ * Waarom die extra klik, terwijl bevestigen wél in één keer gaat: mailscanners
+ * halen links in een bericht vooraf op. Bij bevestigen is dat hooguit vervelend,
+ * bij uitschrijven haalt het iemand ongemerkt van de lijst en merkt niemand het.
+ * Zie de toelichting bij `afmeldUrl` in src/lib/nieuwsbrief.ts.
+ */
+export const prerender = false;
+
+import Base from '../../layouts/Base.astro';
+import { emailUitToken } from '../../lib/nieuwsbrief';
+import { BUSINESS } from '../../lib/business';
+
+const token = Astro.url.searchParams.get('t');
+const email = emailUitToken(token, 'afmelding');
+---
+
+<Base
+  title="Uitschrijven · Villa Happ"
+  description="Schrijf je uit voor de Villa Happ nieuwsbrief."
+  noindex={true}
+>
+  <section class="vh-page">
+    <div class="vh-page-inner vh-smal">
+      <header class="vh-page-head">
+        <p class="vh-page-label vh-mono">Nieuwsbrief</p>
+        <h1 class="vh-page-title" id="vh-af-kop">
+          {email ? 'Uitschrijven?' : 'Deze link werkt niet.'}
+        </h1>
+      </header>
+
+      {email ? (
+        <div id="vh-af-formulier">
+          <p class="vh-lood">
+            Je staat op de lijst met <b>{email}</b>. Eén klik en we schrijven je uit.
+          </p>
+          <form id="vh-af-form" method="post" action="/api/newsletter/afmelden">
+            <input type="hidden" name="t" value={token} />
+            <button type="submit" class="vh-btn vh-btn--primary"><span>Schrijf me uit</span></button>
+          </form>
+          <p class="vh-fijn">
+            Je gegevens verdwijnen daarmee van de verzendlijst. Bestellingen die je eerder
+            plaatste blijven bestaan; die bewaren we omdat de belastingdienst dat vraagt.
+          </p>
+        </div>
+      ) : (
+        <p class="vh-lood">
+          De link klopt niet of is beschadigd geraakt onderweg. Mail
+          <a href={`mailto:${BUSINESS.supportEmail}`}>{BUSINESS.supportEmail}</a> en we
+          halen je er met de hand af.
+        </p>
+      )}
+
+      <div id="vh-af-klaar" hidden>
+        <p class="vh-lood">Gelukt. Je krijgt geen mail meer van ons.</p>
+        <p>
+          Bedenk je je, dan kun je je onderaan elke pagina opnieuw aanmelden.
+          Er gaat dan weer een bevestigingsmail uit.
+        </p>
+      </div>
+
+      <div id="vh-af-fout" hidden>
+        <p class="vh-lood">
+          Het lukte niet. Probeer het zo nog eens, of mail
+          <a href={`mailto:${BUSINESS.supportEmail}`}>{BUSINESS.supportEmail}</a>,
+          dan doen we het met de hand.
+        </p>
+      </div>
+
+      <p class="vh-acties">
+        <a href="/" class="vh-btn vh-btn--ghost"><span>Terug naar de site</span></a>
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .vh-smal { max-width: 620px; }
+  .vh-lood { font-size: 18px; line-height: 1.65; }
+  .vh-fijn { font-size: 14px; line-height: 1.6; color: var(--vh-muted, #7A705F); margin-top: 20px; }
+  .vh-acties { margin-top: 32px; }
+  #vh-af-form { margin-top: 24px; }
+</style>
+
+<script>
+  import { onPageReady } from '../../lib/page';
+
+  onPageReady(() => {
+    const form = document.getElementById('vh-af-form') as HTMLFormElement | null;
+    if (!form) return;
+
+    const blok = document.getElementById('vh-af-formulier')!;
+    const klaar = document.getElementById('vh-af-klaar')!;
+    const fout = document.getElementById('vh-af-fout')!;
+    const kop = document.getElementById('vh-af-kop')!;
+
+    const verstuur = async (e: Event) => {
+      e.preventDefault();
+      const knop = form.querySelector('button')!;
+      knop.disabled = true;
+
+      try {
+        const res = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+        const uitslag = await res.json().catch(() => ({ success: false }));
+        blok.setAttribute('hidden', '');
+        if (uitslag.success) {
+          kop.textContent = 'Uitgeschreven.';
+          klaar.removeAttribute('hidden');
+        } else {
+          fout.removeAttribute('hidden');
+        }
+      } catch {
+        // Zonder javascript of bij een netwerkfout blijft het formulier gewoon
+        // werken: het POST dan zonder fetch naar dezelfde route.
+        blok.setAttribute('hidden', '');
+        fout.removeAttribute('hidden');
+      }
+    };
+
+    form.addEventListener('submit', verstuur);
+    return () => form.removeEventListener('submit', verstuur);
+  });
+</script>

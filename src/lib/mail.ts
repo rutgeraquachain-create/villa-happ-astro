@@ -549,3 +549,37 @@ export function renderTerugbetaling(
   });
   return { subject: `Terugbetaling voor bestelling ${orderNumber}`, html };
 }
+
+/* ---------- Nieuwsbrief ---------- */
+
+/**
+ * Bevestigingsmail voor de dubbele opt-in.
+ *
+ * Deze mail is geen reclame: hij vraagt iemand de inschrijving af te maken die
+ * hij zelf startte. Daarom staat er geen aanbod in en is de knop het enige wat
+ * telt. Hoe minder er omheen staat, hoe meer mensen hem afmaken.
+ *
+ * De uitschrijflink hoort hier bewust níét bij. Wie niet bevestigt komt nooit
+ * op de lijst, dus er valt nog niets uit te schrijven.
+ */
+export function renderNieuwsbriefBevestiging(
+  email: string,
+  bevestigUrl: string,
+): { subject: string; html: string } {
+  const inhoud = `
+    ${titel('Nog één klik', 'Bevestig je aanmelding.')}
+    ${alinea(`Je hebt je aangemeld voor de Villa Happ nieuwsbrief met <b>${escapeHtml(email)}</b>. Klik op de knop en je staat op de lijst.`)}
+
+    <div style="margin:0 0 26px;">${knop(bevestigUrl, 'Ja, meld me aan')}</div>
+
+    ${alinea('Je hoort van ons als er een nieuwe oplage komt of als er iets te vertellen valt over het merk. Een paar keer per jaar, niet vaker.', '0')}`;
+
+  const html = shell({
+    preheader: 'Eén klik en je aanmelding is rond.',
+    inhoud,
+    voet: 'Heb je je niet aangemeld? Dan hoef je niets te doen. Zonder bevestiging komt dit adres niet op onze lijst en krijg je van ons geen mail.',
+    origin: getSiteOrigin(),
+  });
+
+  return { subject: 'Bevestig je aanmelding voor Villa Happ', html };
+}
