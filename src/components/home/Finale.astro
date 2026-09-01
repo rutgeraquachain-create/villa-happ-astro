@@ -65,12 +65,18 @@ import Pic from '../Pic.astro';
         return;
       }
 
-      // Flits + ontwikkel de polaroid (ook bij netwerkfout: de beleving telt)
+      // Flits en ontwikkel de polaroid. Dat is de bevestiging dat de knop
+      // aankwam, en die mag ook bij een netwerkfout spelen.
+      //
+      // Het bijschrift zei hier "Welkom in het archief" en dat gebeurde op een
+      // vaste timer, dus ook als de aanmelding mislukte en sowieso vóór het
+      // antwoord binnen was. Met dubbele opt-in is dat dubbel onwaar: iemand
+      // staat er pas op na de klik in de bevestigingsmail. Het bijschrift volgt
+      // daarom nu de uitslag en niet de animatie.
       polaroid.classList.add('is-flashing');
       setTimeout(() => {
         polaroid.classList.remove('is-flashing');
         polaroid.classList.add('is-developed');
-        if (cap) cap.textContent = 'Welkom in het archief ✦';
       }, 380);
 
       try {
@@ -80,13 +86,18 @@ import Pic from '../Pic.astro';
           body: JSON.stringify({ email, source: 'finale' }),
         });
         const data = await res.json();
+        const gelukt = res.ok && data.success;
         if (msg) {
-          msg.textContent = res.ok && data.success ? (data.message || 'Je staat in het archief.') : (data.message || 'Er ging iets mis, probeer opnieuw.');
-          msg.className = `vh-finale-msg vh-mono ${res.ok && data.success ? 'is-success' : 'is-error'}`;
+          msg.textContent = gelukt
+            ? (data.message || 'Kijk in je mail om je aanmelding te bevestigen.')
+            : (data.message || 'Er ging iets mis, probeer opnieuw.');
+          msg.className = `vh-finale-msg vh-mono ${gelukt ? 'is-success' : 'is-error'}`;
         }
-        if (res.ok && data.success) input.value = '';
+        if (cap) cap.textContent = gelukt ? 'Bevestig in je mail ✦' : 'Nog niet gelukt ✦';
+        if (gelukt) input.value = '';
       } catch {
         if (msg) { msg.textContent = 'Verbinding mislukt. Probeer opnieuw.'; msg.className = 'vh-finale-msg vh-mono is-error'; }
+        if (cap) cap.textContent = 'Nog niet gelukt ✦';
       }
     });
   }

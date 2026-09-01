@@ -66,6 +66,7 @@ const identityLine = [
           <h2 class="vh-footer-heading">Blijf in the know</h2>
           <p class="vh-newsletter-tagline">
             Als eerste op de hoogte van nieuwe drops en exclusieve releases.
+            Een paar keer per jaar, en je kunt je met één klik weer uitschrijven.
           </p>
           <div class="vh-newsletter-row">
             <label for="vh-newsletter-email" class="vh-sr-only">E-mailadres</label>
@@ -380,7 +381,10 @@ const identityLine = [
         const data = await res.json();
         if (res.ok && data.success) {
           msgEl.className = 'vh-newsletter-msg is-success';
-          msgEl.textContent = data.message || 'Bedankt voor je inschrijving.';
+          // De route bepaalt de tekst, want alleen die weet of er een
+          // bevestigingsmail uit ging of dat het adres er al op stond. De
+          // terugval mag daarom niets beloven wat nog niet gebeurd is.
+          msgEl.textContent = data.message || 'Kijk in je mail om je aanmelding te bevestigen.';
           emailInput.value = '';
         } else {
           msgEl.className = 'vh-newsletter-msg is-error';

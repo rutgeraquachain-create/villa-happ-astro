@@ -35,8 +35,22 @@ const VEILIGE_METHODES = new Set(['GET', 'HEAD', 'OPTIONS']);
  * Routes die van buiten aangeroepen worden door een partij die geen Origin
  * meestuurt. Alleen toevoegen als die route de inhoud van het verzoek niet
  * vertrouwt.
+ *
+ * `/api/newsletter/afmelden` staat erbij om twee redenen. Gmail en Outlook
+ * tonen hun eigen uitschrijfknop op basis van de `List-Unsubscribe`-header en
+ * sturen daar een form-encoded POST heen vanaf hun eigen servers, zonder
+ * Origin (RFC 8058). Zonder vrijstelling krijgt precies die knop een 403, en
+ * dan blijft de ontvanger achter met de spamknop als enige uitweg.
+ *
+ * Het mag hier omdat de route geen enkele omgevingsbevoegdheid gebruikt: er is
+ * geen sessie en geen cookie. Het ondertekende token ís de bevoegdheid. Een
+ * vervalst verzoek kan dus niemand uitschrijven, en wie het token wél heeft,
+ * heeft het uit het postvak van de ontvanger zelf.
  */
-export const VRIJGESTELDE_PADEN = new Set(['/api/checkout/webhook']);
+export const VRIJGESTELDE_PADEN = new Set([
+  '/api/checkout/webhook',
+  '/api/newsletter/afmelden',
+]);
 
 export interface Verzoek {
   methode: string;

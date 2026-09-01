@@ -17,6 +17,7 @@ import {
   renderTerugbetaling,
   renderNieuweBestelling,
   renderContactMessage,
+  renderNieuwsbriefBevestiging,
 } from './mail';
 
 export const VOORBEELD_ORDER = {
@@ -93,6 +94,17 @@ export function voorbeeldMails(): VoorbeeldMail[] {
       slug: 'winkelier-nieuwe-order',
       naam: 'Melding aan de winkelier',
       ...renderNieuweBestelling(VOORBEELD_ORDER, 'https://villahapp.nl/beheer/order/voorbeeld'),
+    },
+    {
+      slug: 'nieuwsbrief-bevestiging',
+      naam: 'Bevestig je aanmelding',
+      // Vaste voorbeeldlink in plaats van een echt token: `bevestigUrl` heeft
+      // AUTH_SECRET nodig en dat is er in CI niet. De vorm is gelijk, en wat
+      // deze mail moet bewijzen is de opmaak, niet de handtekening.
+      ...renderNieuwsbriefBevestiging(
+        'anouk@voorbeeld.nl',
+        'https://villahapp.nl/nieuwsbrief/bevestigen?t=voorbeeld-token',
+      ),
     },
     {
       slug: 'contactformulier',

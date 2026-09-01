@@ -1,0 +1,127 @@
+---
+/**
+ * GET /nieuwsbrief/bevestigen?t=<token>
+ *
+ * Stap twee van de dubbele opt-in. De link uit de bevestigingsmail komt hier
+ * uit en zet de inschrijving meteen op actief; er staat bewust geen extra knop
+ * tussen. De afweging staat bij `bevestigUrl` in src/lib/nieuwsbrief.ts.
+ *
+ * `confirmed_at` is het bewijsstuk voor de AVG: niet dát iemand bevestigde,
+ * maar wanneer.
+ */
+export const prerender = false;
+
+import Base from '../../layouts/Base.astro';
+import { getSupabaseAdmin } from '../../lib/supabase';
+import { emailUitToken } from '../../lib/nieuwsbrief';
+
+type Uitslag = 'gelukt' | 'al-actief' | 'ongeldig' | 'geen-database';
+
+let uitslag: Uitslag = 'ongeldig';
+let adres = '';
+
+const email = emailUitToken(Astro.url.searchParams.get('t'), 'aanmelding');
+
+if (email) {
+  const sb = getSupabaseAdmin();
+  if (!sb) {
+    uitslag = 'geen-database';
+  } else {
+    const { data: bestaand } = await sb
+      .from('newsletter_subscribers')
+      .select('confirmed, unsubscribed_at')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (bestaand?.confirmed && !bestaand.unsubscribed_at) {
+      uitslag = 'al-actief';
+      adres = email;
+    } else {
+      // `unsubscribed_at` wordt hier gewist: wie zich eerder uitschreef en nu
+      // opnieuw bevestigt, kiest daar bewust voor.
+      const { error } = await sb
+        .from('newsletter_subscribers')
+        .update({ confirmed: true, confirmed_at: new Date().toISOString(), unsubscribed_at: null })
+        .eq('email', email);
+
+      if (error) {
+        console.error('[nieuwsbrief] Bevestigen mislukte:', error.message);
+        uitslag = 'geen-database';
+      } else {
+        uitslag = 'gelukt';
+        adres = email;
+      }
+    }
+  }
+}
+
+const koppen: Record<Uitslag, string> = {
+  gelukt: 'Je staat op de lijst.',
+  'al-actief': 'Je stond er al op.',
+  ongeldig: 'Deze link werkt niet meer.',
+  'geen-database': 'Het lukte even niet.',
+};
+---
+
+<Base
+  title="Aanmelding bevestigen · Villa Happ"
+  description="Bevestig je aanmelding voor de Villa Happ nieuwsbrief."
+  noindex={true}
+>
+  <section class="vh-page">
+    <div class="vh-page-inner vh-smal">
+      <header class="vh-page-head">
+        <p class="vh-page-label vh-mono">Nieuwsbrief</p>
+        <h1 class="vh-page-title">{koppen[uitslag]}</h1>
+      </header>
+
+      {uitslag === 'gelukt' && (
+        <>
+          <p class="vh-lood">
+            Bedankt. We hebben <b>{adres}</b> toegevoegd aan de lijst.
+          </p>
+          <p>
+            Je hoort van ons als er een nieuwe oplage komt of als er iets te vertellen valt
+            over het merk. Een paar keer per jaar, niet vaker. Onder elke mail staat een
+            link om je weer uit te schrijven.
+          </p>
+        </>
+      )}
+
+      {uitslag === 'al-actief' && (
+        <p class="vh-lood">
+          <b>{adres}</b> stond al op de lijst. Je hoeft verder niets te doen.
+        </p>
+      )}
+
+      {uitslag === 'ongeldig' && (
+        <>
+          <p class="vh-lood">
+            De link is verlopen of klopt niet. Bevestigingslinks zijn een week geldig.
+          </p>
+          <p>
+            Meld je opnieuw aan onderaan een willekeurige pagina, dan sturen we een
+            nieuwe bevestiging.
+          </p>
+        </>
+      )}
+
+      {uitslag === 'geen-database' && (
+        <p class="vh-lood">
+          We konden je aanmelding nu niet afronden. Probeer de link uit de mail
+          over een paar minuten opnieuw; hij blijft een week werken.
+        </p>
+      )}
+
+      <p class="vh-acties">
+        <a href="/shop" class="vh-btn vh-btn--primary"><span>Bekijk de collectie</span></a>
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .vh-smal { max-width: 620px; }
+  .vh-lood { font-size: 18px; line-height: 1.65; }
+  .vh-acties { margin-top: 32px; }
+</style>
