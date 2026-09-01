@@ -55,6 +55,8 @@ De volledige lijst met wat er stukgaat als ze ontbreken staat in
 | `CRON_SECRET` | ja | beveiligt de dagelijkse cron |
 | `RESEND_API_KEY` | optioneel | transactiemail; zonder deze wordt er bewust niets verstuurd |
 | `MAIL_FROM` | optioneel | afzender, default staat in `src/lib/mail.ts` |
+| `RESEND_WEBHOOK_SECRET` | aanbevolen | meldt terug of mail is aangekomen; zonder deze weet je alleen dat Resend hem aannam |
+| `MAIL_ALARM_NAAR` | aanbevolen | adres **buiten** `villahapp.nl` dat bericht krijgt bij een bounce |
 
 ## Bron van waarheid
 

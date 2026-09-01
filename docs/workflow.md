@@ -102,9 +102,58 @@ een checklist:
 | `CRON_SECRET` | back-in-stock-verzender staat open |
 | `RESEND_API_KEY` | geen transactiemail |
 | `MAIL_FROM` | valt terug op de default in `src/lib/mail.ts` |
+| `RESEND_WEBHOOK_SECRET` | `/api/mail/webhook` geeft 503; geen zicht op aflevering |
+| `MAIL_ALARM_NAAR` | geen melding bij een bounce, alleen zichtbaar in `/beheer` |
 | `PUBLIC_GTM_ID` | geen GTM, geen GA4, geen Ads, geen cookiebanner |
 
 `DEV`, `PROD` en `VERCEL_GIT_COMMIT_SHA` hoef je niet te zetten.
+
+### De Resend-webhook aanzetten
+
+Twee stappen, allebei buiten de code.
+
+1. Resend-dashboard, account Villa Happ, onder **Webhooks** een endpoint
+   toevoegen op `https://villahapp.nl/api/mail/webhook`. Vink deze zes aan:
+   `email.sent`, `email.delivered`, `email.delivery_delayed`, `email.bounced`,
+   `email.failed`, `email.complained`. Resend toont daarna een sleutel die met
+   `whsec_` begint.
+
+   `email.failed` hoort er echt bij. Dat is geen weigering door de ontvanger
+   maar een mislukking bij Resend zelf, en het gevolg is hetzelfde: de mail is
+   niet aangekomen. `duidGebeurtenis()` zet hem daarom op `gebounced` en slaat
+   alarm. Vink je hem niet aan, dan valt precies die categorie stil weg.
+
+   `email.received` hoort er **niet** bij. Dat gaat over binnenkomende mail via
+   Resend, en de MX van `villahapp.nl` wijst naar Microsoft 365. Die
+   gebeurtenis komt hier nooit langs; zou hij toch komen, dan wordt hij wel
+   vastgelegd maar verandert hij niets aan de stand.
+
+   `email.opened` en `email.clicked` blijven ook uit. Die vereisen een
+   trackingpixel en herschreven links, en dat is voor een webshop met een
+   privacyverklaring een losse afweging.
+
+   Meer aanvinken kost niets. Resend rekent per verstuurde mail, niet per
+   webhook-gebeurtenis (nagekeken op de prijspagina, 31 augustus 2026).
+   Begrensd is alleen het aantal endpoints: vijf op Pro, tien op Scale, en wij
+   gebruiken er één.
+2. Die sleutel als `RESEND_WEBHOOK_SECRET` in Vercel zetten, plus
+   `MAIL_ALARM_NAAR` met een adres **buiten** `villahapp.nl`. Daarna
+   redeployen: Astro bakt deze waarden bij de build in de servercode.
+
+> **Waarom dit ertoe doet.** `uitgaande_mail.status` gaat op `verzonden` zodra
+> Resend de POST met 200 beantwoordt. Dat betekent "aangenomen", niet
+> "aangekomen". Bij bestelling VH-2026-00001 stond de winkeliersmelding op
+> `verzonden` met nul pogingen en geen fout, terwijl hij nooit in de inbox
+> belandde. Zonder deze webhook is dat verschil onzichtbaar en meldt het
+> systeem altijd het gunstigste. Met de webhook vult de kolom `aflevering`
+> zich met wat de ontvangende server werkelijk deed.
+
+Controleren of hij aankomt:
+
+```sql
+select soort, ontvanger, detail, ontvangen_op
+from mail_gebeurtenissen order by ontvangen_op desc limit 10;
+```
 
 > **Valkuil 4 — `PUBLIC_SITE_URL` op Preview.**
 > Zet deze **alleen op Production**. Staat hij ook op Preview, dan claimen

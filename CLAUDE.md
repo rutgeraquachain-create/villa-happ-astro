@@ -159,6 +159,19 @@ webshop. De site wijkt daarmee bewust af van het Handelsregister zolang dat niet
 is bijgewerkt. Zet dat niet terug om de bronnen te laten matchen; de toelichting
 staat in `src/lib/business.ts` en in `docs/vindbaarheid-vermeldingen.md`.
 
+**`status` en `aflevering` in `uitgaande_mail` zijn twee verschillende dingen.**
+`status` beschrijft de wachtrij: is de mail de deur uit. Hij gaat op `verzonden`
+zodra Resend de POST met 200 beantwoordt, en dat betekent **aangenomen**, niet
+aangekomen. `aflevering` beschrijft wat de ontvangende server ermee deed en
+wordt uitsluitend door de Resend-webhook gevuld (`/api/mail/webhook`). Zet die
+twee nooit samen, en laat de verzendcode `aflevering` nooit op iets goeds
+zetten. Gemeten 25 augustus 2026: de winkeliersmelding bij VH-2026-00001 stond
+op `verzonden` met nul pogingen en geen fout, terwijl hij nooit in de inbox
+belandde; er is zes dagen in de verkeerde richting gezocht omdat het systeem
+alleen het gunstigste kon melden. De koppelsleutel is `provider_id`, de id die
+Resend teruggeeft; `verstuurDirect()` moet die blijven doorgeven, anders valt de
+webhook terug op raden.
+
 **`src/lib/entity.ts` is de enige bron voor merkfeiten**: de canonieke definitie,
 het merkverhaal, de kernfeiten, `sameAs`. Die voedt het Organization-schema,
 `llms.txt` en de perspagina. Eén wijziging daar loopt overal in mee, en dat is de
