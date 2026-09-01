@@ -221,6 +221,12 @@ export interface VerzendUitslag {
 
 export async function verstuurDirect(
   to: string, subject: string, html: string, replyTo?: string,
+  /**
+   * Extra kopregels, per ontvanger. Gebruikt voor `List-Unsubscribe` en
+   * `List-Unsubscribe-Post`: die dragen een adres-specifiek token en kunnen dus
+   * niet vast in deze functie staan. Zie `mailingKopregels` in lib/mailing.ts.
+   */
+  kopregels?: Record<string, string>,
 ): Promise<VerzendUitslag> {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -234,6 +240,7 @@ export async function verstuurDirect(
       subject,
       html,
       ...(replyTo ? { reply_to: replyTo } : {}),
+      ...(kopregels && Object.keys(kopregels).length ? { headers: kopregels } : {}),
     }),
   });
   if (!res.ok) {

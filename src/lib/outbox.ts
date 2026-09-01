@@ -55,6 +55,12 @@ export interface WachtrijMail {
    * bijvoorbeeld een webhook die Mollie twee keer aanroept.
    */
   dedupeSleutel?: string;
+  /**
+   * Extra e-mailkopregels voor deze ene mail. Gebruikt door mailings voor
+   * `List-Unsubscribe`, dat een token per ontvanger draagt. De outbox kijkt
+   * niet naar de inhoud: hij vervoert ze en geeft ze door aan Resend.
+   */
+  kopregels?: Record<string, string>;
 }
 
 /**
@@ -78,6 +84,7 @@ export async function zetInWachtrij(mail: WachtrijMail): Promise<{ vastgelegd: b
       html: mail.html,
       reply_to: mail.replyTo ?? null,
       dedupe_sleutel: mail.dedupeSleutel ?? null,
+      kopregels: mail.kopregels ?? null,
     })
     .select('id')
     .single();
@@ -89,7 +96,9 @@ export async function zetInWachtrij(mail: WachtrijMail): Promise<{ vastgelegd: b
     return { vastgelegd: false, verzonden: false };
   }
 
-  const verzonden = await probeerEen(sb, data.id, mail.ontvanger, mail.onderwerp, mail.html, mail.replyTo, 0);
+  const verzonden = await probeerEen(
+    sb, data.id, mail.ontvanger, mail.onderwerp, mail.html, mail.replyTo, 0, mail.kopregels,
+  );
   return { vastgelegd: true, verzonden };
 }
 
@@ -102,6 +111,7 @@ async function probeerEen(
   html: string,
   replyTo: string | null | undefined,
   pogingenTotNu: number,
+  kopregels?: Record<string, string> | null,
 ): Promise<boolean> {
   if (!isMailConfigured()) {
     // Geen mailkanaal: laat de rij staan, markeer niets. Zo gaat er geen
@@ -113,7 +123,9 @@ async function probeerEen(
   let gelukt = false;
   let providerId: string | undefined;
   try {
-    const uitslag = await verstuurDirect(ontvanger, onderwerp, html, replyTo ?? undefined);
+    const uitslag = await verstuurDirect(
+      ontvanger, onderwerp, html, replyTo ?? undefined, kopregels ?? undefined,
+    );
     gelukt = uitslag.ok;
     providerId = uitslag.id;
     if (!gelukt) fout = uitslag.fout || 'Resend gaf geen bevestiging';
@@ -206,7 +218,9 @@ export async function verwerkWachtrij(): Promise<OutboxUitslag> {
       await sb.from('uitgaande_mail').update({ status: 'wacht', geclaimd_op: null }).eq('id', rij.id);
       continue;
     }
-    const ok = await probeerEen(sb, rij.id, rij.ontvanger, rij.onderwerp, rij.html, rij.reply_to, rij.pogingen);
+    const ok = await probeerEen(
+      sb, rij.id, rij.ontvanger, rij.onderwerp, rij.html, rij.reply_to, rij.pogingen, rij.kopregels,
+    );
     ok ? verzonden++ : mislukt++;
   }
 
