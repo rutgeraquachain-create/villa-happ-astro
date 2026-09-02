@@ -58,6 +58,21 @@ wat je raakte:
   DOM niet raakt.
 - **Altijd:** de geraakte kernflow, niet alleen het nieuwe stukje.
 
+> **Een voorbeeldweergave rendert de echte bron, of hij bewijst niets.** Een
+> preview-scherm hoort dezelfde gegevens te lezen als productie. Lukt dat niet
+> omdat er een bestelling of een gebruiker voor nodig is, zet de toets dan op de
+> echte bron in plaats van op verzonnen invoer. Gemeten 2 september 2026:
+> `/dev/mail/mailing` voedde de opmaakfunctie met een oefentekst die in de code
+> stond, terwijl de echte tekst uit `src/content/mailings/` komt. Die oefentekst
+> had korte regels, het echte bestand was op tachtig tekens afgebroken, en de
+> opmaakfunctie maakte van elk regeleinde een harde afbreking. Het voorbeeld kón
+> de fout dus niet tonen. Hij kwam pas boven water toen een mens de verstuurde
+> mail zag, met het woord "Wat" alleen op een regel.
+>
+> `tests/mailing.test.ts` leest daarom `src/content/mailings/*.md` zelf. Let bij
+> zo'n toets op de lege map: `it.each([])` draait nul keer en meldt groen, dus er
+> hoort een assertie bij dat er überhaupt bestanden zijn.
+
 > **De homepage bewijs je alleen door hem echt te scrollen.** Een gemeten
 > DOM-volgorde zegt dat de secties op de juiste plek stáán, niet dat de pagina
 > goed leest. Gemeten 26 augustus 2026: na een herschikking klopte de volgorde,
