@@ -48,7 +48,38 @@ const RESEND_API_KEY = import.meta.env.RESEND_API_KEY;
  * waarde bij de build in de servercode bakt, dus een wijziging vraagt een
  * redeploy, niet alleen een opgeslagen variabele.
  */
-const MAIL_FROM = import.meta.env.MAIL_FROM || `Villa Happ <${BUSINESS.orderEmail}>`;
+const MAIL_FROM = import.meta.env.MAIL_FROM || `Villa Happ <${BUSINESS.supportEmail}>`;
+
+/**
+ * Mailsoorten die bij een bestelling horen en dus van `bestellingen@` komen.
+ *
+ * Waarom niet alles van één adres: onder de bestelbevestiging staat "Antwoord
+ * gewoon op deze mail". Een klant die over zijn pakket schrijft hoort in de
+ * orderpostbus terecht te komen, en niet tussen de merkaanmeldingen en de
+ * persvragen. Andersom leest een nieuwsbriefbevestiging die van "bestellingen"
+ * komt alsof je iets besteld hebt.
+ *
+ * De winkeliersmelding staat er bewust bij: die gaat naar dezelfde postbus, en
+ * dan is het prettig dat de hele orderdraad daar dezelfde afzender heeft.
+ */
+const ORDERSOORTEN = new Set([
+  'orderbevestiging',
+  'verzendbevestiging',
+  'terugbetaling',
+  'winkelier-nieuwe-order',
+]);
+
+/**
+ * De afzender voor een mailsoort.
+ *
+ * `MAIL_FROM` uit de omgeving blijft de waarde voor alles wat niet bij een
+ * bestelling hoort. Die staat in Vercel gezet en wint daar van de code; het
+ * orderadres komt uit `business.ts` en heeft geen eigen variabele, zodat er
+ * geen tweede plek ontstaat waar hetzelfde adres kan verouderen.
+ */
+export function afzenderVoor(soort: string): string {
+  return ORDERSOORTEN.has(soort) ? `Villa Happ <${BUSINESS.orderEmail}>` : MAIL_FROM;
+}
 
 interface OrderForMail {
   order_number: string;
@@ -227,6 +258,11 @@ export async function verstuurDirect(
    * niet vast in deze functie staan. Zie `mailingKopregels` in lib/mailing.ts.
    */
   kopregels?: Record<string, string>,
+  /**
+   * Afzender. Zonder waarde valt hij terug op `MAIL_FROM`, wat het gedrag is
+   * van vóór de splitsing. De outbox vult hem met `afzenderVoor(soort)`.
+   */
+  van?: string,
 ): Promise<VerzendUitslag> {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -235,7 +271,7 @@ export async function verstuurDirect(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: MAIL_FROM,
+      from: van || MAIL_FROM,
       to: [to],
       subject,
       html,

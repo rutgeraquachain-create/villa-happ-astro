@@ -130,7 +130,22 @@ export const BUSINESS = {
    * op `@villa-happ.nl` blijven als alias op hetzelfde postvak bestaan, want
    * die staan in bestelbevestigingen die al de deur uit zijn.
    */
-  orderEmail: 'contact@villahapp.nl',
+  /**
+   * Alles rond een bestelling: de afzender van de bevestiging, de
+   * verzendmelding en de terugbetaling, en de postbus waar de melding van een
+   * nieuwe bestelling binnenkomt.
+   *
+   * Aangemaakt op 2 september 2026, daarvoor stond hier `contact@`. Onder elke
+   * orderbevestiging staat "Antwoord gewoon op deze mail", dus dit is ook het
+   * adres waar klantvragen over een bestelling landen. Bouncet dit adres, dan
+   * verdwijnen die antwoorden zonder dat iemand het merkt.
+   */
+  orderEmail: 'bestellingen@villahapp.nl',
+  /**
+   * Het adres dat de site publiceert: contactpagina, voorwaarden, herroeping,
+   * pers. Blijft bewust `contact@`, want dat is het adres dat in eerdere
+   * bestelbevestigingen en op externe vermeldingen staat.
+   */
   supportEmail: 'contact@villahapp.nl',
   /** Aparte AVG-postbus is netjes maar niet verplicht bij een eenmanszaak. */
   privacyEmail: 'contact@villahapp.nl',
