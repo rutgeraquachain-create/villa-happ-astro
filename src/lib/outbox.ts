@@ -24,7 +24,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSupabaseAdmin } from './supabase';
-import { verstuurDirect, isMailConfigured } from './mail';
+import { verstuurDirect, isMailConfigured, afzenderVoor } from './mail';
 
 /** Minuten tot de volgende poging, per poging. Daarna opgeven. */
 const BACKOFF_MINUTEN = [1, 5, 15, 60, 180, 720];
@@ -85,6 +85,9 @@ export async function zetInWachtrij(mail: WachtrijMail): Promise<{ vastgelegd: b
       reply_to: mail.replyTo ?? null,
       dedupe_sleutel: mail.dedupeSleutel ?? null,
       kopregels: mail.kopregels ?? null,
+      // Nu vastleggen en niet bij elke poging opnieuw afleiden: een herpoging
+      // van morgen hoort dezelfde afzender te hebben als de eerste poging.
+      afzender: afzenderVoor(mail.soort),
     })
     .select('id')
     .single();
@@ -97,7 +100,8 @@ export async function zetInWachtrij(mail: WachtrijMail): Promise<{ vastgelegd: b
   }
 
   const verzonden = await probeerEen(
-    sb, data.id, mail.ontvanger, mail.onderwerp, mail.html, mail.replyTo, 0, mail.kopregels,
+    sb, data.id, mail.ontvanger, mail.onderwerp, mail.html, mail.replyTo, 0,
+    mail.kopregels, afzenderVoor(mail.soort),
   );
   return { vastgelegd: true, verzonden };
 }
@@ -112,6 +116,7 @@ async function probeerEen(
   replyTo: string | null | undefined,
   pogingenTotNu: number,
   kopregels?: Record<string, string> | null,
+  afzender?: string | null,
 ): Promise<boolean> {
   if (!isMailConfigured()) {
     // Geen mailkanaal: laat de rij staan, markeer niets. Zo gaat er geen
@@ -125,6 +130,7 @@ async function probeerEen(
   try {
     const uitslag = await verstuurDirect(
       ontvanger, onderwerp, html, replyTo ?? undefined, kopregels ?? undefined,
+      afzender ?? undefined,
     );
     gelukt = uitslag.ok;
     providerId = uitslag.id;
@@ -219,7 +225,8 @@ export async function verwerkWachtrij(): Promise<OutboxUitslag> {
       continue;
     }
     const ok = await probeerEen(
-      sb, rij.id, rij.ontvanger, rij.onderwerp, rij.html, rij.reply_to, rij.pogingen, rij.kopregels,
+      sb, rij.id, rij.ontvanger, rij.onderwerp, rij.html, rij.reply_to, rij.pogingen,
+      rij.kopregels, rij.afzender,
     );
     ok ? verzonden++ : mislukt++;
   }
