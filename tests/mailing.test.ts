@@ -7,6 +7,7 @@
  * de verkeerde mensen versturen, en versturen zonder uitweg voor de ontvanger.
  */
 
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { mailingKopregels } from '../src/lib/mailing';
 import { bodyNaarHtml, renderMailing } from '../src/lib/mailing-render';
@@ -66,6 +67,68 @@ describe('markdown naar mail-HTML', () => {
   it('maakt van ## een tussenkop en niet van een gewone regel', () => {
     expect(bodyNaarHtml('## Tussenkop')).toContain('text-transform:uppercase');
     expect(bodyNaarHtml('Gewone regel')).not.toContain('text-transform:uppercase');
+  });
+
+  /**
+   * De brontekst in `src/content/mailings/` is op ongeveer tachtig tekens
+   * afgebroken. Kwam die afbreking in de mail terecht, dan las de ontvanger de
+   * kolombreedte van het bronbestand in plaats van die van zijn eigen scherm.
+   * Gemeten 2 september 2026: het woord "Wat" stond alleen op een regel.
+   */
+  it('laat de afbreking van het bronbestand niet in de mail belanden', () => {
+    const html = bodyNaarHtml('een winkel aan de Heuvelstraat. Wat\ndaaruit groeide kleedde een generatie.');
+    expect(html).not.toContain('<br />');
+    expect(html).toContain('Heuvelstraat. Wat daaruit groeide');
+  });
+
+  it('houdt de alinea heel, ook over meer dan twee bronregels', () => {
+    expect(bodyNaarHtml('een\ntwee\ndrie')).toContain('een twee drie');
+  });
+
+  it('breekt wel af als de schrijver erom vraagt', () => {
+    // Twee spaties of een backslash, zoals markdown dat kent.
+    expect(bodyNaarHtml('Vijzelweg 18E  \n5145 NK Waalwijk')).toContain('18E<br />5145');
+    expect(bodyNaarHtml('Vijzelweg 18E\\\n5145 NK Waalwijk')).toContain('18E<br />5145');
+  });
+
+  it('laat geen losse backslash of spatiestaart in de tekst achter', () => {
+    const html = bodyNaarHtml('Vijzelweg 18E\\\n5145 NK Waalwijk');
+    expect(html).not.toContain('\\');
+    expect(html).not.toContain(' <br />');
+  });
+
+  it('zet opmaak ook om in een stuk na een gevraagde afbreking', () => {
+    // De omzetting draait per stuk, dus dit is de plek waar hij stil kon falen.
+    const html = bodyNaarHtml('Eerste regel  \n**vet** en [link](https://villahapp.nl)');
+    expect(html).toContain('<b>vet</b>');
+    expect(html).toContain('href="https://villahapp.nl"');
+  });
+});
+
+/**
+ * De tests hierboven draaien op verzonnen tekst. Deze draait op de mailings die
+ * er echt staan, want daar zat de fout in: `/dev/mail/mailing` toont een
+ * voorbeeldtekst en niet het bestand, dus de preview liet de afbreking niet
+ * zien die de ontvanger wel kreeg.
+ */
+describe('de mailings in src/content/mailings', () => {
+  const map = new URL('../src/content/mailings/', import.meta.url);
+  const bestanden = readdirSync(map).filter((n) => n.endsWith('.md'));
+
+  it('staan er, anders bewijst deze suite niets', () => {
+    expect(bestanden.length).toBeGreaterThan(0);
+  });
+
+  it.each(bestanden)('%s breekt geen zin af die niet afgebroken hoort', (naam) => {
+    const ruw = readFileSync(new URL(naam, map), 'utf-8');
+    const body = ruw.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+    const html = bodyNaarHtml(body);
+
+    // Elke <br /> hier is er één die iemand met twee spaties of een backslash
+    // heeft aangevraagd. Een afbreking die alleen uit de tekstbreedte van het
+    // bronbestand volgt, hoort de lezer niet te bereiken.
+    const gevraagd = (body.match(/(\s{2}|\\)\r?\n/g) || []).length;
+    expect((html.match(/<br \/>/g) || []).length).toBe(gevraagd);
   });
 });
 

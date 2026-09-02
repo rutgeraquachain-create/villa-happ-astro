@@ -871,6 +871,37 @@
 .vh-field input.is-valid + .vh-field-msg::before,
 .vh-field:has(input.is-valid) label::after { content: ' ✓'; color: var(--vh-olive, #6b7a4e); }
 .vh-field-msg { font-size: 11px; color: var(--vh-danger); min-height: 13px; }
+
+/* Aanmeldvinkje bij het afrekenen.
+   Het label staat hier bewust in gewone leesbare tekst en niet in de kleine
+   kapitalen van `.vh-field label`: dit is een zin die iemand moet lezen voordat
+   hij hem aanvinkt, geen veldnaam. Het raakvlak is het hele label, want een
+   vakje van 16 pixels is op een telefoon te klein om te mikken. */
+.vh-check {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	align-items: start;
+	gap: 10px;
+	margin-top: 14px;
+}
+.vh-check input {
+	width: 17px; height: 17px;
+	margin: 2px 0 0;
+	accent-color: var(--vh-accent);
+	flex: none;
+	cursor: pointer;
+}
+.vh-check label {
+	font-family: var(--vh-font-sans);
+	font-size: 13px;
+	line-height: 1.5;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--vh-ink-muted);
+	cursor: pointer;
+}
+.vh-check input:focus-visible { outline: 2px solid var(--vh-ink); outline-offset: 2px; }
+
 @media (max-width: 560px) { .vh-form-row { grid-template-columns: 1fr; } }
 
 /* Stappenindicator (goal-gradient) */

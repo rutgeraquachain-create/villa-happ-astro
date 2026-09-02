@@ -28,6 +28,8 @@ import {
   renderNieuweBestelling,
   renderTerugbetaling,
 } from '../../../lib/mail';
+import { meldAanViaCheckout } from '../../../lib/nieuwsbrief-checkout';
+import { afmeldUrl } from '../../../lib/nieuwsbrief';
 import { zetInWachtrij } from '../../../lib/outbox';
 import { logGebeurtenis } from '../../../lib/order-events';
 import { maakOrderToken } from '../../../lib/order-token';
@@ -152,8 +154,26 @@ export const POST: APIRoute = async ({ request }) => {
       image_url: regel.product_variants?.image_url || regel.products?.image_url || null,
     }));
 
+    /**
+     * Het aanmeldvinkje van het bestelformulier verzilveren. Dit gebeurt vóór
+     * het renderen, want de bevestiging moet vermelden dát het gebeurd is: dat
+     * is de mededeling waar deze opt-in op rust. Zie `nieuwsbrief-checkout.ts`.
+     */
+    const { data: klant } = await sb
+      .from('customers')
+      .select('accepts_marketing')
+      .eq('email', order.customer_email)
+      .maybeSingle();
+
+    const inschrijving = await meldAanViaCheckout(sb, order.customer_email, klant?.accepts_marketing);
+
     // Bevestiging aan de klant
-    const bevestiging = renderOrderConfirmation({ ...order, order_items: regelsMetBeeld, portaalUrl });
+    const bevestiging = renderOrderConfirmation({
+      ...order,
+      order_items: regelsMetBeeld,
+      portaalUrl,
+      nieuwsbriefAfmeldUrl: inschrijving === 'toegevoegd' ? afmeldUrl(origin, order.customer_email) : undefined,
+    });
     await zetInWachtrij({
       soort: 'orderbevestiging',
       ontvanger: order.customer_email,

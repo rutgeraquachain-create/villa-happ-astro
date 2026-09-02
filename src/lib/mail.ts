@@ -104,6 +104,17 @@ interface OrderForMail {
      */
     image_url?: string | null;
   }[];
+  /**
+   * Gezet als deze bestelling de klant zojuist op de nieuwsbrieflijst heeft
+   * gezet, met het vinkje op het bestelformulier. Dan komt er een blok in de
+   * mail dat dat meldt, met deze link erin.
+   *
+   * Dat blok is niet vrijblijvend. De opt-in bij het afrekenen leunt erop dat
+   * de klant het meteen te horen krijgt en er in één klik vanaf kan
+   * (art. 11.7 Telecomwet). Laat dit veld leeg en de inschrijving gebeurt in
+   * stilte. Zie `nieuwsbrief-checkout.ts`.
+   */
+  nieuwsbriefAfmeldUrl?: string;
 }
 
 export function isMailConfigured(): boolean {
@@ -205,7 +216,15 @@ export function renderOrderConfirmation(order: OrderForMail): { subject: string;
       <a href="${origin}/herroeping" style="${linkStijl}">Modelformulier voor herroeping</a> &middot;
       <a href="${origin}/algemene-voorwaarden" style="${linkStijl}">Algemene voorwaarden</a> &middot;
       <a href="${origin}/retourneren" style="${linkStijl}">Zo retourneer je</a>
-    </p>`;
+    </p>
+    ${order.nieuwsbriefAfmeldUrl ? `
+      ${lijn()}
+      <div style="font-family:${MONO};font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:${KLEUR.zacht};margin:0 0 8px;">Nieuwsbrief</div>
+      <p style="margin:0;font-family:${LETTERTYPE};font-size:13px;line-height:1.7;color:${KLEUR.zacht};">
+        Je hebt bij het afrekenen aangevinkt dat je op de hoogte wilt blijven, dus je staat nu op
+        de lijst. Een paar keer per jaar, en alleen als er iets te vertellen valt.
+        <a href="${order.nieuwsbriefAfmeldUrl}" style="${linkStijl}">Toch liever niet?</a>
+      </p>` : ''}`;
 
   const voet = `Vragen over je bestelling? Antwoord gewoon op deze mail.<br />
     ${escapeHtml(BUSINESS.legalName)} &middot; ${escapeHtml(BUSINESS.returnAddress.street)}, ${escapeHtml(BUSINESS.returnAddress.postalCode)} ${escapeHtml(BUSINESS.returnAddress.city)}<br />

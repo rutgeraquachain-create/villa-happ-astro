@@ -35,6 +35,22 @@ import '../../styles/shop.css';
               <label for="co-email">E-mailadres</label>
               <input id="co-email" name="email" type="email" autocomplete="email" required />
             </div>
+            <!--
+              Onaangevinkt, en dat blijft zo. Een vooraf aangevinkt vakje is geen
+              toestemming (AVG art. 4 lid 11: een actieve handeling), en het Hof
+              heeft dat in Planet49 uitdrukkelijk zo uitgesproken. Zet hier dus
+              nooit `checked` bij, hoe verleidelijk de conversie ook is.
+
+              Het staat los van de bestelling: niets hangt ervan af, het blokkeert
+              geen knop en het hoort daarom niet bij de verplichte velden.
+            -->
+            <div class="vh-check">
+              <input id="co-marketing" name="accepts_marketing" type="checkbox" value="1" />
+              <label for="co-marketing">
+                Houd me op de hoogte van nieuwe drops en het verhaal erachter.
+                Een paar keer per jaar, uitschrijven kan met één klik.
+              </label>
+            </div>
           </div>
 
           <div class="vh-form-section">
@@ -322,6 +338,10 @@ import '../../styles/shop.css';
         email: String(fd.get('email')),
         first_name: String(fd.get('first_name')),
         last_name: String(fd.get('last_name')),
+        // FormData laat een niet-aangevinkt vakje helemaal weg, dus dit is
+        // precies "heeft hij hem aangeklikt". Niet omzetten naar String(): dat
+        // maakt van een ontbrekend vakje de tekst "null", en die is waar.
+        accepts_marketing: fd.get('accepts_marketing') === '1',
       },
       shipping: {
         street: String(fd.get('street')),
