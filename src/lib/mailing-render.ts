@@ -34,25 +34,61 @@ function inline(s: string): string {
 }
 
 /**
+ * Splitst één alinea in de stukken die door een `<br />` gescheiden moeten
+ * worden. Meestal is dat er precies één.
+ *
+ * Standaard markdown: een enkel regeleinde binnen een alinea is een spatie. De
+ * lezer bepaalt dan zelf waar de tekst afbreekt, op de breedte van zijn eigen
+ * scherm.
+ *
+ * Hier werd eerst élk regeleinde een `<br />`, met als reden dat een adres of
+ * een opsomming dan leesbaar bleef. Dat gaf de brontekst de macht over de
+ * opmaak. Gemeten 2 september 2026 op de eerste mailing: de markdown in
+ * `src/content/mailings/` is op ongeveer tachtig tekens afgebroken, en die
+ * afbreking kwam ongewijzigd in de mail terecht. Het woord "Wat" stond daardoor
+ * alleen op een regel. Op een telefoon breekt elke bronregel bovendien nog een
+ * keer, en dan valt de alinea helemaal uiteen.
+ *
+ * Een echte afbreking vraag je aan zoals markdown dat kent: twee spaties aan
+ * het eind van de regel, of een backslash. Een adresblok kan dus nog steeds,
+ * maar het staat er dan omdat iemand het bedoelde.
+ */
+function regelsSamen(blok: string): string[] {
+  const stukken: string[] = [];
+  let lopend = '';
+  for (const regel of blok.split('\n')) {
+    const hard = /(\s{2,}|\\)$/.test(regel);
+    const kaal = regel.replace(/(\s+|\\)+$/, '').trim();
+    lopend = lopend ? `${lopend} ${kaal}` : kaal;
+    if (hard) {
+      stukken.push(lopend);
+      lopend = '';
+    }
+  }
+  if (lopend) stukken.push(lopend);
+  return stukken.filter(Boolean);
+}
+
+/**
  * Markdown-body naar mail-HTML.
  *
  * Alinea's worden gescheiden door een lege regel. Een regel die met ## begint
- * is een tussenkop. Enkele regeleinden binnen een alinea blijven regeleinden,
- * zodat een adres of een opsomming zonder opmaak leesbaar blijft.
+ * is een tussenkop. Voor regeleinden binnen een alinea, zie `regelsSamen`.
  */
 export function bodyNaarHtml(markdown: string): string {
   return markdown
     .trim()
     .split(/\n\s*\n/)
     .map((blok) => {
-      const tekst = blok.trim();
-      if (!tekst) return '';
+      const stukken = regelsSamen(blok);
+      if (!stukken.length) return '';
+      const tekst = stukken.join(' ');
 
       if (tekst.startsWith('## ')) {
         return `<div style="font-family:${MONO};font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:${KLEUR.zacht};margin:26px 0 8px;">${inline(escape(tekst.slice(3)))}</div>`;
       }
 
-      return alinea(inline(escape(tekst)).replace(/\n/g, '<br />'));
+      return alinea(stukken.map((s) => inline(escape(s))).join('<br />'));
     })
     .filter(Boolean)
     .join('\n');

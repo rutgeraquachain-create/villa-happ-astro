@@ -67,6 +67,22 @@ export function voorbeeldMails(): VoorbeeldMail[] {
   return [
     { slug: 'orderbevestiging', naam: 'Orderbevestiging', ...renderOrderConfirmation(VOORBEELD_ORDER) },
     {
+      slug: 'orderbevestiging-nieuwsbrief',
+      naam: 'Orderbevestiging met nieuwsbriefmelding',
+      /**
+       * Dezelfde mail, maar zoals hij eruitziet als de klant het vakje bij het
+       * afrekenen aanvinkte. Staat hier apart omdat dit blok de mededeling
+       * draagt waar die opt-in op rust: is het onzichtbaar in de preview, dan
+       * kan het wegvallen zonder dat iemand het merkt. Gemeten 2 september 2026
+       * bij de mailing: een preview die iets anders toont dan de ontvanger
+       * krijgt, verbergt precies de fout die je zoekt.
+       */
+      ...renderOrderConfirmation({
+        ...VOORBEELD_ORDER,
+        nieuwsbriefAfmeldUrl: 'https://villahapp.nl/nieuwsbrief/afmelden?t=voorbeeld',
+      }),
+    },
+    {
       slug: 'verzonden',
       naam: 'Verzendbevestiging',
       ...renderShippingConfirmation({

@@ -154,13 +154,26 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'Bestellen lukt nu even niet. Probeer het zo opnieuw.' }), { status: 503 });
   }
 
-  // Upsert customer
-  const { data: cust } = await sb.from('customers').upsert({
+  /**
+   * Upsert customer.
+   *
+   * `accepts_marketing` gaat hier alleen omhóóg. Het stond eerst als
+   * `body.customer.accepts_marketing || false` in de upsert, en dat zette een
+   * eerdere toestemming stil terug op false zodra dezelfde klant een tweede keer
+   * bestelde zonder het vakje aan te vinken. Een leeg vakje is geen intrekking,
+   * het is de afwezigheid van een nieuwe verklaring; intrekken doe je met de
+   * uitschrijflink. Zie ook de les "wie bezit de tabel": een upsert vanaf de ene
+   * kant wist zonder melding wat aan de andere kant is vastgelegd.
+   */
+  const klantRij: Record<string, unknown> = {
     email: body.customer.email,
     first_name: body.customer.first_name,
     last_name: body.customer.last_name,
-    accepts_marketing: body.customer.accepts_marketing || false,
-  }, { onConflict: 'email' }).select().single();
+  };
+  if (body.customer.accepts_marketing) klantRij.accepts_marketing = true;
+
+  const { data: cust } = await sb.from('customers')
+    .upsert(klantRij, { onConflict: 'email' }).select().single();
 
   const { data: order, error: orderErr } = await sb.from('orders').insert({
     order_number: orderNumber,
