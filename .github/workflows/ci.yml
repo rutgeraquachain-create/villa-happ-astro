@@ -15,10 +15,12 @@ on:
   push:
     branches: [main]
   pull_request:
-    # ready_for_review MOET hier staan. De standaard-types zijn opened, synchronize en
-    # reopened; geen daarvan vuurt wanneer een draft op "ready" gaat. Zonder deze regel
-    # draait de poort dan nooit, rapporteert de required check nooit, en blokkeert de
-    # merge voorgoed. Zie _canon/Actions-workflows.md regel 3.
+    # ready_for_review MOET hier staan, en het gevaar zit precies andersom dan je
+    # verwacht. De standaard-types zijn opened, synchronize en reopened; geen daarvan
+    # vuurt wanneer een draft op "ready" gaat. Er komt dan geen nieuwe run. De jobs uit
+    # de laatste run staan op `skipped`, en GitHub telt een overgeslagen job als VOLDAAN
+    # voor een required check. De PR is dus gewoon mergebaar terwijl de poort nooit heeft
+    # gedraaid. Zie _canon/Actions-workflows.md regel 3.
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
