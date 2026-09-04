@@ -21,7 +21,12 @@ on:
     # de laatste run staan op `skipped`, en GitHub telt een overgeslagen job als VOLDAAN
     # voor een required check. De PR is dus gewoon mergebaar terwijl de poort nooit heeft
     # gedraaid. Zie _canon/Actions-workflows.md regel 3.
-    types: [opened, synchronize, reopened, ready_for_review]
+    # converted_to_draft hoort er ook bij. Zet iemand een ready PR terug naar draft,
+    # dan start er zonder deze type geen run, en cancel-in-progress heeft juist een
+    # NIEUWE run nodig om de lopende te annuleren. Die draait anders gewoon door op
+    # minuten die niemand meer wil. De jobs van die nieuwe run worden door de
+    # draft-conditie overgeslagen en kosten dus niets.
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
 
 jobs:
   verify:
