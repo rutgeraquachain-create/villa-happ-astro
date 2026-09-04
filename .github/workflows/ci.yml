@@ -15,9 +15,25 @@ on:
   push:
     branches: [main]
   pull_request:
+    # ready_for_review MOET hier staan, en het gevaar zit precies andersom dan je
+    # verwacht. De standaard-types zijn opened, synchronize en reopened; geen daarvan
+    # vuurt wanneer een draft op "ready" gaat. Er komt dan geen nieuwe run. De jobs uit
+    # de laatste run staan op `skipped`, en GitHub telt een overgeslagen job als VOLDAAN
+    # voor een required check. De PR is dus gewoon mergebaar terwijl de poort nooit heeft
+    # gedraaid. Zie _canon/Actions-workflows.md regel 3.
+    # converted_to_draft hoort er ook bij. Zet iemand een ready PR terug naar draft,
+    # dan start er zonder deze type geen run, en cancel-in-progress heeft juist een
+    # NIEUWE run nodig om de lopende te annuleren. Die draait anders gewoon door op
+    # minuten die niemand meer wil. De jobs van die nieuwe run worden door de
+    # draft-conditie overgeslagen en kosten dus niets.
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
 
 jobs:
   verify:
+    # Draait op push altijd; op een PR pas als hij geen draft meer is. Gemeten 4 sep
+    # 2026: 2,4 runs per PR, en cancel-in-progress vangt daar weinig van omdat een
+    # afgeronde run al betaald is. Zie _canon/Actions-workflows.md regel 3.
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
