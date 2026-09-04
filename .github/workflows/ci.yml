@@ -15,9 +15,18 @@ on:
   push:
     branches: [main]
   pull_request:
+    # ready_for_review MOET hier staan. De standaard-types zijn opened, synchronize en
+    # reopened; geen daarvan vuurt wanneer een draft op "ready" gaat. Zonder deze regel
+    # draait de poort dan nooit, rapporteert de required check nooit, en blokkeert de
+    # merge voorgoed. Zie _canon/Actions-workflows.md regel 3.
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   verify:
+    # Draait op push altijd; op een PR pas als hij geen draft meer is. Gemeten 4 sep
+    # 2026: 2,9 runs per PR, en cancel-in-progress vangt daar weinig van omdat een
+    # afgeronde run al betaald is. Zie _canon/Actions-workflows.md regel 3.
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
