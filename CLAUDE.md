@@ -301,7 +301,6 @@ wat de code doet, voegt niets toe.
 | CI-poort | `.github/workflows/ci.yml` |
 | Redirects en headers | `vercel.json` |
 
-
 ## Als een aanname sneuvelt
 
 Blijkt er tijdens het werk iets anders te zijn dan gedacht (een toets die niets bewees, een oplossing die om een andere reden werkte dan je dacht, een prijs die niemand had benoemd), leg dat dan vast met de skill `lesvastleggen`. Niet bij elk antwoord: alleen als je de zin "ik dacht dat X, en dat was niet zo" met iets concreets kunt invullen.
