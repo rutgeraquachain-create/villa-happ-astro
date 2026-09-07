@@ -21,12 +21,18 @@ import { renderNieuwsbriefBevestiging } from '../../lib/mail';
 import { zetInWachtrij } from '../../lib/outbox';
 import { getSiteOrigin } from '../../lib/site';
 import { authSecretOntbreekt } from '../../lib/order-token';
+import { magBevestigingVersturen, domeinGeweigerd, schoneBron } from '../../lib/aanmeldrem';
 
 export const prerender = false;
 
 const Schema = z.object({
   email: z.email(),
   source: z.string().max(40).optional().default('footer'),
+  /**
+   * Honeypot. Onzichtbaar voor mensen, ingevuld door bots die elk veld vullen
+   * dat ze tegenkomen. Zie de toelichting bij het gebruik verderop.
+   */
+  bedrijf: z.string().optional(),
 });
 
 /**
@@ -40,7 +46,10 @@ const KIJK_IN_JE_MAIL = {
 };
 
 export const POST: APIRoute = async ({ request }) => {
-  if (!rateLimit(clientKey(request, 'newsletter'), 5)) return tooManyRequests();
+  // Van vijf naar drie per minuut. De aanval van 4 september kwam niet van één
+  // adres, dus dit houdt hem niet tegen; het is de goedkoopste van de remmen en
+  // hij hoort strak te staan. Het echte werk doet `magBevestigingVersturen`.
+  if (!rateLimit(clientKey(request, 'newsletter'), 3)) return tooManyRequests();
 
   let body;
   try {
@@ -52,7 +61,23 @@ export const POST: APIRoute = async ({ request }) => {
     }), { status: 400 });
   }
 
+  /**
+   * Honeypot gevuld: dit is een bot. Antwoorden alsof het gelukt is en niets
+   * doen. Een foutmelding zou hem laten variëren tot hij er wel doorkomt.
+   */
+  if (body.bedrijf) {
+    console.warn('[nieuwsbrief] Honeypot gevuld; aanmelding genegeerd.');
+    return new Response(JSON.stringify(KIJK_IN_JE_MAIL));
+  }
+
   const email = normaliseerEmail(body.email);
+
+  // Sms-gateways en verwanten. Mail daarheen wordt een tekstbericht op iemands
+  // telefoon, en dat is bij dit misbruik het doel. Zie lib/aanmeldrem.ts.
+  if (domeinGeweigerd(email)) {
+    console.warn('[nieuwsbrief] Geweigerd domein; aanmelding genegeerd.');
+    return new Response(JSON.stringify(KIJK_IN_JE_MAIL));
+  }
 
   // Zonder secret is er geen bevestigingslink te maken. Vroeg stoppen met een
   // eerlijke melding, anders leggen we een adres vast dat nooit bevestigd kan
@@ -97,7 +122,11 @@ export const POST: APIRoute = async ({ request }) => {
   // bevestiging. `unsubscribed_at` wordt daarom pas bij die klik gewist.
   const { error } = await sb.from('newsletter_subscribers').upsert({
     email,
-    source: body.source,
+    // Door de allowlist heen. Dit veld werd letterlijk overgenomen, dus de bot
+    // bepaalde zelf wat er in de kolom kwam: veertig rijen kregen `atelier` mee
+    // terwijl geen pagina die waarde stuurt, en daarmee wees de analyse naar
+    // het verkeerde kanaal.
+    source: schoneBron(body.source),
     confirmed: false,
   }, { onConflict: 'email' });
 
@@ -107,6 +136,19 @@ export const POST: APIRoute = async ({ request }) => {
       success: false,
       message: 'Er ging iets mis. Probeer opnieuw.',
     }), { status: 500 });
+  }
+
+  /**
+   * De rem die het domein beschermt. Is de bovengrens voor dit uur bereikt, dan
+   * staat de aanmelding er wel maar gaat er geen mail uit. Dat is beter dan
+   * honderd bevestigingsmails naar mensen die er niet om vroegen, want daar
+   * hangt de verzendreputatie aan waarmee de campagne straks moet landen.
+   *
+   * Het antwoord aan de bezoeker verandert niet. Wie hier legitiem staat en
+   * geen mail krijgt, kan het over een uur opnieuw proberen.
+   */
+  if (!(await magBevestigingVersturen(sb))) {
+    return new Response(JSON.stringify(KIJK_IN_JE_MAIL));
   }
 
   const mail = renderNieuwsbriefBevestiging(email, bevestigUrl(getSiteOrigin(), email));

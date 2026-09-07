@@ -31,6 +31,7 @@ import {
   ACTIE, isGesloten, naamGeldig, herinneringGeldig, nummerGeldig,
   HERINNERING_MIN, HERINNERING_MAX,
 } from '../../lib/herinnering';
+import { magBevestigingVersturen, domeinGeweigerd } from '../../lib/aanmeldrem';
 
 export const prerender = false;
 
@@ -46,6 +47,8 @@ const Schema = z.object({
   nieuwsbrief: z.boolean().optional().default(false),
   magArchief: z.boolean().optional().default(false),
   magNaam: z.boolean().optional().default(false),
+  /** Honeypot. De pagina houdt hem al tegen; dit dekt een rechtstreekse POST. */
+  bedrijf: z.string().optional(),
 });
 
 function fout(message: string, status = 400) {
@@ -69,7 +72,24 @@ export const POST: APIRoute = async ({ request }) => {
     return fout(eerste || 'Controleer de velden en probeer opnieuw.');
   }
 
+  /**
+   * Honeypot gevuld: bot. Doen alsof het gelukt is, met een nummer dat nergens
+   * bestaat, en niets wegschrijven. Een foutmelding laat hem variëren.
+   */
+  if (body.bedrijf) {
+    console.warn('[herinnering] Honeypot gevuld; inzending genegeerd.');
+    return new Response(JSON.stringify({
+      success: true, nummer: 'HH-0000-0000', fotoAdres: ACTIE.fotoAdres,
+      message: 'Je inzending is binnen.', mailVerstuurd: false,
+    }));
+  }
+
   const email = normaliseerEmail(body.email);
+
+  if (domeinGeweigerd(email)) {
+    console.warn('[herinnering] Geweigerd domein; inzending genegeerd.');
+    return fout('Dit e-mailadres kunnen we niet gebruiken. Vul er een ander in.');
+  }
 
   if (authSecretOntbreekt() && body.nieuwsbrief) {
     // Zonder secret is er geen bevestigingslink voor de nieuwsbrief. De
@@ -162,6 +182,10 @@ async function meldAanVoorNieuwsbrief(
 
   // Al actief: geen tweede bevestigingsmail. Die leest als spam.
   if (inschrijfstand(bestaand) === 'actief') return;
+
+  // Dezelfde rem als bij het gewone formulier. Zonder deze regel zou deze route
+  // een tweede weg naar buiten zijn voor precies het misbruik van 4 september.
+  if (!(await magBevestigingVersturen(sb))) return;
 
   const { error } = await sb.from('newsletter_subscribers').upsert({
     email,

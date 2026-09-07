@@ -2,65 +2,29 @@
 /**
  * GET /nieuwsbrief/bevestigen?t=<token>
  *
- * Stap twee van de dubbele opt-in. De link uit de bevestigingsmail komt hier
- * uit en zet de inschrijving meteen op actief; er staat bewust geen extra knop
- * tussen. De afweging staat bij `bevestigUrl` in src/lib/nieuwsbrief.ts.
+ * Stap twee van de dubbele opt-in. Deze pagina bevestigt níét bij het openen;
+ * hij toont een knop die POST doet naar /api/newsletter/bevestigen.
  *
- * `confirmed_at` is het bewijsstuk voor de AVG: niet dát iemand bevestigde,
- * maar wanneer.
+ * WAAROM DIE KNOP ERTUSSEN ZIT
+ * Hier stond dat de link meteen bevestigde, met de afweging dat elke extra stap
+ * bevestigingen kost. Gemeten 7 september 2026 bleek dat verkeerd uit te pakken:
+ * van de negen bevestigde inschrijvingen kwam er geen enkele van een mens. Alle
+ * negen kwamen van zakelijke domeinen met een mailscanner, zes ervan binnen een
+ * minuut na verzending en één binnen drie seconden. De volledige meting staat in
+ * src/pages/api/newsletter/bevestigen.ts.
+ *
+ * Zet dit niet terug naar bevestigen-bij-openen. Een scanner die klikt levert
+ * een adres op dat als toestemming telt terwijl niemand toestemming gaf, en dat
+ * merk je pas als er een mailing uit gaat.
  */
 export const prerender = false;
 
 import Base from '../../layouts/Base.astro';
-import { getSupabaseAdmin } from '../../lib/supabase';
 import { emailUitToken } from '../../lib/nieuwsbrief';
 
-type Uitslag = 'gelukt' | 'al-actief' | 'ongeldig' | 'geen-database';
-
-let uitslag: Uitslag = 'ongeldig';
-let adres = '';
-
-const email = emailUitToken(Astro.url.searchParams.get('t'), 'aanmelding');
-
-if (email) {
-  const sb = getSupabaseAdmin();
-  if (!sb) {
-    uitslag = 'geen-database';
-  } else {
-    const { data: bestaand } = await sb
-      .from('newsletter_subscribers')
-      .select('confirmed, unsubscribed_at')
-      .eq('email', email)
-      .maybeSingle();
-
-    if (bestaand?.confirmed && !bestaand.unsubscribed_at) {
-      uitslag = 'al-actief';
-      adres = email;
-    } else {
-      // `unsubscribed_at` wordt hier gewist: wie zich eerder uitschreef en nu
-      // opnieuw bevestigt, kiest daar bewust voor.
-      const { error } = await sb
-        .from('newsletter_subscribers')
-        .update({ confirmed: true, confirmed_at: new Date().toISOString(), unsubscribed_at: null })
-        .eq('email', email);
-
-      if (error) {
-        console.error('[nieuwsbrief] Bevestigen mislukte:', error.message);
-        uitslag = 'geen-database';
-      } else {
-        uitslag = 'gelukt';
-        adres = email;
-      }
-    }
-  }
-}
-
-const koppen: Record<Uitslag, string> = {
-  gelukt: 'Je staat op de lijst.',
-  'al-actief': 'Je stond er al op.',
-  ongeldig: 'Deze link werkt niet meer.',
-  'geen-database': 'Het lukte even niet.',
-};
+const token = Astro.url.searchParams.get('t');
+// Alleen lezen, niets wijzigen. Dit bepaalt of we een knop tonen of een uitleg.
+const email = emailUitToken(token, 'aanmelding');
 ---
 
 <Base
@@ -72,29 +36,30 @@ const koppen: Record<Uitslag, string> = {
     <div class="vh-page-inner vh-smal">
       <header class="vh-page-head">
         <p class="vh-page-label vh-mono">Nieuwsbrief</p>
-        <h1 class="vh-page-title">{koppen[uitslag]}</h1>
+        <h1 class="vh-page-title" data-kop>
+          {email ? 'Nog één klik.' : 'Deze link werkt niet meer.'}
+        </h1>
       </header>
 
-      {uitslag === 'gelukt' && (
-        <>
+      {email ? (
+        <div data-vraag>
           <p class="vh-lood">
-            Bedankt. We hebben <b>{adres}</b> toegevoegd aan de lijst.
+            Klik op de knop en we zetten <b>{email}</b> op de lijst.
           </p>
           <p>
             Je hoort van ons als er een nieuwe oplage komt of als er iets te vertellen valt
             over het merk. Een paar keer per jaar, niet vaker. Onder elke mail staat een
             link om je weer uit te schrijven.
           </p>
-        </>
-      )}
-
-      {uitslag === 'al-actief' && (
-        <p class="vh-lood">
-          <b>{adres}</b> stond al op de lijst. Je hoeft verder niets te doen.
-        </p>
-      )}
-
-      {uitslag === 'ongeldig' && (
+          <form method="POST" action="/api/newsletter/bevestigen" class="vh-acties" data-form>
+            <input type="hidden" name="t" value={token} />
+            <button type="submit" class="vh-btn vh-btn--accent">
+              <span data-knoplabel>Ja, meld me aan</span>
+            </button>
+          </form>
+          <p class="vh-fout" role="alert" data-fout></p>
+        </div>
+      ) : (
         <>
           <p class="vh-lood">
             De link is verlopen of klopt niet. Bevestigingslinks zijn een week geldig.
@@ -106,12 +71,13 @@ const koppen: Record<Uitslag, string> = {
         </>
       )}
 
-      {uitslag === 'geen-database' && (
-        <p class="vh-lood">
-          We konden je aanmelding nu niet afronden. Probeer de link uit de mail
-          over een paar minuten opnieuw; hij blijft een week werken.
+      <div data-gelukt hidden>
+        <p class="vh-lood" data-gelukttekst></p>
+        <p>
+          Je hoort van ons als er een nieuwe oplage komt of als er iets te vertellen valt
+          over het merk. Onder elke mail staat een link om je weer uit te schrijven.
         </p>
-      )}
+      </div>
 
       <p class="vh-acties">
         <a href="/shop" class="vh-btn vh-btn--primary"><span>Bekijk de collectie</span></a>
@@ -120,8 +86,61 @@ const koppen: Record<Uitslag, string> = {
   </section>
 </Base>
 
+<script>
+  const form = document.querySelector('[data-form]') as HTMLFormElement | null;
+
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const knop = form.querySelector('button') as HTMLButtonElement;
+      const label = form.querySelector('[data-knoplabel]');
+      const fout = document.querySelector('[data-fout]');
+      knop.disabled = true;
+      if (label) label.textContent = 'Een moment…';
+
+      try {
+        const res = await fetch('/api/newsletter/bevestigen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ t: new FormData(form).get('t') }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          const vraag = document.querySelector('[data-vraag]') as HTMLElement;
+          const gelukt = document.querySelector('[data-gelukt]') as HTMLElement;
+          const tekst = document.querySelector('[data-gelukttekst]');
+          const kop = document.querySelector('[data-kop]');
+          if (kop) kop.textContent = data.uitslag === 'al-actief' ? 'Je stond er al op.' : 'Je staat op de lijst.';
+          if (tekst) {
+            tekst.textContent = data.uitslag === 'al-actief'
+              ? `${data.email} stond al op de lijst. Je hoeft verder niets te doen.`
+              : `Bedankt. We hebben ${data.email} toegevoegd aan de lijst.`;
+          }
+          if (vraag) vraag.hidden = true;
+          if (gelukt) gelukt.hidden = false;
+          return;
+        }
+
+        if (fout) {
+          fout.textContent = data.uitslag === 'ongeldig'
+            ? 'Deze link is verlopen of klopt niet.'
+            : 'Het lukte even niet. Probeer de link uit de mail over een paar minuten opnieuw.';
+        }
+        knop.disabled = false;
+        if (label) label.textContent = 'Ja, meld me aan';
+      } catch {
+        if (fout) fout.textContent = 'Verbinding mislukt. Probeer het zo opnieuw.';
+        knop.disabled = false;
+        if (label) label.textContent = 'Ja, meld me aan';
+      }
+    });
+  }
+</script>
+
 <style>
   .vh-smal { max-width: 620px; }
   .vh-lood { font-size: 18px; line-height: 1.65; }
   .vh-acties { margin-top: 32px; }
+  .vh-fout { color: var(--vh-danger); font-size: 14px; min-height: 18px; margin-top: 12px; }
 </style>
