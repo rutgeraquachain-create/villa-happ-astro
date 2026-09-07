@@ -7,6 +7,7 @@ import Base from '../layouts/Base.astro';
 import Loader from '../components/home/Loader.astro';
 import Hero from '../components/home/Hero.astro';
 import Marquee from '../components/home/Marquee.astro';
+import Oproep from '../components/home/Oproep.astro';
 import Manifesto from '../components/home/Manifesto.astro';
 import YearMask from '../components/home/YearMask.astro';
 import HeritageScroll from '../components/home/HeritageScroll.astro';
@@ -52,6 +53,14 @@ import '../styles/home.css';
   <Loader />
   <Hero />
   <Marquee />
+  {/**
+    * De oproep staat bewust hier en niet verderop. Wie via pers of social
+    * binnenkomt leest zelden voorbij het eerste scherm, en het aanmeldveld
+    * onderaan bereikt die bezoeker nooit. Het blok verdwijnt vanzelf zodra de
+    * actie sluit; zie Oproep.astro. Zonder nummer, dus de telling 01 tot 07
+    * hieronder blijft ongewijzigd.
+    */}
+  <Oproep />
   <YearMask />
   <ShopGrid />
   <ParallaxColumns />

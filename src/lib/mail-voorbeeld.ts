@@ -18,9 +18,11 @@ import {
   renderNieuweBestelling,
   renderContactMessage,
   renderNieuwsbriefBevestiging,
+  renderHerinneringOntvangen,
 } from './mail';
 import { renderMailing } from './mailing-render';
 import { getSiteOrigin } from './site';
+import { ACTIE } from './herinnering';
 
 export const VOORBEELD_ORDER = {
   order_number: 'VH-2026-00001',
@@ -112,6 +114,17 @@ export function voorbeeldMails(): VoorbeeldMail[] {
       slug: 'winkelier-nieuwe-order',
       naam: 'Melding aan de winkelier',
       ...renderNieuweBestelling(VOORBEELD_ORDER, 'https://villahapp.nl/beheer/order/voorbeeld'),
+    },
+    {
+      slug: 'herinnering-ontvangen',
+      naam: 'Inzending herinneringsactie',
+      /**
+       * Deze mail draagt het inzendnummer, en dat nummer is de enige koppeling
+       * tussen de rij in de database en de foto die los in het postvak belandt.
+       * Staat het er niet duidelijk in, dan mailt iemand een foto zonder
+       * kenmerk. Vandaar dat hij hier te bekijken is en niet alleen in een test.
+       */
+      ...renderHerinneringOntvangen('Anouk de Wit', 'HH-2026-0042', ACTIE.fotoAdres),
     },
     {
       slug: 'mailing',

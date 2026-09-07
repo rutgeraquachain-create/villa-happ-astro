@@ -1,0 +1,247 @@
+---
+export const prerender = true;
+
+import Base from '../layouts/Base.astro';
+import { ACTIE, prijsInEuro, HERINNERING_MAX } from '../lib/herinnering';
+import '../styles/shop.css';
+
+/**
+ * De herinneringsactie.
+ *
+ * Dit is de pagina waar pers, social en de homepage naartoe linken. Hij vraagt
+ * één ding van een bezoeker die het merk nog van vroeger kent: vertel wat je
+ * ervan weet. Het adres dat hij daarbij achterlaat is het doel, de tegoedbon is
+ * de reden.
+ *
+ * Let op de drie vinkjes onderaan het formulier. Geen ervan staat vooraf aan en
+ * geen ervan is voorwaarde voor meedoen. Zie src/lib/herinnering.ts.
+ */
+
+const prijs = prijsInEuro();
+const sluitTekst = '11 oktober 2026';
+---
+<Base
+  title="Wat is jouw Villa Happ herinnering? · Villa Happ"
+  description={`Deel je herinnering aan Villa Happ en stuur een oude foto mee. De mooiste inzending wint een tegoedbon van ${prijs} voor de webshop.`}
+>
+  <section class="vh-page">
+    <div class="vh-page-inner">
+
+      <header class="vh-page-head">
+        <p class="vh-page-label vh-mono">Sinds 1945 · Het archief</p>
+        <h1 class="vh-page-title">Wat is jouw <span class="vh-italic-accent">herinnering</span>?</h1>
+        <p class="vh-page-sub">
+          Tachtig winkels door Europa, en een generatie die er in liep. Grote kans dat jij
+          er kleren van droeg, of dat je moeder ze voor je kocht. We zijn op zoek naar die
+          verhalen, en naar de foto's die erbij horen.
+        </p>
+      </header>
+
+      <div class="vh-hh">
+
+        <div class="vh-hh-uitleg">
+          <h2>Hoe het werkt</h2>
+          <ol class="vh-hh-stappen">
+            <li>
+              <b>Vertel je herinnering.</b>
+              Een winkelbezoek, een jas die je jarenlang droeg, de speelhoek, de rat aan
+              de muur. Hoe concreter, hoe leuker.
+            </li>
+            <li>
+              <b>Stuur je foto.</b>
+              Na het versturen krijg je een inzendnummer. Mail je foto naar
+              <a href={`mailto:${ACTIE.fotoAdres}`}>{ACTIE.fotoAdres}</a> met dat nummer
+              in het onderwerp.
+            </li>
+            <li>
+              <b>Maak kans op {prijs}.</b>
+              De mooiste inzending wint een tegoedbon van {prijs} voor de webshop.
+              Inzenden kan tot en met {sluitTekst}, de winnaar horen we op 16 oktober.
+            </li>
+          </ol>
+          <p class="vh-hh-klein">
+            Meedoen is gratis en verplicht je tot niets. Lees de
+            <a href="/actievoorwaarden">actievoorwaarden</a>.
+          </p>
+        </div>
+
+        <form class="vh-form vh-hh-form" id="vh-hh-form" novalidate>
+          <div class="vh-form-row">
+            <div class="vh-field">
+              <label for="hh-naam">Je naam</label>
+              <input id="hh-naam" name="naam" autocomplete="name" required />
+            </div>
+            <div class="vh-field">
+              <label for="hh-email">E-mailadres</label>
+              <input id="hh-email" name="email" type="email" autocomplete="email" required />
+            </div>
+          </div>
+
+          <div class="vh-field">
+            <label for="hh-herinnering">Je herinnering</label>
+            <textarea id="hh-herinnering" name="herinnering" rows="7" maxlength={HERINNERING_MAX} required></textarea>
+            <p class="vh-hh-teller vh-mono" data-hh-teller aria-live="polite"></p>
+          </div>
+
+          <!--
+            Drie losse toestemmingen, alle drie uit. Nooit `checked` toevoegen:
+            toestemming vraagt een actieve handeling (AVG art. 4 lid 11), en
+            toestemming die aan meedoen vastzit is niet vrij gegeven (art. 7 lid 4).
+          -->
+          <fieldset class="vh-hh-akkoord">
+            <legend>Nog even dit</legend>
+
+            <div class="vh-check">
+              <input id="hh-nieuwsbrief" name="nieuwsbrief" type="checkbox" value="1" />
+              <label for="hh-nieuwsbrief">
+                Houd me op de hoogte via de nieuwsbrief. Via die weg horen we het als eerste:
+                nieuwe drops, acties en aanbiedingen.
+              </label>
+            </div>
+
+            <div class="vh-check">
+              <input id="hh-archief" name="magArchief" type="checkbox" value="1" />
+              <label for="hh-archief">
+                Villa Happ mag mijn foto gebruiken voor het archief op de website.
+              </label>
+            </div>
+
+            <div class="vh-check">
+              <input id="hh-naamgebruik" name="magNaam" type="checkbox" value="1" />
+              <label for="hh-naamgebruik">
+                Mijn naam mag daarbij vermeld worden.
+              </label>
+            </div>
+          </fieldset>
+
+          <!-- Honeypot: onzichtbaar voor mensen, ingevuld door bots -->
+          <div class="vh-hp" aria-hidden="true">
+            <label for="hh-bedrijf">Bedrijf (niet invullen)</label>
+            <input id="hh-bedrijf" name="bedrijf" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <button type="submit" class="vh-btn vh-btn--accent" id="hh-verstuur">
+            <span id="hh-verstuur-label">Stuur mijn herinnering in</span>
+            <svg class="vh-btn-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+
+          <p class="vh-contact-error" id="hh-fout" role="alert"></p>
+          <p class="vh-contact-note vh-mono">
+            We bewaren je gegevens om de actie af te handelen. Zie de
+            <a href="/privacy">privacyverklaring</a>.
+          </p>
+        </form>
+
+        <div class="vh-hh-gelukt" id="hh-gelukt" hidden>
+          <p class="vh-page-label vh-mono">Inzending binnen</p>
+          <h2>Nu nog je foto.</h2>
+          <p>Je inzendnummer is:</p>
+          <p class="vh-hh-nummer vh-mono" data-hh-nummer></p>
+          <p>
+            Mail je foto naar <a href={`mailto:${ACTIE.fotoAdres}`} data-hh-mailto>{ACTIE.fotoAdres}</a>
+            en zet dit nummer in het onderwerp. Zonder dat nummer kunnen we je foto
+            niet bij je verhaal leggen.
+          </p>
+          <p class="vh-hh-klein" data-hh-mailstatus></p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const form = document.getElementById('vh-hh-form') as HTMLFormElement | null;
+  const gelukt = document.getElementById('hh-gelukt');
+  const fout = document.getElementById('hh-fout');
+  const knop = document.getElementById('hh-verstuur') as HTMLButtonElement | null;
+  const knopLabel = document.getElementById('hh-verstuur-label');
+  const veld = document.getElementById('hh-herinnering') as HTMLTextAreaElement | null;
+  const teller = document.querySelector('[data-hh-teller]');
+
+  // Teller onder het tekstvak. Niet als waarschuwing maar als aanmoediging:
+  // een langer verhaal is een beter verhaal, en het vak oogt leeg.
+  if (veld && teller) {
+    const tel = () => {
+      const n = veld.value.trim().length;
+      teller.textContent = n === 0 ? '' : `${n} tekens`;
+    };
+    veld.addEventListener('input', tel);
+    tel();
+  }
+
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (fout) fout.textContent = '';
+
+      const fd = new FormData(form);
+
+      // Honeypot: gevuld betekent bot. Doen alsof het gelukt is en niets
+      // versturen, want een bot die een foutmelding krijgt probeert opnieuw.
+      if (String(fd.get('bedrijf') || '').length > 0) {
+        form.hidden = true;
+        if (gelukt) gelukt.hidden = false;
+        return;
+      }
+
+      if (knop) knop.disabled = true;
+      if (knopLabel) knopLabel.textContent = 'Een moment…';
+
+      try {
+        const res = await fetch('/api/herinnering', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            naam: String(fd.get('naam') || ''),
+            email: String(fd.get('email') || ''),
+            herinnering: String(fd.get('herinnering') || ''),
+            // FormData laat een niet-aangevinkt vakje weg, dus dit is exact
+            // "heeft hij hem aangeklikt". Niet via String(), want dan wordt een
+            // ontbrekend vakje de tekst "null" en die is waar.
+            nieuwsbrief: fd.get('nieuwsbrief') === '1',
+            magArchief: fd.get('magArchief') === '1',
+            magNaam: fd.get('magNaam') === '1',
+          }),
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          if (fout) fout.textContent = data.message || 'Er ging iets mis. Probeer opnieuw.';
+          if (knop) knop.disabled = false;
+          if (knopLabel) knopLabel.textContent = 'Stuur mijn herinnering in';
+          return;
+        }
+
+        const nummerEl = document.querySelector('[data-hh-nummer]');
+        if (nummerEl) nummerEl.textContent = data.nummer;
+
+        // Het onderwerp vast invullen scheelt de deelnemer een handeling, en het
+        // scheelt ons de inzendingen waarbij het nummer vergeten is.
+        const mailto = document.querySelector('[data-hh-mailto]') as HTMLAnchorElement | null;
+        if (mailto && data.nummer) {
+          mailto.href = `mailto:${data.fotoAdres}?subject=${encodeURIComponent(`Foto bij inzending ${data.nummer}`)}`;
+        }
+
+        // Kwam de bevestigingsmail niet uit de wachtrij, dan is het nummer op
+        // dit scherm het enige dat hij heeft. Dat hoort hij te weten.
+        const status = document.querySelector('[data-hh-mailstatus]');
+        if (status) {
+          status.textContent = data.mailVerstuurd
+            ? 'Je krijgt dit nummer ook nog per mail.'
+            : 'Let op: de bevestigingsmail is niet verstuurd. Noteer dit nummer even.';
+        }
+
+        form.hidden = true;
+        if (gelukt) {
+          gelukt.hidden = false;
+          gelukt.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } catch {
+        if (fout) fout.textContent = 'Verbinding mislukt. Probeer opnieuw.';
+        if (knop) knop.disabled = false;
+        if (knopLabel) knopLabel.textContent = 'Stuur mijn herinnering in';
+      }
+    });
+  }
+</script>

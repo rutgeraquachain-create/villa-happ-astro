@@ -645,3 +645,51 @@ export function renderNieuwsbriefBevestiging(
 
   return { subject: 'Bevestig je aanmelding voor Villa Happ', html };
 }
+
+/**
+ * Bevestiging van een inzending voor de herinneringsactie.
+ *
+ * Deze mail doet één ding dat de rest niet doet: hij draagt het inzendnummer,
+ * en dat nummer is de enige koppeling tussen de rij in de database en de foto
+ * die straks los in het postvak belandt. Staat het nummer er niet duidelijk in,
+ * dan mailt iemand een foto zonder kenmerk en is die inzending niet meer thuis
+ * te brengen. Het staat daarom groot en apart, en niet weggestopt in een zin.
+ *
+ * De uitschrijflink ontbreekt hier bewust. Dit is geen reclame maar bericht
+ * over iets waar de ontvanger zich zojuist zelf voor aanmeldde. Vinkte hij ook
+ * de nieuwsbrief aan, dan komt dáár een aparte bevestigingsmail voor, met
+ * uitschrijflink en al.
+ */
+export function renderHerinneringOntvangen(
+  naam: string,
+  nummer: string,
+  fotoAdres: string,
+): { subject: string; html: string } {
+  const origin = getSiteOrigin();
+  const voornaam = (naam || '').trim().split(' ')[0] || 'daar';
+
+  const inhoud = `
+    ${titel(`Inzending ${escapeHtml(nummer)}`, `Bedankt, ${escapeHtml(voornaam)}.`)}
+    ${alinea('Je herinnering is binnen. Nu nog de foto, en dan doe je volledig mee.')}
+
+    ${lijn('4px 0 22px')}
+
+    <div style="font-family:${MONO};font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:${KLEUR.zacht};margin:0 0 8px;">Je inzendnummer</div>
+    <p style="margin:0 0 20px;font-family:${MONO};font-size:26px;font-weight:bold;letter-spacing:0.04em;color:${KLEUR.ink};">${escapeHtml(nummer)}</p>
+
+    ${alinea(`Mail je foto naar <b>${escapeHtml(fotoAdres)}</b> en zet dit nummer in het onderwerp. Zonder dat nummer kunnen we de foto niet bij je verhaal leggen.`)}
+
+    ${lijn()}
+
+    ${alinea('We laten je weten wie er gewonnen heeft. Verder krijg je van ons niets, tenzij je je apart voor de nieuwsbrief hebt aangemeld.', '0')}`;
+
+  const html = shell({
+    preheader: `Je inzending is binnen. Stuur je foto naar ${fotoAdres} met nummer ${nummer}.`,
+    inhoud,
+    voet: `Vragen over je inzending? Antwoord gewoon op deze mail.<br />
+      ${escapeHtml(BUSINESS.legalName)} &middot; <a href="${origin}/actievoorwaarden" style="color:${KLEUR.zacht};">Actievoorwaarden</a>`,
+    origin,
+  });
+
+  return { subject: `Je inzending ${nummer} is binnen`, html };
+}

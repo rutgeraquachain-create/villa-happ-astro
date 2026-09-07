@@ -1,0 +1,194 @@
+---
+export const prerender = true;
+
+import LegalLayout from '../components/legal/LegalLayout.astro';
+import { BUSINESS } from '../lib/business';
+import { ACTIE, prijsInEuro } from '../lib/herinnering';
+
+/**
+ * Actievoorwaarden voor de herinneringsactie.
+ *
+ * De tekst volgt wat de code werkelijk doet. Twee dingen die daarbij niet mogen
+ * schuiven, omdat ze de rest dragen:
+ *
+ * 1. Meedoen staat los van de nieuwsbrief. Op /herinnering staan drie losse
+ *    vinkjes en geen daarvan is voorwaarde. Zou hier staan dat deelname een
+ *    inschrijving inhoudt, dan is de toestemming niet vrij gegeven (AVG art. 7
+ *    lid 4) en is de hele lijst onbruikbaar voor reclame.
+ * 2. Er is geen gebruiksrecht op de foto zonder het vinkje. De inzender houdt
+ *    zijn rechten, wij krijgen alleen wat hij aankruist.
+ *
+ * De prijs en de adressen komen uit lib/herinnering.ts en lib/business.ts, zodat
+ * de pagina, de mail en het formulier niet uiteen kunnen lopen.
+ *
+ * De kop voert korte woorden, met opzet. Er stond "Actievoorwaarden
+ * herinneringsactie"; dat laatste is één woord van zeventien tekens en kan niet
+ * afbreken. Op 360 px stak het 2 px buiten het scherm en liet het de hele
+ * pagina horizontaal scrollen. Gemeten met de apparatenmatrix. Het woord staat
+ * nu in de titel en de introzin, waar het wel mag wikkelen.
+ */
+
+const prijs = prijsInEuro();
+---
+<LegalLayout
+  title="Actievoorwaarden herinneringsactie"
+  heading="Spelregels"
+  headingAccent="van de actie"
+  intro={`De spelregels van de herinneringsactie: wie mee mag doen, hoe je inzendt, en wat er met je verhaal en je foto gebeurt.`}
+  description="Actievoorwaarden van de Villa Happ herinneringsactie: deelname, inzending, jurering, prijs en het gebruik van ingestuurde foto's."
+  updated="7 september 2026"
+>
+  <section>
+    <h2>Wie de actie organiseert</h2>
+    <p>
+      Deze actie wordt georganiseerd door {BUSINESS.legalName},
+      {BUSINESS.businessAddress.street}, {BUSINESS.businessAddress.postalCode}
+      {BUSINESS.businessAddress.city}, ingeschreven bij de Kamer van Koophandel
+      onder nummer {BUSINESS.kvk}.
+    </p>
+  </section>
+
+  <section>
+    <h2>Wie mee mag doen</h2>
+    <p>
+      Iedereen van 16 jaar en ouder met een woonadres in Nederland of België.
+      Ben je jonger dan 16, dan mag je meedoen met toestemming van je ouder of
+      verzorger.
+    </p>
+    <p>
+      Medewerkers van de organisator en hun huisgenoten zijn uitgesloten van de
+      prijs. Ze mogen wel een herinnering insturen voor het archief.
+    </p>
+  </section>
+
+  <section>
+    <h2>Hoe je meedoet</h2>
+    <p>
+      Vul het formulier op de <a href="/herinnering">actiepagina</a> in met je
+      naam, je e-mailadres en je herinnering aan Villa Happ. Je krijgt daarna een
+      inzendnummer. Mail je foto naar <a href={`mailto:${ACTIE.fotoAdres}`}>{ACTIE.fotoAdres}</a>
+      met dat nummer in het onderwerp.
+    </p>
+    <p>
+      Een inzending zonder foto telt gewoon mee voor het archief, maar dingt niet
+      mee naar de prijs. De foto hoort namelijk bij de beoordeling.
+    </p>
+    <p>
+      Eén inzending per persoon. Deelname is gratis en er is geen aankoop nodig.
+    </p>
+  </section>
+
+  <section>
+    <h2>Wanneer</h2>
+    <p>
+      Inzenden kan tot en met zondag 11 oktober 2026, 23:59 uur. Inzendingen die
+      daarna binnenkomen doen niet mee. De winnaar krijgt uiterlijk vrijdag
+      16 oktober 2026 bericht op het opgegeven e-mailadres.
+    </p>
+  </section>
+
+  <section>
+    <h2>De prijs</h2>
+    <p>
+      Eén tegoedbon van {prijs}, te besteden in de webshop van Villa Happ. De bon
+      is een jaar geldig vanaf de dag van uitgifte, geldt op het hele assortiment
+      en is niet inwisselbaar voor geld. Verzendkosten zijn niet inbegrepen.
+    </p>
+    <p>
+      Over de uitslag wordt niet gecorrespondeerd. Reageert de winnaar niet
+      binnen veertien dagen, dan wijzen we de prijs toe aan de eerstvolgende
+      inzending.
+    </p>
+  </section>
+
+  <section>
+    <h2>Hoe we kiezen</h2>
+    <p>
+      De organisator beoordeelt de inzendingen op het verhaal en op de foto. Wat
+      meeweegt: hoe concreet de herinnering is, hoe die zich verhoudt tot de
+      geschiedenis van het merk, en hoe sprekend het beeld is. Dit is geen
+      loterij; er wordt niet geloot.
+    </p>
+  </section>
+
+  <section>
+    <h2>Wat er met je foto gebeurt</h2>
+    <p>
+      Je houdt alle rechten op je foto en op je verhaal. Wij krijgen alleen wat
+      je zelf aankruist op het formulier:
+    </p>
+    <ul>
+      <li>
+        <b>Archief.</b> Vink je aan dat we je foto mogen gebruiken, dan mogen we
+        die tonen op de website van Villa Happ en op onze eigen sociale kanalen,
+        in het kader van het merkarchief. Niet in betaalde advertenties, en niet
+        doorverkocht aan derden.
+      </li>
+      <li>
+        <b>Naamsvermelding.</b> Vink je dat apart aan, dan zetten we je naam
+        erbij. Doe je dat niet, dan blijft de inzending anoniem.
+      </li>
+    </ul>
+    <p>
+      Vink je niets aan, dan gebruiken we je foto uitsluitend om de winnaar te
+      kiezen en daarna niet meer. Je kunt je toestemming altijd intrekken door te
+      mailen naar <a href={`mailto:${BUSINESS.supportEmail}`}>{BUSINESS.supportEmail}</a>.
+      We halen het beeld dan weg. Dat werkt niet met terugwerkende kracht voor
+      wat al gedeeld is door anderen.
+    </p>
+    <p>
+      Stuur alleen foto's die van jou zijn of waarvoor je toestemming hebt. Staan
+      er andere mensen op, zorg dan dat zij het goed vinden. Een inzending waar
+      dat niet duidelijk is, laten we buiten beschouwing.
+    </p>
+  </section>
+
+  <section>
+    <h2>De nieuwsbrief staat hier los van</h2>
+    <p>
+      Meedoen aan deze actie meldt je <b>niet</b> aan voor de nieuwsbrief. Dat is
+      een apart vinkje op het formulier, en het staat niet vooraf aan. Je kunt
+      dus gewoon meedoen en winnen zonder ooit een nieuwsbrief te krijgen.
+    </p>
+    <p>
+      Vink je het wel aan, dan krijg je eerst een mail waarin je je aanmelding
+      bevestigt. Pas na die klik sta je op de lijst. Onder elke nieuwsbrief staat
+      een uitschrijflink die het meteen doet.
+    </p>
+    <p>
+      Over de actie zelf mailen we je wel: een bevestiging van je inzending met
+      je inzendnummer, en bericht over de uitslag. Dat hoort bij de deelname
+      waar je je voor aanmeldde.
+    </p>
+  </section>
+
+  <section>
+    <h2>Je gegevens</h2>
+    <p>
+      We bewaren je naam, je e-mailadres, je herinnering en je foto om de actie
+      af te handelen en de winnaar te kiezen. Na afloop verwijderen we de
+      inzendingen binnen drie maanden, behalve het beeld waarvoor je archief-
+      toestemming gaf en behalve je adres als je je voor de nieuwsbrief hebt
+      aangemeld. Meer hierover in de <a href="/privacy">privacyverklaring</a>.
+    </p>
+  </section>
+
+  <section>
+    <h2>De rest</h2>
+    <p>
+      De organisator mag een inzending weigeren die kwetsend, misleidend of niet
+      van de inzender zelf is. Bij een vermoeden van fraude, zoals meerdere
+      inzendingen onder verschillende adressen, vervalt het recht op de prijs.
+    </p>
+    <p>
+      De organisator mag de actie wijzigen of stoppen als omstandigheden daartoe
+      dwingen. Dat melden we dan op deze pagina.
+    </p>
+    <p>
+      Deze actie valt onder de Gedragscode Promotionele Kansspelen 2014. Vragen
+      of een klacht? Mail naar
+      <a href={`mailto:${BUSINESS.supportEmail}`}>{BUSINESS.supportEmail}</a>.
+      Op deze voorwaarden is Nederlands recht van toepassing.
+    </p>
+  </section>
+</LegalLayout>
