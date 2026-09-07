@@ -1,0 +1,213 @@
+---
+/**
+ * /beheer/herinneringen — de inzendingen van de herinneringsactie
+ *
+ * Server-gerenderd en niet cachebaar, net als de orderlijst. Hier staan naam,
+ * e-mailadres, een persoonlijk verhaal en een foto bij elkaar, dus dit is de
+ * gevoeligste pagina van het portaal.
+ *
+ * Wat aandacht vraagt staat bovenaan: nieuwe inzendingen eerst, en binnen elke
+ * groep die met een foto boven die zonder. Een inzending zonder foto dingt niet
+ * mee naar de prijs, dus die hoeft niet vooraan.
+ *
+ * De fotolinks zijn ondertekend en verlopen na een uur; de bucket is privé.
+ * Waarom dat zo moet staat in src/lib/herinnering-beheer.ts.
+ */
+export const prerender = false;
+
+import BeheerLayout from '../../layouts/BeheerLayout.astro';
+import { BEHEER_COOKIE, beheerToegang, beheerGeconfigureerd } from '../../lib/beheer-sessie';
+import { BEHEER_HEADERS } from '../../lib/beheer';
+import { getSupabaseAdmin } from '../../lib/supabase';
+import { leesInzendingen, sorteer, kerncijfers, STATUSSEN, STATUS_LABEL, type Inzending } from '../../lib/herinnering-beheer';
+import { leesbareGrootte } from '../../lib/herinnering-foto';
+import { prijsInEuro } from '../../lib/herinnering';
+
+for (const [k, v] of Object.entries(BEHEER_HEADERS)) Astro.response.headers.set(k, v);
+
+const ingelogd = beheerToegang(Astro.cookies.get(BEHEER_COOKIE)?.value);
+const geconfigureerd = beheerGeconfigureerd();
+const sb = getSupabaseAdmin();
+
+let rijen: Inzending[] = [];
+if (ingelogd && sb) rijen = sorteer(await leesInzendingen(sb));
+
+const cijfers = kerncijfers(rijen);
+
+const tijdstip = (iso: string) =>
+  new Date(iso).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+---
+
+<BeheerLayout
+  title="Herinneringen · Villa Happ beheer"
+  ingelogd={ingelogd}
+  geconfigureerd={geconfigureerd}
+  terug={{ href: '/beheer', label: 'Terug naar orders' }}
+>
+  <header class="bh-kop">
+    <h1>Herinneringen</h1>
+    <p class="bh-sub">
+      Inzendingen voor de actie. De winnaar krijgt een tegoedbon van {prijsInEuro()}.
+      Fotolinks op deze pagina verlopen na een uur.
+    </p>
+  </header>
+
+  <div class="bh-cijfers">
+    <div class="bh-cijfer"><b>{cijfers.totaal}</b><span>Inzendingen</span></div>
+    <div class={`bh-cijfer${cijfers.nieuw > 0 ? ' is-actie' : ''}`}><b>{cijfers.nieuw}</b><span>Nog niet bekeken</span></div>
+    <div class="bh-cijfer"><b>{cijfers.metFoto}</b><span>Met foto</span></div>
+    <div class="bh-cijfer"><b>{cijfers.favoriet}</b><span>Op de shortlist</span></div>
+    <div class="bh-cijfer"><b>{cijfers.magArchief}</b><span>Mag in archief</span></div>
+  </div>
+
+  {rijen.length === 0 ? (
+    <p class="bh-leeg">Er zijn nog geen inzendingen binnen.</p>
+  ) : (
+    <div class="bh-inz">
+      {rijen.map((r) => (
+        <article class="bh-inz-kaart" data-rij={r.id}>
+          <div>
+            {r.fotoUrl ? (
+              <a href={r.fotoUrl} target="_blank" rel="noopener">
+                <img class="bh-inz-beeld" src={r.fotoUrl} alt={`Foto bij inzending ${r.nummer}`} loading="lazy" />
+              </a>
+            ) : (
+              <div class="bh-inz-geenbeeld">Geen foto</div>
+            )}
+            {r.foto_bytes && <p class="bh-inz-meta" style="margin-top:6px;">{leesbareGrootte(r.foto_bytes)}</p>}
+          </div>
+
+          <div>
+            <div class="bh-inz-kop">
+              <span class="bh-inz-nummer">{r.nummer}</span>
+              <span class="bh-inz-naam">{r.naam}</span>
+              <span class="bh-inz-meta">{tijdstip(r.created_at)}</span>
+            </div>
+            <p class="bh-inz-meta" style="margin:0 0 12px;">
+              <a href={`mailto:${r.email}`}>{r.email}</a>
+            </p>
+
+            <p class="bh-inz-tekst">{r.herinnering}</p>
+
+            {/*
+              De drie toestemmingen zichtbaar naast elkaar. Dit is waar je op
+              kijkt voordat je een foto ergens gebruikt, dus het hoort niet
+              weggeklikt in een detailscherm.
+            */}
+            <div class="bh-inz-vinkjes">
+              <span class={`bh-merk${r.mag_archief ? ' ja' : ''}`}>
+                {r.mag_archief ? 'Foto mag in archief' : 'Foto niet gebruiken'}
+              </span>
+              <span class={`bh-merk${r.mag_naam ? ' ja' : ''}`}>
+                {r.mag_naam ? 'Naam mag erbij' : 'Anoniem'}
+              </span>
+              <span class={`bh-merk${r.nieuwsbrief ? ' ja' : ''}`}>
+                {r.nieuwsbrief ? 'Nieuwsbrief aangevinkt' : 'Geen nieuwsbrief'}
+              </span>
+            </div>
+
+            <div class="bh-inz-acties">
+              <label class="bh-inz-meta" for={`st-${r.id}`}>Status</label>
+              <select id={`st-${r.id}`} data-status={r.id}>
+                {STATUSSEN.map((s) => (
+                  <option value={s} selected={s === r.status}>{STATUS_LABEL[s]}</option>
+                ))}
+              </select>
+              {/*
+                Intrekken hoort hier omdat toestemming even makkelijk in te
+                trekken moet zijn als te geven (AVG art. 7 lid 3). Mailt iemand
+                dat zijn foto er toch niet op mag, dan is dit de knop. De foto
+                gaat uit de opslag, de vinkjes op nee, en er komt een datum bij.
+                De rij blijft, want die legt vast dát er is ingetrokken.
+              */}
+              {r.ingetrokken_op ? (
+                <span class="bh-merk">Ingetrokken op {new Date(r.ingetrokken_op).toLocaleDateString('nl-NL')}</span>
+              ) : (
+                <button type="button" class="bh-inz-intrek" data-intrek={r.id}>Toestemming intrekken</button>
+              )}
+              <span class="bh-inz-meta" data-melding={r.id}></span>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  )}
+</BeheerLayout>
+
+<script>
+  const csrf = document.body.dataset.csrf || '';
+
+  document.querySelectorAll<HTMLSelectElement>('[data-status]').forEach((keuze) => {
+    const id = keuze.dataset.status!;
+    const melding = document.querySelector(`[data-melding="${id}"]`);
+    // Onthouden wat er stond, zodat een mislukte poging niet stilzwijgend een
+    // andere status in beeld laat staan dan er in de database zit.
+    let vorige = keuze.value;
+
+    keuze.addEventListener('change', async () => {
+      if (melding) melding.textContent = 'Opslaan…';
+      keuze.disabled = true;
+      try {
+        const res = await fetch(`/api/beheer/herinnering?csrf=${encodeURIComponent(csrf)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ actie: 'status', id, status: keuze.value }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          vorige = keuze.value;
+          if (melding) melding.textContent = 'Opgeslagen';
+          setTimeout(() => { if (melding) melding.textContent = ''; }, 2500);
+        } else {
+          keuze.value = vorige;
+          if (melding) melding.textContent = data.error || 'Opslaan mislukte';
+        }
+      } catch {
+        keuze.value = vorige;
+        if (melding) melding.textContent = 'Verbinding mislukt';
+      } finally {
+        keuze.disabled = false;
+      }
+    });
+  });
+
+  /**
+   * Intrekken. Onomkeerbaar, want de foto gaat echt uit de opslag, dus er zit
+   * een bevestiging voor. Zonder die vraag is het één misklik naast de
+   * statuskeuze.
+   */
+  document.querySelectorAll<HTMLButtonElement>('[data-intrek]').forEach((knop) => {
+    const id = knop.dataset.intrek!;
+    const melding = document.querySelector(`[data-melding="${id}"]`);
+
+    knop.addEventListener('click', async () => {
+      const zeker = confirm(
+        'Toestemming intrekken?\n\n'
+        + 'De foto wordt uit de opslag verwijderd en de vinkjes voor archief en naam gaan op nee. '
+        + 'Dat is niet ongedaan te maken. De inzending zelf blijft staan.',
+      );
+      if (!zeker) return;
+
+      knop.disabled = true;
+      if (melding) melding.textContent = 'Intrekken…';
+      try {
+        const res = await fetch(`/api/beheer/herinnering?csrf=${encodeURIComponent(csrf)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ actie: 'intrekken', id }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          if (melding) melding.textContent = 'Ingetrokken. Ververs de pagina.';
+          knop.remove();
+        } else {
+          if (melding) melding.textContent = data.error || 'Intrekken mislukte';
+          knop.disabled = false;
+        }
+      } catch {
+        if (melding) melding.textContent = 'Verbinding mislukt';
+        knop.disabled = false;
+      }
+    });
+  });
+</script>

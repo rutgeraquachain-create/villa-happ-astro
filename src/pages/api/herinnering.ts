@@ -32,6 +32,7 @@ import {
   HERINNERING_MIN, HERINNERING_MAX,
 } from '../../lib/herinnering';
 import { magBevestigingVersturen, domeinGeweigerd } from '../../lib/aanmeldrem';
+import { keurFoto, FOTO_MELDING, fotoPad } from '../../lib/herinnering-foto';
 
 export const prerender = false;
 
@@ -64,12 +65,47 @@ export const POST: APIRoute = async ({ request }) => {
     return fout('De actie is gesloten. Bedankt voor je belangstelling.', 410);
   }
 
+  /**
+   * De inzending komt binnen als multipart, want de foto gaat mee. JSON blijft
+   * werken: de tests en een handmatige aanroep sturen dat, en het scheelt een
+   * tweede pad in de validatie.
+   */
   let body;
+  let foto: File | null = null;
   try {
-    body = Schema.parse(await request.json());
+    const type = request.headers.get('content-type') || '';
+    if (type.includes('multipart/form-data')) {
+      const fd = await request.formData();
+      const kies = (naam: string) => {
+        const v = fd.get(naam);
+        return typeof v === 'string' ? v : undefined;
+      };
+      body = Schema.parse({
+        naam: kies('naam') ?? '',
+        email: kies('email') ?? '',
+        herinnering: kies('herinnering') ?? '',
+        // Een niet-aangevinkt vakje zit niet in de FormData, dus dit is exact
+        // "heeft hij hem aangeklikt".
+        nieuwsbrief: fd.get('nieuwsbrief') === '1',
+        magArchief: fd.get('magArchief') === '1',
+        magNaam: fd.get('magNaam') === '1',
+        bedrijf: kies('bedrijf'),
+      });
+      const bestand = fd.get('foto');
+      if (bestand instanceof File && bestand.size > 0) foto = bestand;
+    } else {
+      body = Schema.parse(await request.json());
+    }
   } catch (err) {
     const eerste = (err as { issues?: { message: string }[] })?.issues?.[0]?.message;
     return fout(eerste || 'Controleer de velden en probeer opnieuw.');
+  }
+
+  // De foto vóór het nummer keuren. Anders verbruikt een afgekeurde inzending
+  // een nummer uit de reeks en houdt de teller een gat over.
+  if (foto) {
+    const oordeel = keurFoto(foto.type, foto.size);
+    if (oordeel !== 'geen') return fout(FOTO_MELDING[oordeel]);
   }
 
   /**
@@ -117,6 +153,19 @@ export const POST: APIRoute = async ({ request }) => {
     return fout('Inzenden lukt nu even niet. Probeer het zo opnieuw.', 503);
   }
 
+  /**
+   * De rij vóór de foto.
+   *
+   * Andersom stond de foto eerst in de bucket, en dat liet een weesbestand
+   * achter zodra de rij daarna afketste op de unieke index (iemand die al
+   * meedeed). Zo'n bestand hoort bij niemand: er is geen rij, dus ook geen
+   * toestemmingsverklaring, en het beheerscherm kent geen verwijderknop om het
+   * eruit te halen. Nu bestaat de rij eerst en hangt elk bestand aan een
+   * inzending die erbij hoort.
+   *
+   * Het foto-veld wordt daarna bijgewerkt. Mislukt het uploaden, dan blijft de
+   * inzending staan zonder foto en zegt het antwoord dat erbij.
+   */
   const { error } = await sb.from('herinneringen').insert({
     nummer,
     naam: body.naam.trim(),
@@ -136,9 +185,46 @@ export const POST: APIRoute = async ({ request }) => {
     return fout('Er ging iets mis. Probeer opnieuw.', 500);
   }
 
+  /**
+   * Nu pas de foto, en `upsert: false`.
+   *
+   * Met `upsert: true` zou een tweede bestand op hetzelfde nummer het eerste
+   * stil overschrijven. Dat kan alleen als de nummerreeks iets herhaalt, en dan
+   * wil je dat weten in plaats van er een inzending door kwijt te raken.
+   */
+  let pad: string | null = null;
+  let fotoMislukt = false;
+  if (foto) {
+    const doel = fotoPad(nummer!, foto.type);
+    if (!doel) {
+      fotoMislukt = true;
+    } else {
+      const { error: opslagFout } = await sb.storage
+        .from('herinneringen')
+        .upload(doel, foto, { contentType: foto.type, upsert: false });
+      if (opslagFout) {
+        console.error('[herinnering] Foto opslaan mislukte voor', nummer, ':', opslagFout.message);
+        fotoMislukt = true;
+      } else {
+        pad = doel;
+        const { error: bijwerkFout } = await sb
+          .from('herinneringen')
+          .update({ foto_pad: pad, foto_type: foto.type, foto_bytes: foto.size })
+          .eq('nummer', nummer);
+        if (bijwerkFout) {
+          // Het bestand staat er, de verwijzing niet. Dat is een weesbestand en
+          // dat hoort in het log, want het beheerscherm toont hem dan niet.
+          console.error('[herinnering] Fotoverwijzing bijwerken mislukte voor', nummer, ':', bijwerkFout.message);
+          pad = null;
+          fotoMislukt = true;
+        }
+      }
+    }
+  }
+
   // Bevestiging met het nummer erin. Mislukt dit, dan staat de inzending er wel
   // en weet de deelnemer zijn nummer niet, dus dat melden we eerlijk.
-  const mail = renderHerinneringOntvangen(body.naam, nummer!, ACTIE.fotoAdres);
+  const mail = renderHerinneringOntvangen(body.naam, nummer!, ACTIE.fotoAdres, !!pad);
   const { vastgelegd } = await zetInWachtrij({
     soort: 'herinnering-ontvangen',
     ontvanger: email,
@@ -153,6 +239,10 @@ export const POST: APIRoute = async ({ request }) => {
     success: true,
     nummer,
     fotoAdres: ACTIE.fotoAdres,
+    fotoOntvangen: !!pad,
+    // Alleen waar als er een foto was die niet opgeslagen kon worden. De
+    // deelnemer moet dat weten, anders denkt hij dat hij volledig meedoet.
+    fotoMislukt,
     message: vastgelegd
       ? `Je inzending is binnen onder nummer ${nummer}. Je krijgt er een mail over.`
       : `Je inzending is binnen onder nummer ${nummer}. De bevestigingsmail kwam er niet uit, dus noteer dit nummer even.`,
@@ -183,10 +273,16 @@ async function meldAanVoorNieuwsbrief(
   // Al actief: geen tweede bevestigingsmail. Die leest als spam.
   if (inschrijfstand(bestaand) === 'actief') return;
 
-  // Dezelfde rem als bij het gewone formulier. Zonder deze regel zou deze route
-  // een tweede weg naar buiten zijn voor precies het misbruik van 4 september.
-  if (!(await magBevestigingVersturen(sb))) return;
-
+  /**
+   * Eerst vastleggen, dan pas de rem.
+   *
+   * Hier stond de remcontrole vóór deze upsert, en dat wierp bij een volle
+   * teller de hele aanmelding weg in plaats van alleen de mail. Precies
+   * omgekeerd aan wat `aanmeldrem.ts` belooft, en het raakt de maat waarop
+   * gestuurd wordt: één drukke dag en je verliest inschrijvingen zonder dat er
+   * iets over gemeld wordt. De route bij het gewone formulier deed het al goed;
+   * deze liep uit de pas.
+   */
   const { error } = await sb.from('newsletter_subscribers').upsert({
     email,
     source: 'herinnering',
@@ -195,6 +291,12 @@ async function meldAanVoorNieuwsbrief(
 
   if (error) {
     console.error('[herinnering] Nieuwsbriefaanmelding mislukte:', error.message);
+    return;
+  }
+
+  // Nu pas de rem: de aanmelding staat vast, alleen de mail wacht.
+  if (!(await magBevestigingVersturen(sb))) {
+    console.error('[herinnering] Bovengrens bereikt; aanmelding vastgelegd, bevestigingsmail niet verstuurd voor:', email);
     return;
   }
 

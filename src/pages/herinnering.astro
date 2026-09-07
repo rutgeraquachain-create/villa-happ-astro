@@ -3,6 +3,7 @@ export const prerender = true;
 
 import Base from '../layouts/Base.astro';
 import { ACTIE, prijsInEuro, HERINNERING_MAX } from '../lib/herinnering';
+import { MAX_ZIJDE, MAX_BYTES } from '../lib/herinnering-foto';
 import '../styles/shop.css';
 
 /**
@@ -19,6 +20,14 @@ import '../styles/shop.css';
 
 const prijs = prijsInEuro();
 const sluitTekst = '11 oktober 2026';
+
+/**
+ * De grenzen komen uit lib/herinnering-foto.ts, zodat de browser naar dezelfde
+ * maat verkleint als waar de server op keurt. Twee losse getallen zouden na één
+ * wijziging uit elkaar lopen, en dan keurt de server af wat de pagina zojuist
+ * goedkeurde.
+ */
+const fotoGrenzen = { maxZijde: MAX_ZIJDE, maxBytes: MAX_BYTES };
 ---
 <Base
   title="Wat is jouw Villa Happ herinnering? · Villa Happ"
@@ -48,10 +57,11 @@ const sluitTekst = '11 oktober 2026';
               de muur. Hoe concreter, hoe leuker.
             </li>
             <li>
-              <b>Stuur je foto.</b>
-              Na het versturen krijg je een inzendnummer. Mail je foto naar
-              <a href={`mailto:${ACTIE.fotoAdres}`}>{ACTIE.fotoAdres}</a> met dat nummer
-              in het onderwerp.
+              <b>Voeg je foto toe.</b>
+              Een scan of een kiekje van de oude foto is genoeg. Je kiest hem
+              hiernaast en hij gaat meteen mee. Lukt dat niet, dan kun je hem later
+              nog mailen naar <a href={`mailto:${ACTIE.fotoAdres}`}>{ACTIE.fotoAdres}</a>
+              met je inzendnummer erbij.
             </li>
             <li>
               <b>Maak kans op {prijs}.</b>
@@ -81,6 +91,25 @@ const sluitTekst = '11 oktober 2026';
             <label for="hh-herinnering">Je herinnering</label>
             <textarea id="hh-herinnering" name="herinnering" rows="7" maxlength={HERINNERING_MAX} required></textarea>
             <p class="vh-hh-teller vh-mono" data-hh-teller aria-live="polite"></p>
+          </div>
+
+          <div class="vh-field">
+            <label for="hh-foto">Je foto <span class="vh-hh-optioneel">optioneel, maar het maakt je inzending sterker</span></label>
+            <input
+              id="hh-foto"
+              name="foto"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              class="vh-hh-bestand"
+            />
+            <div class="vh-hh-voorbeeld" data-hh-voorbeeld hidden>
+              <img alt="" data-hh-thumb />
+              <div>
+                <p class="vh-hh-bestandsnaam" data-hh-bestandsnaam></p>
+                <button type="button" class="vh-hh-weg" data-hh-weg>Verwijderen</button>
+              </div>
+            </div>
+            <p class="vh-hh-teller vh-mono" data-hh-fotomelding aria-live="polite"></p>
           </div>
 
           <!--
@@ -134,14 +163,26 @@ const sluitTekst = '11 oktober 2026';
 
         <div class="vh-hh-gelukt" id="hh-gelukt" hidden>
           <p class="vh-page-label vh-mono">Inzending binnen</p>
-          <h2>Nu nog je foto.</h2>
+          <h2>Bedankt.</h2>
           <p>Je inzendnummer is:</p>
           <p class="vh-hh-nummer vh-mono" data-hh-nummer></p>
-          <p>
-            Mail je foto naar <a href={`mailto:${ACTIE.fotoAdres}`} data-hh-mailto>{ACTIE.fotoAdres}</a>
-            en zet dit nummer in het onderwerp. Zonder dat nummer kunnen we je foto
-            niet bij je verhaal leggen.
-          </p>
+
+          <div data-hh-compleet hidden>
+            <p>
+              Je verhaal en je foto zijn allebei binnen. Je doet volledig mee en je
+              hoeft verder niets te doen. We laten je weten wie er gewonnen heeft.
+            </p>
+          </div>
+
+          <div data-hh-nogfoto>
+            <p>
+              Je hebt geen foto meegestuurd. Dat mag, maar een inzending met beeld
+              maakt meer kans. Mail hem alsnog naar
+              <a href={`mailto:${ACTIE.fotoAdres}`} data-hh-mailto>{ACTIE.fotoAdres}</a>
+              met dit nummer in het onderwerp.
+            </p>
+          </div>
+
           <p class="vh-hh-klein" data-hh-mailstatus></p>
         </div>
 
@@ -149,6 +190,10 @@ const sluitTekst = '11 oktober 2026';
     </div>
   </section>
 </Base>
+
+<script define:vars={{ fotoGrenzen }}>
+  window.__vhFotoGrenzen = fotoGrenzen;
+</script>
 
 <script>
   const form = document.getElementById('vh-hh-form') as HTMLFormElement | null;
@@ -170,6 +215,96 @@ const sluitTekst = '11 oktober 2026';
     tel();
   }
 
+  /* ---------- De foto ---------- */
+
+  const grenzen = (window as any).__vhFotoGrenzen as { maxZijde: number; maxBytes: number };
+  const fotoVeld = document.getElementById('hh-foto') as HTMLInputElement | null;
+  const voorbeeld = document.querySelector('[data-hh-voorbeeld]') as HTMLElement | null;
+  const thumb = document.querySelector('[data-hh-thumb]') as HTMLImageElement | null;
+  const bestandsnaam = document.querySelector('[data-hh-bestandsnaam]');
+  const fotomelding = document.querySelector('[data-hh-fotomelding]');
+  const wegKnop = document.querySelector('[data-hh-weg]');
+
+  /** Wat er straks verstuurd wordt. Null als er geen foto is of hij afviel. */
+  let klaarZetteFoto: Blob | null = null;
+  let klaarNaam = '';
+
+  /**
+   * Verkleinen in de browser.
+   *
+   * Een telefoonfoto van een oude kiek is al gauw acht megabyte, en een
+   * serverless-verzoek op Vercel mag er maar viereneenhalf. Zonder deze stap
+   * mislukt precies de inzending van iemand die zijn best deed met een goede
+   * scan. Na het verkleinen komt er een paar honderd kilobyte binnen.
+   *
+   * Het resultaat is altijd JPEG. Dat zet meteen de iPhone-HEIC om, want de
+   * canvas leest het en schrijft er iets uit dat elke browser en het
+   * beheerscherm kunnen tonen.
+   */
+  function verklein(bestand: File): Promise<{ blob: Blob; naam: string }> {
+    return new Promise((klaar, mislukt) => {
+      const url = URL.createObjectURL(bestand);
+      const beeld = new Image();
+      beeld.onload = () => {
+        URL.revokeObjectURL(url);
+        const schaal = Math.min(1, grenzen.maxZijde / Math.max(beeld.width, beeld.height));
+        const b = Math.round(beeld.width * schaal);
+        const h = Math.round(beeld.height * schaal);
+        const doek = document.createElement('canvas');
+        doek.width = b;
+        doek.height = h;
+        const ctx = doek.getContext('2d');
+        if (!ctx) return mislukt(new Error('geen canvas'));
+        ctx.drawImage(beeld, 0, 0, b, h);
+        doek.toBlob(
+          (blob) => (blob ? klaar({ blob, naam: bestand.name.replace(/\.[^.]+$/, '') + '.jpg' }) : mislukt(new Error('geen blob'))),
+          'image/jpeg',
+          0.85,
+        );
+      };
+      beeld.onerror = () => { URL.revokeObjectURL(url); mislukt(new Error('geen beeld')); };
+      beeld.src = url;
+    });
+  }
+
+  function wisFoto() {
+    klaarZetteFoto = null;
+    klaarNaam = '';
+    if (fotoVeld) fotoVeld.value = '';
+    if (voorbeeld) voorbeeld.hidden = true;
+    if (thumb) thumb.removeAttribute('src');
+    if (fotomelding) fotomelding.textContent = '';
+  }
+
+  wegKnop?.addEventListener('click', wisFoto);
+
+  fotoVeld?.addEventListener('change', async () => {
+    const bestand = fotoVeld.files?.[0];
+    if (!bestand) return wisFoto();
+
+    if (fotomelding) fotomelding.textContent = 'Even verkleinen…';
+    try {
+      const { blob, naam } = await verklein(bestand);
+      if (blob.size > grenzen.maxBytes) {
+        wisFoto();
+        if (fotomelding) fotomelding.textContent = 'Deze foto blijft te groot. Probeer een kleinere.';
+        return;
+      }
+      klaarZetteFoto = blob;
+      klaarNaam = naam;
+      if (thumb) thumb.src = URL.createObjectURL(blob);
+      if (bestandsnaam) bestandsnaam.textContent = naam;
+      if (voorbeeld) voorbeeld.hidden = false;
+      if (fotomelding) fotomelding.textContent = `${Math.round(blob.size / 1024)} kB, klaar om mee te sturen`;
+    } catch {
+      // Kan de browser het beeld niet lezen (een kapot bestand, of een formaat
+      // dat hij niet kent), dan is dat geen reden om de hele inzending te
+      // blokkeren. Het verhaal telt ook zonder foto.
+      wisFoto();
+      if (fotomelding) fotomelding.textContent = 'Deze foto konden we niet lezen. Kies een JPG, PNG of WebP, of stuur hem later per mail.';
+    }
+  });
+
   if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -189,21 +324,26 @@ const sluitTekst = '11 oktober 2026';
       if (knopLabel) knopLabel.textContent = 'Een moment…';
 
       try {
-        const res = await fetch('/api/herinnering', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            naam: String(fd.get('naam') || ''),
-            email: String(fd.get('email') || ''),
-            herinnering: String(fd.get('herinnering') || ''),
-            // FormData laat een niet-aangevinkt vakje weg, dus dit is exact
-            // "heeft hij hem aangeklikt". Niet via String(), want dan wordt een
-            // ontbrekend vakje de tekst "null" en die is waar.
-            nieuwsbrief: fd.get('nieuwsbrief') === '1',
-            magArchief: fd.get('magArchief') === '1',
-            magNaam: fd.get('magNaam') === '1',
-          }),
-        });
+        /**
+         * Multipart, en met de verkleinde versie in plaats van het bestand dat
+         * de bezoeker koos. Het originele veld gaat er expres uit: dat draagt de
+         * volle acht megabyte van een telefoonfoto en zou het verzoek laten
+         * afkappen.
+         */
+        const verzending = new FormData();
+        verzending.set('naam', String(fd.get('naam') || ''));
+        verzending.set('email', String(fd.get('email') || ''));
+        verzending.set('herinnering', String(fd.get('herinnering') || ''));
+        // Een niet-aangevinkt vakje zit niet in de FormData, dus dit is exact
+        // "heeft hij hem aangeklikt".
+        if (fd.get('nieuwsbrief') === '1') verzending.set('nieuwsbrief', '1');
+        if (fd.get('magArchief') === '1') verzending.set('magArchief', '1');
+        if (fd.get('magNaam') === '1') verzending.set('magNaam', '1');
+        if (klaarZetteFoto) verzending.set('foto', klaarZetteFoto, klaarNaam);
+
+        // Geen Content-Type meezetten: de browser vult hem aan met de
+        // boundary, en die zelf schrijven maakt de body onleesbaar.
+        const res = await fetch('/api/herinnering', { method: 'POST', body: verzending });
         const data = await res.json();
 
         if (!res.ok || !data.success) {
@@ -227,9 +367,22 @@ const sluitTekst = '11 oktober 2026';
         // dit scherm het enige dat hij heeft. Dat hoort hij te weten.
         const status = document.querySelector('[data-hh-mailstatus]');
         if (status) {
-          status.textContent = data.mailVerstuurd
+          const regels: string[] = [];
+          if (data.fotoMislukt) {
+            regels.push('Je foto kwam er niet doorheen. Mail hem alsnog met dit nummer in het onderwerp.');
+          }
+          regels.push(data.mailVerstuurd
             ? 'Je krijgt dit nummer ook nog per mail.'
-            : 'Let op: de bevestigingsmail is niet verstuurd. Noteer dit nummer even.';
+            : 'Let op: de bevestigingsmail is niet verstuurd. Noteer dit nummer even.');
+          status.textContent = regels.join(' ');
+        }
+
+        // Wie zijn foto meestuurde is klaar en hoeft niets meer te mailen.
+        const fotoBlok = document.querySelector('[data-hh-nogfoto]') as HTMLElement | null;
+        const klaarBlok = document.querySelector('[data-hh-compleet]') as HTMLElement | null;
+        if (data.fotoOntvangen && !data.fotoMislukt) {
+          if (fotoBlok) fotoBlok.hidden = true;
+          if (klaarBlok) klaarBlok.hidden = false;
         }
 
         form.hidden = true;
