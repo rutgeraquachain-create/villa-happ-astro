@@ -1,0 +1,51 @@
+---
+/**
+ * Oproep — het campagneblok voor de herinneringsactie.
+ *
+ * Staat hoog op de homepage, direct na de hero, en verdwijnt vanzelf zodra de
+ * actie sluit. Reden voor die plek: wie via een krantenartikel binnenkomt leest
+ * zelden verder dan het eerste scherm, en het nieuwsbriefveld staat helemaal
+ * onderaan in `Finale.astro`. Dat blok blijft staan voor wie de pagina wél
+ * afloopt; dit blok vangt de bezoeker die dat niet doet.
+ *
+ * Niet gepind en zonder scroll-animatie, dus `pinPrioriteit()` in lib/motion.ts
+ * hoeft hier niets mee. Wel telt dit blok mee in de documentvolgorde waaruit die
+ * functie de prioriteit afleidt, en dat gaat vanzelf goed omdat hij de volgorde
+ * uitleest en niet hardcodeert.
+ *
+ * De genummerde labels van de secties eronder blijven ongemoeid: dit blok heeft
+ * geen nummer en hoort niet in die telling thuis.
+ */
+import { ACTIE, isGesloten, prijsInEuro } from '../../lib/herinnering';
+
+/**
+ * Op build-moment beslist, want de pagina is geprerenderd. Loopt de actie af,
+ * dan verdwijnt het blok pas bij de eerstvolgende deploy. Dat is bewust: een
+ * client-side controle zou het blok laten flikkeren, en een dag te lang zichtbaar
+ * is minder erg dan een homepage die bij het laden verspringt.
+ */
+const gesloten = isGesloten();
+const prijs = prijsInEuro();
+---
+{!gesloten && (
+  <section class="vh-oproep" id="vh-oproep" aria-labelledby="vh-oproep-kop">
+    <div class="vh-oproep-inner">
+      <div>
+        <p class="vh-oproep-label vh-mono">Sinds 1945 · Doe mee</p>
+        <h2 id="vh-oproep-kop">Wat is jouw Villa Happ herinnering?</h2>
+        <p>
+          Een generatie groeide op in onze kleding. Deel je verhaal en je oude foto,
+          en maak kans op een tegoedbon van {prijs}. Inzenden kan tot en met 11 oktober.
+        </p>
+      </div>
+      <div class="vh-oproep-actie">
+        <a href="/herinnering" class="vh-btn vh-btn--accent" data-magnetic>
+          <span>Deel je herinnering</span>
+          <svg class="vh-btn-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+)}
