@@ -1,0 +1,153 @@
+/**
+ * De remmen op de aanmeldstroom.
+ *
+ * Aanleiding, gemeten 7 september 2026: tussen 3 en 7 september kwamen er 64
+ * aanmeldingen binnen en gingen er 60 bevestigingsmails uit naar mensen die er
+ * niet om vroegen. Twee bounces en één spamklacht, op een domein dat in oktober
+ * een echte mailing moet kunnen versturen.
+ *
+ * Deze tests bewaken de drie dingen die dat toen niet tegenhielden.
+ */
+
+import { readFileSync } from 'node:fs';
+import { describe, it, expect, vi } from 'vitest';
+import {
+  domeinGeweigerd, schoneBron, magBevestigingVersturen, MAX_BEVESTIGINGEN_PER_UUR,
+} from '../src/lib/aanmeldrem';
+
+const lees = (pad: string) => readFileSync(new URL(`../${pad}`, import.meta.url), 'utf-8');
+
+/** Test-dubbel dat teruggeeft wat de teller zou vinden, plus wat er gevraagd is. */
+function nepDb(count: number | null, error: { message: string } | null = null) {
+  const gevraagd: Record<string, unknown> = {};
+  const sb = {
+    from(tabel: string) {
+      gevraagd.tabel = tabel;
+      const ketting: Record<string, unknown> = {
+        select: () => ketting,
+        eq: (kolom: string, waarde: unknown) => { gevraagd.eq = [kolom, waarde]; return ketting; },
+        gte: (kolom: string, waarde: unknown) => {
+          gevraagd.gte = [kolom, waarde];
+          return Promise.resolve({ count, error });
+        },
+      };
+      return ketting;
+    },
+  } as any;
+  return { sb, gevraagd };
+}
+
+describe('sms-gateways en verwanten', () => {
+  it('weigert het adrestype dat bij dit misbruik het doelwit is', () => {
+    // Mail naar vtext.com wordt een tekstbericht op iemands telefoon. Zo'n adres
+    // komt bij een Nederlandse kledingwinkel nooit legitiem binnen.
+    expect(domeinGeweigerd('5551234567@vtext.com')).toBe(true);
+    expect(domeinGeweigerd('5551234567@tmomail.net')).toBe(true);
+  });
+
+  it('laat gewone adressen met rust, ook zakelijke', () => {
+    for (const adres of ['anouk@gmail.com', 'r@villahapp.nl', 'iemand@nbbj.com']) {
+      expect(domeinGeweigerd(adres)).toBe(false);
+    }
+  });
+
+  it('valt niet om op een adres zonder domein', () => {
+    expect(domeinGeweigerd('kapot')).toBe(false);
+  });
+});
+
+describe('de herkomst van een aanmelding', () => {
+  /**
+   * Dit veld werd letterlijk uit de request overgenomen, dus de bot bepaalde
+   * zelf wat er in de kolom kwam. Veertig rijen kregen `atelier` mee terwijl
+   * geen enkele pagina die waarde verstuurt, en daardoor wees de eerste analyse
+   * naar het verkeerde kanaal.
+   */
+  it('laat alleen de bronnen door die de site zelf stuurt', () => {
+    expect(schoneBron('footer')).toBe('footer');
+    expect(schoneBron('herinnering')).toBe('herinnering');
+  });
+
+  it('vervangt een verzonnen herkomst door onbekend', () => {
+    expect(schoneBron('<script>')).toBe('onbekend');
+    expect(schoneBron('gratis-iphone')).toBe('onbekend');
+    expect(schoneBron(undefined)).toBe('onbekend');
+    expect(schoneBron('')).toBe('onbekend');
+  });
+});
+
+describe('de bovengrens per uur', () => {
+  it('laat door zolang er ruimte is', async () => {
+    const { sb } = nepDb(MAX_BEVESTIGINGEN_PER_UUR - 1);
+    expect(await magBevestigingVersturen(sb)).toBe(true);
+  });
+
+  it('sluit zodra de grens geraakt is', async () => {
+    const { sb } = nepDb(MAX_BEVESTIGINGEN_PER_UUR);
+    expect(await magBevestigingVersturen(sb)).toBe(false);
+  });
+
+  it('telt alleen bevestigingsmails van het laatste uur', async () => {
+    const { sb, gevraagd } = nepDb(0);
+    await magBevestigingVersturen(sb);
+    expect(gevraagd.tabel).toBe('uitgaande_mail');
+    expect(gevraagd.eq).toEqual(['soort', 'nieuwsbrief-bevestiging']);
+    const [kolom, sinds] = gevraagd.gte as [string, string];
+    expect(kolom).toBe('created_at');
+    const verschilMin = (Date.now() - Date.parse(sinds)) / 60_000;
+    expect(verschilMin).toBeGreaterThan(59);
+    expect(verschilMin).toBeLessThan(61);
+  });
+
+  /**
+   * Een kapotte rem mag geen echte aanmelding blokkeren. Andersom geredeneerd:
+   * bij twijfel gaat de mail eruit, want de bezoeker die hier legitiem staat
+   * wacht anders op iets dat nooit komt.
+   */
+  it('laat door als de telling zelf faalt', async () => {
+    const stil = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { sb } = nepDb(null, { message: 'kapot' });
+    expect(await magBevestigingVersturen(sb)).toBe(true);
+    stil.mockRestore();
+  });
+});
+
+describe('de honeypots staan er echt in', () => {
+  it('op het aanmeldveld van de homepage', () => {
+    const finale = lees('src/components/home/Finale.astro');
+    expect(finale).toContain('name="bedrijf"');
+    expect(finale).toContain('vh-hp');
+  });
+
+  it('en de routes negeren een gevuld veld', () => {
+    for (const pad of ['src/pages/api/newsletter.ts', 'src/pages/api/herinnering.ts']) {
+      expect(lees(pad)).toContain('body.bedrijf');
+    }
+  });
+});
+
+describe('bevestigen gebeurt niet meer bij het openen van de link', () => {
+  const pagina = lees('src/pages/nieuwsbrief/bevestigen.astro');
+
+  /**
+   * De kern van de fout van 4 september: negen zakelijke mailscanners klikten
+   * de bevestigingslink, zes ervan binnen een minuut. Die adressen stonden
+   * daarna als toestemming op de lijst. Zet dit dus niet terug naar een GET die
+   * meteen wegschrijft.
+   */
+  it('schrijft niets weg tijdens het renderen', () => {
+    expect(pagina).not.toMatch(/\.update\(/);
+    expect(pagina).not.toMatch(/confirmed:\s*true/);
+  });
+
+  it('toont een knop die POST doet', () => {
+    expect(pagina).toContain('method="POST"');
+    expect(pagina).toContain('/api/newsletter/bevestigen');
+  });
+
+  it('en die route bestaat en accepteert alleen POST', () => {
+    const route = lees('src/pages/api/newsletter/bevestigen.ts');
+    expect(route).toContain('export const POST');
+    expect(route).not.toContain('export const GET');
+  });
+});

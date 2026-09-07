@@ -54,11 +54,20 @@ export function magOntvangen(rij: Parameters<typeof inschrijfstand>[0]): boolean
 /**
  * De link uit de bevestigingsmail.
  *
- * Bewust een gewone link die bij het openen meteen bevestigt, zonder knop op de
- * bestemming. Sommige mailscanners volgen links vooraf en bevestigen daarmee
- * een inschrijving die de mens nog niet aanklikte. Dat weegt hier niet op tegen
- * het alternatief: elke extra stap kost bevestigingen, en de persoon vulde het
- * formulier zelf al in. Bij uitschrijven ligt die afweging andersom, zie hieronder.
+ * De bestemming toont een knop die POST doet; hij bevestigt niet bij het openen.
+ *
+ * Hier stond het omgekeerde, met de afweging dat elke extra stap bevestigingen
+ * kost en dat de persoon het formulier zelf al invulde. Daar stond bij dat
+ * mailscanners links vooruit halen en zo zouden kunnen bevestigen. Dat risico is
+ * op 7 september 2026 werkelijkheid geworden en niet een beetje: van de negen
+ * bevestigde inschrijvingen kwam er geen enkele van een mens. Alle negen kwamen
+ * van zakelijke domeinen met een filter, zes ervan binnen een minuut, één binnen
+ * drie seconden. De meting staat in src/pages/api/newsletter/bevestigen.ts.
+ *
+ * De afweging valt nu dus hetzelfde uit als bij uitschrijven, en om dezelfde
+ * reden: stille schade weegt zwaarder dan een klik extra. Een scanner die
+ * bevestigt levert een adres op dat als toestemming telt terwijl niemand
+ * toestemming gaf, en dat merk je pas als de mailing eruit is.
  */
 export function bevestigUrl(origin: string, email: string, nu?: number): string {
   const token = maakToken(normaliseerEmail(email), 'aanmelding', nu);

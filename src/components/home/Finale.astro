@@ -31,6 +31,15 @@ import Pic from '../Pic.astro';
       <form class="vh-finale-form" id="vh-finale-form" novalidate>
         <label class="vh-sr-only" for="vh-finale-email">E-mailadres</label>
         <input id="vh-finale-email" type="email" placeholder="Schrijf je naam in het archief" autocomplete="email" required />
+        <!--
+          Honeypot: onzichtbaar voor mensen, ingevuld door bots die elk veld
+          vullen. Dit formulier had er geen, en op 4 september kwamen er 33
+          aanmeldingen binnen uit 21 buitenlandse zakelijke domeinen.
+        -->
+        <div class="vh-hp" aria-hidden="true">
+          <label for="vh-finale-bedrijf">Bedrijf (niet invullen)</label>
+          <input id="vh-finale-bedrijf" name="bedrijf" type="text" tabindex="-1" autocomplete="off" />
+        </div>
         <button type="submit" aria-label="Inschrijven">→</button>
       </form>
       <p class="vh-finale-cap vh-mono" data-finale-cap>Frame 002 · Gereserveerd</p>
@@ -58,8 +67,17 @@ import Pic from '../Pic.astro';
   if (form && polaroid) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const input = form.querySelector('input') as HTMLInputElement;
+      const input = form.querySelector('#vh-finale-email') as HTMLInputElement;
+      const pot = form.querySelector('#vh-finale-bedrijf') as HTMLInputElement | null;
       const email = input.value.trim();
+
+      // Honeypot gevuld: doen alsof het gelukt is en niets versturen. Een
+      // foutmelding laat een bot variëren tot hij er wel doorkomt.
+      if (pot && pot.value) {
+        if (msg) { msg.textContent = 'Kijk in je mail om je aanmelding te bevestigen.'; msg.className = 'vh-finale-msg vh-mono is-success'; }
+        return;
+      }
+
       if (!email || !email.includes('@')) {
         if (msg) { msg.textContent = 'Vul een geldig e-mailadres in.'; msg.className = 'vh-finale-msg vh-mono is-error'; }
         return;
