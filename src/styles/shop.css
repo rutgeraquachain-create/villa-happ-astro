@@ -1219,3 +1219,212 @@
 	opacity: 0.82;
 }
 .vh-oproep-actie { justify-self: start; }
+
+/* Fotoveld bij de herinneringsactie */
+
+.vh-hh-optioneel {
+	text-transform: none;
+	letter-spacing: 0;
+	font-family: var(--vh-font-sans);
+	font-size: 11px;
+	color: var(--vh-ink-muted);
+	margin-left: 6px;
+}
+.vh-hh-bestand {
+	padding: 10px 12px;
+	border: 1px dashed var(--vh-ink-faint);
+	border-radius: var(--vh-radius-sm);
+	background: var(--vh-white-soft);
+	font-size: 13px;
+	font-family: var(--vh-font-sans);
+	color: var(--vh-ink);
+	width: 100%;
+	cursor: pointer;
+}
+.vh-hh-bestand::file-selector-button {
+	margin-right: 12px;
+	padding: 7px 14px;
+	border: 1px solid var(--vh-ink-faint);
+	border-radius: var(--vh-radius-sm);
+	background: var(--vh-paper, #F4EEE3);
+	font-family: var(--vh-font-mono);
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--vh-ink);
+	cursor: pointer;
+}
+
+.vh-hh-voorbeeld {
+	display: grid;
+	grid-template-columns: 72px minmax(0, 1fr);
+	gap: 14px;
+	align-items: center;
+	margin-top: 12px;
+	padding: 10px;
+	border: 1px solid var(--vh-ink-faint);
+	border-radius: var(--vh-radius-sm);
+	background: var(--vh-white-soft);
+}
+/* `display: grid` op de klasse wint van het `hidden`-attribuut, dat alleen
+   `display: none` uit het browsersjabloon meebrengt. Zonder deze regel stond
+   het voorbeeldblok bij het laden van de pagina open, met een leeg beeldkader.
+   Gemeten met de apparatenmatrix, die de verwijderknop mat op een pagina waar
+   nog geen foto gekozen was. */
+.vh-hh-voorbeeld[hidden] { display: none; }
+.vh-hh-voorbeeld img {
+	width: 72px;
+	height: 72px;
+	object-fit: cover;
+	border-radius: 2px;
+	display: block;
+}
+.vh-hh-bestandsnaam {
+	margin: 0 0 4px;
+	font-size: 13px;
+	color: var(--vh-ink);
+	overflow-wrap: anywhere;
+}
+/* Minstens 24px hoog: dat is de ondergrens voor een tikdoel (WCAG 2.2, 2.5.8).
+   Met `padding: 4px 0` kwam hij op 20px uit. */
+.vh-hh-weg {
+	background: none;
+	border: 0;
+	min-height: 24px;
+	padding: 5px 0;
+	font-family: var(--vh-font-mono);
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--vh-danger);
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+/* ==========================================================================
+   Beheerscherm voor de inzendingen
+   ========================================================================== */
+
+.bh-inz {
+	display: grid;
+	gap: 16px;
+}
+.bh-inz-kaart {
+	display: grid;
+	grid-template-columns: 160px minmax(0, 1fr);
+	gap: 20px;
+	padding: 18px;
+	border: 1px solid var(--vh-ink-faint, #DCD2C0);
+	border-radius: var(--vh-radius-sm, 3px);
+	background: var(--vh-white-soft, #fff);
+	align-items: start;
+}
+@media (max-width: 720px) {
+	.bh-inz-kaart { grid-template-columns: minmax(0, 1fr); }
+}
+.bh-inz-beeld {
+	display: block;
+	width: 100%;
+	aspect-ratio: 1;
+	object-fit: cover;
+	border-radius: 2px;
+	background: var(--vh-paper, #F4EEE3);
+}
+.bh-inz-geenbeeld {
+	display: grid;
+	place-items: center;
+	width: 100%;
+	aspect-ratio: 1;
+	border: 1px dashed var(--vh-ink-faint, #DCD2C0);
+	border-radius: 2px;
+	font-family: var(--vh-font-mono);
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--vh-ink-muted, #7A705F);
+	text-align: center;
+	padding: 8px;
+}
+.bh-inz-kop {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 14px;
+	align-items: baseline;
+	margin-bottom: 8px;
+}
+.bh-inz-nummer {
+	font-family: var(--vh-font-mono);
+	font-size: 12px;
+	letter-spacing: 0.08em;
+	color: var(--vh-accent, #FE6B01);
+}
+.bh-inz-naam { font-size: 16px; font-weight: 600; }
+.bh-inz-meta {
+	font-family: var(--vh-font-mono);
+	font-size: 10px;
+	letter-spacing: 0.06em;
+	color: var(--vh-ink-muted, #7A705F);
+}
+.bh-inz-tekst {
+	margin: 0 0 14px;
+	font-size: 14.5px;
+	line-height: 1.65;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+.bh-inz-vinkjes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: 12px;
+}
+.bh-merk {
+	font-family: var(--vh-font-mono);
+	font-size: 9.5px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	padding: 4px 8px;
+	border-radius: 2px;
+	border: 1px solid var(--vh-ink-faint, #DCD2C0);
+	color: var(--vh-ink-muted, #7A705F);
+}
+.bh-merk.ja {
+	border-color: var(--vh-accent, #FE6B01);
+	color: var(--vh-accent, #FE6B01);
+}
+.bh-inz-acties {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+}
+.bh-inz-acties select {
+	padding: 7px 10px;
+	border: 1px solid var(--vh-ink-faint, #DCD2C0);
+	border-radius: var(--vh-radius-sm, 3px);
+	background: #fff;
+	font-size: 13px;
+	font-family: var(--vh-font-sans);
+}
+.bh-inz-intrek {
+	background: none;
+	border: 1px solid var(--vh-ink-faint, #DCD2C0);
+	border-radius: var(--vh-radius-sm, 3px);
+	min-height: 32px;
+	padding: 6px 12px;
+	font-family: var(--vh-font-mono);
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--vh-danger, #C0392B);
+	cursor: pointer;
+}
+.bh-inz-intrek:hover { border-color: var(--vh-danger, #C0392B); }
+.bh-inz-intrek[disabled] { opacity: 0.5; cursor: default; }
+
+.bh-leeg {
+	padding: 40px 0;
+	text-align: center;
+	color: var(--vh-ink-muted, #7A705F);
+	font-size: 15px;
+}

@@ -664,27 +664,41 @@ export function renderHerinneringOntvangen(
   naam: string,
   nummer: string,
   fotoAdres: string,
+  metFoto: boolean,
 ): { subject: string; html: string } {
   const origin = getSiteOrigin();
   const voornaam = (naam || '').trim().split(' ')[0] || 'daar';
 
+  /**
+   * Twee versies van dezelfde mail. Wie zijn foto meestuurde is klaar en moet
+   * niet alsnog om een foto gevraagd worden; wie hem oversloeg kan hem nog
+   * nasturen. Eén tekst voor beide gevallen is voor de helft van de ontvangers
+   * onjuist, en juist die helft gaat dan iets doen wat niet hoeft.
+   */
+  const vervolg = metFoto
+    ? alinea('Je foto hebben we ook binnen. Je doet dus volledig mee en je hoeft verder niets te doen.')
+    : `${alinea('Je hebt geen foto meegestuurd. Dat mag, maar een inzending met beeld maakt meer kans, want de foto weegt mee in de beoordeling.')}
+       ${alinea(`Wil je er alsnog een sturen? Mail hem naar <b>${escapeHtml(fotoAdres)}</b> met dit nummer in het onderwerp.`)}`;
+
   const inhoud = `
     ${titel(`Inzending ${escapeHtml(nummer)}`, `Bedankt, ${escapeHtml(voornaam)}.`)}
-    ${alinea('Je herinnering is binnen. Nu nog de foto, en dan doe je volledig mee.')}
+    ${alinea('Je herinnering is binnen.')}
 
     ${lijn('4px 0 22px')}
 
     <div style="font-family:${MONO};font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:${KLEUR.zacht};margin:0 0 8px;">Je inzendnummer</div>
     <p style="margin:0 0 20px;font-family:${MONO};font-size:26px;font-weight:bold;letter-spacing:0.04em;color:${KLEUR.ink};">${escapeHtml(nummer)}</p>
 
-    ${alinea(`Mail je foto naar <b>${escapeHtml(fotoAdres)}</b> en zet dit nummer in het onderwerp. Zonder dat nummer kunnen we de foto niet bij je verhaal leggen.`)}
+    ${vervolg}
 
     ${lijn()}
 
     ${alinea('We laten je weten wie er gewonnen heeft. Verder krijg je van ons niets, tenzij je je apart voor de nieuwsbrief hebt aangemeld.', '0')}`;
 
   const html = shell({
-    preheader: `Je inzending is binnen. Stuur je foto naar ${fotoAdres} met nummer ${nummer}.`,
+    preheader: metFoto
+      ? `Je inzending ${nummer} is compleet binnen, verhaal en foto.`
+      : `Je inzending is binnen. Een foto nasturen kan naar ${fotoAdres} met nummer ${nummer}.`,
     inhoud,
     voet: `Vragen over je inzending? Antwoord gewoon op deze mail.<br />
       ${escapeHtml(BUSINESS.legalName)} &middot; <a href="${origin}/actievoorwaarden" style="color:${KLEUR.zacht};">Actievoorwaarden</a>`,

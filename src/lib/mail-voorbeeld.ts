@@ -124,7 +124,17 @@ export function voorbeeldMails(): VoorbeeldMail[] {
        * Staat het er niet duidelijk in, dan mailt iemand een foto zonder
        * kenmerk. Vandaar dat hij hier te bekijken is en niet alleen in een test.
        */
-      ...renderHerinneringOntvangen('Anouk de Wit', 'HH-2026-0042', ACTIE.fotoAdres),
+      ...renderHerinneringOntvangen('Anouk de Wit', 'HH-2026-0042', ACTIE.fotoAdres, true),
+    },
+    {
+      slug: 'herinnering-zonder-foto',
+      naam: 'Inzending zonder foto',
+      /**
+       * Dezelfde mail voor wie zijn foto oversloeg. Staat er apart bij omdat
+       * dit de helft is die nog iets moet doen: één tekst voor beide gevallen
+       * is voor de ene helft onjuist, en die gaat dan iets doen wat niet hoeft.
+       */
+      ...renderHerinneringOntvangen('Anouk de Wit', 'HH-2026-0043', ACTIE.fotoAdres, false),
     },
     {
       slug: 'mailing',
