@@ -219,6 +219,32 @@ lezen". Dat is precies de verbetering die de bescherming verzwakt.
 `aggregateRating` zonder echte reviews, geen `FreeReturn` terwijl de klant de
 retourzending betaalt, geen verzonnen `gtin`.
 
+**Elke publieke POST-route accepteert alleen een formulier.** Astro weigert
+formuliergecodeerde en multipart-verzoeken van een andere site. Op JSON geldt die
+controle niet, en dat is het gat waar tussen 3 en 9 september 2026 vier golven
+bots doorheen kwamen: 68 nieuwsbriefaanmeldingen met 65 mails naar vreemden en
+één spamklacht, 8 herinneringen, en 51 nummers uit een genummerde oplage van 500.
+De controle staat in `src/lib/formulierpost.ts` en nergens anders;
+`tests/formulierpost.test.ts` telt de routes en valt om zodra er een zonder die
+controle bij komt. Een route die van buitenaf moet worden aangeroepen (de
+Mollie-webhook, de Resend-webhook, de uitschrijfknop van Gmail) staat daar bij
+naam en met een reden.
+
+**Een aanval sluit je in één keer, niet deur voor deur.** Zolang er iemand actief
+probeert, is de deur die je net dichtdeed de enige plek waar hij niet meer is.
+Loop alle routes van dezelfde soort langs voordat je er één sluit. Gemeten: drie
+keer één deur gesloten, drie keer verhuisde de bot, en de vierde golf kwam terug
+op de route die bij de derde ronde was overgeslagen. Dat was juist de route die
+mail verstuurt.
+
+**Een honeypot bestaat uit twee helften in twee bestanden.** De route die het
+veld uitleest is de helft die je ziet; het verborgen veld in de HTML is de helft
+die het werk doet. Gemeten 9 september 2026: `notify.ts` en `reviews.ts` keken
+allebei naar een veld `bedrijf` dat op de productpagina nergens stond, dus die
+controle kon per definitie niet aanslaan. Toets dit per aanroeper en niet per
+site: de voettekst had het veld wel, dus een controle op "staat het ergens" meldt
+hier groen.
+
 ## Valkuilen, gemeten
 
 **Twee werkmappen, één repo.** `vh-domein-villahapp` en `Astro_Website` zijn
