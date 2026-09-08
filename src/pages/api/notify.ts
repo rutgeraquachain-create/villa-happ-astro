@@ -9,6 +9,7 @@ import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { getSupabaseAdmin } from '../../lib/supabase';
 import { rateLimit, clientKey, tooManyRequests } from '../../lib/rate-limit';
+import { isFormulierPost, formulierVelden, geenFormulier } from '../../lib/formulierpost';
 
 export const prerender = false;
 
@@ -21,12 +22,25 @@ const Schema = z.object({
 export const POST: APIRoute = async ({ request }) => {
   if (!rateLimit(clientKey(request, 'notify'), 5)) return tooManyRequests();
 
+  // Alleen via het formulier, en vóór de database. Wie het adres rechtstreeks
+  // aanroept hoort geen 503 te krijgen die iets over onze opzet verklapt, en
+  // een geweigerd verzoek hoort niets te kosten. Zie src/lib/formulierpost.ts.
+  if (!isFormulierPost(request)) {
+    return geenFormulier('voorraadmelding', request.headers.get('content-type') || '', 'error');
+  }
+
   const sb = getSupabaseAdmin();
   if (!sb) return new Response(JSON.stringify({ error: 'no-db' }), { status: 503 });
 
   let body;
   try {
-    body = Schema.parse(await request.json());
+    const velden = await formulierVelden(request);
+    body = Schema.parse({ slug: velden.slug, size: velden.size, email: velden.email ?? '' });
+    // Honeypot: gevuld betekent bot. Doen alsof het gelukt is en niets doen.
+    if (velden.bedrijf) {
+      console.warn('[voorraadmelding] Honeypot gevuld; melding genegeerd.');
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
   } catch {
     return new Response(JSON.stringify({ error: 'Vul een geldig e-mailadres in.' }), { status: 400 });
   }

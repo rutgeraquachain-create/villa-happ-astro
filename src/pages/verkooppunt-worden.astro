@@ -260,17 +260,15 @@ const steps = [
 
       let data: any = null;
       try {
-        const res = await fetch('/api/contact', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: val('name'),
-            email: val('email'),
-            subject: 'Verkooppunt-aanvraag',
-            message,
-            company: val('hp'), // honeypot
-          }),
-        });
+        // Als formulier en niet als JSON; zie src/lib/formulierpost.ts.
+        const verzending = new FormData();
+        verzending.set('name', val('name'));
+        verzending.set('email', val('email'));
+        verzending.set('subject', 'Verkooppunt-aanvraag');
+        verzending.set('message', message);
+        if (val('hp')) verzending.set('company', val('hp')); // honeypot
+
+        const res = await fetch('/api/contact', { method: 'POST', body: verzending });
         data = await res.json().catch(() => null);
       } catch { /* netwerkfout: hieronder afgehandeld */ }
 

@@ -22,6 +22,7 @@ import { zetInWachtrij } from '../../lib/outbox';
 import { getSiteOrigin } from '../../lib/site';
 import { authSecretOntbreekt } from '../../lib/order-token';
 import { magBevestigingVersturen, domeinGeweigerd, schoneBron } from '../../lib/aanmeldrem';
+import { isFormulierPost, formulierVelden, geenFormulier } from '../../lib/formulierpost';
 
 export const prerender = false;
 
@@ -51,9 +52,34 @@ export const POST: APIRoute = async ({ request }) => {
   // hij hoort strak te staan. Het echte werk doet `magBevestigingVersturen`.
   if (!rateLimit(clientKey(request, 'newsletter'), 3)) return tooManyRequests();
 
+  /**
+   * Alleen formuliergegevens. JSON gaat er niet meer in.
+   *
+   * WAAROM DIT ER PAS OP 9 SEPTEMBER BIJ KWAM
+   * Op 8 september is deze deur gesloten voor /api/herinnering en
+   * /api/atelier/claim, en niet hier. Dat was de verkeerde volgorde: dit is
+   * juist de route die de bevestigingsmail verstuurt. De bot ging na die twee
+   * reparaties gewoon door langs dit adres, en er stonden de volgende ochtend
+   * vier nieuwe rijen met adressen als `nedra.steele@fox.com` en
+   * `rober.tsbodysh.opp@gmail.com`.
+   *
+   * Astro weigert formuliergecodeerde berichten van een andere site. Op JSON
+   * geldt die controle niet, en dat was de weg naar binnen. Beide formulieren
+   * die deze route aanroepen (de voettekst en het polaroidveld op de homepage)
+   * sturen sinds deze wijziging een formulier.
+   */
+  if (!isFormulierPost(request)) {
+    return geenFormulier('nieuwsbrief', request.headers.get('content-type') || '');
+  }
+
   let body;
   try {
-    body = Schema.parse(await request.json());
+    const velden = await formulierVelden(request);
+    body = Schema.parse({
+      email: velden.email ?? '',
+      source: velden.source,
+      bedrijf: velden.bedrijf,
+    });
   } catch {
     return new Response(JSON.stringify({
       success: false,

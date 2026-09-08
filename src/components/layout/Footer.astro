@@ -68,6 +68,15 @@ const identityLine = [
             Als eerste op de hoogte van nieuwe drops en exclusieve releases.
             Een paar keer per jaar, en je kunt je met één klik weer uitschrijven.
           </p>
+          {/*
+            Honeypot: onzichtbaar voor mensen, ingevuld door bots die elk veld
+            vullen. Dit formulier had er geen, en het is de plek waar de
+            bevestigingsmail vandaan komt.
+          */}
+          <div class="vh-hp" aria-hidden="true">
+            <label for="vh-nb-bedrijf">Bedrijf (niet invullen)</label>
+            <input id="vh-nb-bedrijf" name="bedrijf" type="text" tabindex="-1" autocomplete="off" />
+          </div>
           <div class="vh-newsletter-row">
             <label for="vh-newsletter-email" class="vh-sr-only">E-mailadres</label>
             <input
@@ -373,11 +382,19 @@ const identityLine = [
       msgEl.textContent = 'Bezig...';
 
       try {
-        const res = await fetch('/api/newsletter', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
+        /**
+         * Als formulier en niet als JSON. Astro weigert formuliergecodeerde
+         * berichten van een andere site; op JSON geldt die controle niet. Zie
+         * de toelichting in src/pages/api/newsletter.ts. Geen Content-Type
+         * meezetten: de browser vult die aan met de juiste scheiding.
+         */
+        const verzending = new FormData();
+        verzending.set('email', email);
+        verzending.set('source', 'footer');
+        const pot = form.querySelector('input[name="bedrijf"]') as HTMLInputElement | null;
+        if (pot?.value) verzending.set('bedrijf', pot.value);
+
+        const res = await fetch('/api/newsletter', { method: 'POST', body: verzending });
         const data = await res.json();
         if (res.ok && data.success) {
           msgEl.className = 'vh-newsletter-msg is-success';
