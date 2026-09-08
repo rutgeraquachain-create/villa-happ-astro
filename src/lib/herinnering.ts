@@ -79,9 +79,34 @@ export function naamGeldig(naam: string): boolean {
 export const HERINNERING_MIN = 15;
 export const HERINNERING_MAX = 4000;
 
+/**
+ * Hoeveel losse woorden er minstens in moeten staan.
+ *
+ * WAAROM DIT ER BIJ KWAM
+ * Gemeten 8 september 2026. In de eerste twintig uur dat de pagina live stond
+ * kwamen er acht inzendingen binnen, alle acht van een bot. De "herinnering"
+ * was steeds een reeks van zestien tot vierentwintig willekeurige letters,
+ * bijvoorbeeld `ihmgccURCSwmoMWmAjGIpzMi`. Geen enkele bevatte een spatie.
+ *
+ * De lengtegrens hierboven hield ze niet tegen, en dat is de kern van de
+ * misser: vijftien tekens is precies het bereik waar willekeurige rommel
+ * overheen komt. Lengte zegt niets over of er taal staat.
+ *
+ * Vier woorden is de laagste grens die "Ik kreeg er mijn eerste jas" (zes
+ * woorden) doorlaat en een reeks zonder spaties weigert. Iemand die echt maar
+ * drie woorden wil schrijven raken we kwijt, en dat is de prijs.
+ */
+export const HERINNERING_MIN_WOORDEN = 4;
+
+/** Losse woorden tellen, ongeacht hoeveel spaties of regeleinden ertussen staan. */
+export function woorden(tekst: string): number {
+  return tekst.trim().split(/\s+/).filter(Boolean).length;
+}
+
 export function herinneringGeldig(tekst: string): boolean {
   const kaal = tekst.trim();
-  return kaal.length >= HERINNERING_MIN && kaal.length <= HERINNERING_MAX;
+  if (kaal.length < HERINNERING_MIN || kaal.length > HERINNERING_MAX) return false;
+  return woorden(kaal) >= HERINNERING_MIN_WOORDEN;
 }
 
 /**

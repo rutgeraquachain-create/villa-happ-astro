@@ -29,9 +29,11 @@ import { getSiteOrigin } from '../../lib/site';
 import { authSecretOntbreekt } from '../../lib/order-token';
 import {
   ACTIE, isGesloten, naamGeldig, herinneringGeldig, nummerGeldig,
-  HERINNERING_MIN, HERINNERING_MAX,
+  HERINNERING_MIN_WOORDEN, HERINNERING_MAX,
 } from '../../lib/herinnering';
-import { magBevestigingVersturen, domeinGeweigerd } from '../../lib/aanmeldrem';
+import {
+  magBevestigingVersturen, magInzendbevestigingVersturen, domeinGeweigerd,
+} from '../../lib/aanmeldrem';
 import { keurFoto, FOTO_MELDING, fotoPad } from '../../lib/herinnering-foto';
 
 export const prerender = false;
@@ -43,7 +45,7 @@ const Schema = z.object({
   email: z.email('Vul een geldig e-mailadres in.'),
   herinnering: z.string().refine(
     herinneringGeldig,
-    `Schrijf minstens ${HERINNERING_MIN} tekens en hoogstens ${HERINNERING_MAX}.`,
+    `Schrijf een paar zinnen, minstens ${HERINNERING_MIN_WOORDEN} woorden en hoogstens ${HERINNERING_MAX} tekens.`,
   ),
   nieuwsbrief: z.boolean().optional().default(false),
   magArchief: z.boolean().optional().default(false),
@@ -66,36 +68,46 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   /**
-   * De inzending komt binnen als multipart, want de foto gaat mee. JSON blijft
-   * werken: de tests en een handmatige aanroep sturen dat, en het scheelt een
-   * tweede pad in de validatie.
+   * Alleen multipart. JSON gaat er niet meer in.
+   *
+   * WAAROM DIT GEEN WILLEKEURIGE BEPERKING IS
+   * Astro weigert formuliergecodeerde en multipart-verzoeken van een andere
+   * site, en die controle sloeg bij het testen ook echt aan. Op een
+   * JSON-verzoek geldt hij niet, en dat was precies het gat: in de eerste
+   * twintig uur dat deze route live stond kwamen er acht botinzendingen
+   * binnen, alle acht als JSON en dus langs die controle heen.
+   *
+   * De pagina stuurt al multipart, want de foto moet mee. Dit pad sluiten kost
+   * dus niets aan de bezoeker en zet de deur dicht voor wie het adres
+   * rechtstreeks aanroept.
    */
+  const contentType = request.headers.get('content-type') || '';
+  if (!contentType.includes('multipart/form-data')) {
+    console.warn('[herinnering] Verzoek zonder multipart geweigerd:', contentType.slice(0, 40));
+    return fout('Stuur je inzending via het formulier op de site.', 415);
+  }
+
   let body;
   let foto: File | null = null;
   try {
-    const type = request.headers.get('content-type') || '';
-    if (type.includes('multipart/form-data')) {
-      const fd = await request.formData();
-      const kies = (naam: string) => {
-        const v = fd.get(naam);
-        return typeof v === 'string' ? v : undefined;
-      };
-      body = Schema.parse({
-        naam: kies('naam') ?? '',
-        email: kies('email') ?? '',
-        herinnering: kies('herinnering') ?? '',
-        // Een niet-aangevinkt vakje zit niet in de FormData, dus dit is exact
-        // "heeft hij hem aangeklikt".
-        nieuwsbrief: fd.get('nieuwsbrief') === '1',
-        magArchief: fd.get('magArchief') === '1',
-        magNaam: fd.get('magNaam') === '1',
-        bedrijf: kies('bedrijf'),
-      });
-      const bestand = fd.get('foto');
-      if (bestand instanceof File && bestand.size > 0) foto = bestand;
-    } else {
-      body = Schema.parse(await request.json());
-    }
+    const fd = await request.formData();
+    const kies = (naam: string) => {
+      const v = fd.get(naam);
+      return typeof v === 'string' ? v : undefined;
+    };
+    body = Schema.parse({
+      naam: kies('naam') ?? '',
+      email: kies('email') ?? '',
+      herinnering: kies('herinnering') ?? '',
+      // Een niet-aangevinkt vakje zit niet in de FormData, dus dit is exact
+      // "heeft hij hem aangeklikt".
+      nieuwsbrief: fd.get('nieuwsbrief') === '1',
+      magArchief: fd.get('magArchief') === '1',
+      magNaam: fd.get('magNaam') === '1',
+      bedrijf: kies('bedrijf'),
+    });
+    const bestand = fd.get('foto');
+    if (bestand instanceof File && bestand.size > 0) foto = bestand;
   } catch (err) {
     const eerste = (err as { issues?: { message: string }[] })?.issues?.[0]?.message;
     return fout(eerste || 'Controleer de velden en probeer opnieuw.');
@@ -222,16 +234,25 @@ export const POST: APIRoute = async ({ request }) => {
     }
   }
 
-  // Bevestiging met het nummer erin. Mislukt dit, dan staat de inzending er wel
-  // en weet de deelnemer zijn nummer niet, dus dat melden we eerlijk.
+  /**
+   * Bevestiging met het nummer erin. Mislukt dit, dan staat de inzending er wel
+   * en weet de deelnemer zijn nummer niet, dus dat melden we eerlijk.
+   *
+   * De rem staat hier ná het vastleggen, net als bij de nieuwsbrief. De
+   * inzending telt altijd mee; alleen de mail wacht als er te veel per uur
+   * uitgaan.
+   */
+  const magMailen = await magInzendbevestigingVersturen(sb);
   const mail = renderHerinneringOntvangen(body.naam, nummer!, ACTIE.fotoAdres, !!pad);
-  const { vastgelegd } = await zetInWachtrij({
-    soort: 'herinnering-ontvangen',
-    ontvanger: email,
-    onderwerp: mail.subject,
-    html: mail.html,
-    dedupeSleutel: `herinnering:${nummer}`,
-  });
+  const { vastgelegd } = magMailen
+    ? await zetInWachtrij({
+        soort: 'herinnering-ontvangen',
+        ontvanger: email,
+        onderwerp: mail.subject,
+        html: mail.html,
+        dedupeSleutel: `herinnering:${nummer}`,
+      })
+    : { vastgelegd: false };
 
   await meldAanVoorNieuwsbrief(sb, email, body.nieuwsbrief);
 

@@ -112,6 +112,29 @@ describe('de bovengrens per uur', () => {
   });
 });
 
+describe('de inzendroute accepteert alleen een formulier', () => {
+  const route = lees('src/pages/api/herinnering.ts');
+
+  /**
+   * Astro weigert formuliergecodeerde en multipart-verzoeken van een andere
+   * site. Op JSON geldt die controle niet, en dat was het gat waar de acht
+   * botinzendingen van 8 september 2026 doorheen kwamen. De pagina stuurt al
+   * multipart, dus dit pad sluiten kost de bezoeker niets.
+   */
+  it('weigert alles wat geen multipart is', () => {
+    expect(route).toContain("multipart/form-data");
+    expect(route).toContain('Stuur je inzending via het formulier op de site.');
+  });
+
+  it('leest de body niet meer als JSON', () => {
+    expect(route).not.toContain('await request.json()');
+  });
+
+  it('remt ook de inzendbevestiging', () => {
+    expect(route).toContain('magInzendbevestigingVersturen');
+  });
+});
+
 describe('de honeypots staan er echt in', () => {
   it('op het aanmeldveld van de homepage', () => {
     const finale = lees('src/components/home/Finale.astro');
