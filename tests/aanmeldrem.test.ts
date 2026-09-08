@@ -135,6 +135,48 @@ describe('de inzendroute accepteert alleen een formulier', () => {
   });
 });
 
+describe('de atelierclaim is even dicht als de rest', () => {
+  const route = lees('src/pages/api/atelier/claim.ts');
+  const pagina = lees('src/pages/het-atelier.astro');
+
+  /**
+   * Dit was de laatste open deur, en de duurste. Van de vierenvijftig claims op
+   * de genummerde oplage waren er eenenvijftig van een bot, en elf daarvan
+   * kwamen binnen nadat de andere twee formulieren al dicht waren. Een nummer
+   * uit een oplage van 500 met certificaat komt niet terug.
+   */
+  it('weigert alles wat geen formulier is', () => {
+    expect(route).toContain('Claim je nummer via het formulier op de site.');
+    expect(route).not.toContain('await request.json()');
+  });
+
+  it('heeft een honeypot, aan beide kanten', () => {
+    expect(pagina).toContain('name="bedrijf"');
+    expect(pagina).toContain('vh-hp');
+    expect(route).toContain("kies('bedrijf')");
+  });
+
+  /**
+   * Bij een gevulde honeypot mag er geen echt nummer uit. Dat zou een plek uit
+   * de oplage kosten, en dat is precies de schade die we willen stoppen.
+   */
+  it('geeft bij een honeypot geen nummer uit de oplage weg', () => {
+    // Het blok zelf pakken en niet op een woord snijden dat ook in de imports
+    // staat: die eerste versie sneed op `domeinGeweigerd` en leverde een leeg
+    // stuk op, waarmee de toets iets anders keurde dan hij beweerde.
+    const blok = route.match(/if \(honeypot\) \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    expect(blok).toContain('number: 0');
+    expect(blok).not.toContain('next_atelier_number');
+    expect(blok).not.toContain('.insert(');
+  });
+
+  it('stuurt de pagina een formulier en geen JSON', () => {
+    expect(pagina).toContain('new FormData()');
+    const aanroep = pagina.slice(pagina.indexOf("fetch('/api/atelier/claim'"), pagina.indexOf("fetch('/api/atelier/claim'") + 200);
+    expect(aanroep).not.toContain('application/json');
+  });
+});
+
 describe('de honeypots staan er echt in', () => {
   it('op het aanmeldveld van de homepage', () => {
     const finale = lees('src/components/home/Finale.astro');
