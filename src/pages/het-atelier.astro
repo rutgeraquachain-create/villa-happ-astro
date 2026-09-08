@@ -152,6 +152,15 @@ const ld = {
           <form class="atl-form" id="atl-form" novalidate>
             <input type="text" id="atl-name" name="name" placeholder="Je naam (optioneel)" autocomplete="name" maxlength="40" aria-label="Je naam (optioneel)" />
             <input type="email" id="atl-email" name="email" placeholder="jouw@email.nl" autocomplete="email" required aria-label="E-mailadres" />
+            <!--
+              Honeypot: onzichtbaar voor mensen, ingevuld door bots die elk veld
+              vullen. Dit formulier had er geen, en tussen 3 en 8 september
+              claimde een bot eenenvijftig nummers uit de oplage van 500.
+            -->
+            <div class="vh-hp" aria-hidden="true">
+              <label for="atl-bedrijf">Bedrijf (niet invullen)</label>
+              <input id="atl-bedrijf" name="bedrijf" type="text" tabindex="-1" autocomplete="off" />
+            </div>
             <button type="submit" class="vh-btn vh-btn--accent" id="atl-submit"><span>Claim mijn nummer</span></button>
             <p class="atl-form-msg" id="atl-msg" role="status" aria-live="polite"></p>
             <label class="atl-form-check">
@@ -316,18 +325,26 @@ const ld = {
     const name = nameEl.value.trim();
     let number = 0, edition = EDITION;
     try {
-      const res = await fetch('/api/atelier/claim', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          name: name || undefined,
-          garment: 'cap',
-          // Inschrijven op de nieuwsbrief alleen als er expliciet is
-          // aangevinkt; eerder gebeurde dat stilzwijgend bij elke claim.
-          newsletter: (document.getElementById('atl-newsletter') as HTMLInputElement)?.checked === true,
-        }),
-      });
+      /**
+       * Als formulier en niet als JSON. Astro weigert formuliergecodeerde
+       * berichten van een andere site; op JSON geldt die controle niet, en dat
+       * was de weg waarlangs een bot tussen 3 en 8 september eenenvijftig
+       * nummers uit de oplage claimde. Geen Content-Type meezetten: de browser
+       * vult die aan met de juiste scheiding.
+       */
+      const verzending = new FormData();
+      verzending.set('email', email);
+      if (name) verzending.set('name', name);
+      verzending.set('garment', 'cap');
+      // Inschrijven op de nieuwsbrief alleen als er expliciet is aangevinkt;
+      // eerder gebeurde dat stilzwijgend bij elke claim.
+      if ((document.getElementById('atl-newsletter') as HTMLInputElement)?.checked === true) {
+        verzending.set('newsletter', '1');
+      }
+      const pot = (document.getElementById('atl-bedrijf') as HTMLInputElement)?.value;
+      if (pot) verzending.set('bedrijf', pot);
+
+      const res = await fetch('/api/atelier/claim', { method: 'POST', body: verzending });
       if (res.ok) {
         const data = await res.json();
         number = data.number; edition = data.edition || EDITION;
