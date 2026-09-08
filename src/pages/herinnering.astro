@@ -2,7 +2,7 @@
 export const prerender = true;
 
 import Base from '../layouts/Base.astro';
-import { ACTIE, prijsInEuro, HERINNERING_MAX } from '../lib/herinnering';
+import { ACTIE, prijsInEuro, HERINNERING_MAX, HERINNERING_MIN_WOORDEN } from '../lib/herinnering';
 import { MAX_ZIJDE, MAX_BYTES } from '../lib/herinnering-foto';
 import '../styles/shop.css';
 
@@ -28,6 +28,13 @@ const sluitTekst = '11 oktober 2026';
  * goedkeurde.
  */
 const fotoGrenzen = { maxZijde: MAX_ZIJDE, maxBytes: MAX_BYTES };
+
+/**
+ * De teller onder het tekstvak telt vanaf nu woorden en niet tekens. Reden: de
+ * server keurt op woorden, en een teller die iets anders telt dan wat de server
+ * toetst laat iemand doorschrijven tot hij afgewezen wordt.
+ */
+const minWoorden = HERINNERING_MIN_WOORDEN;
 ---
 <Base
   title="Wat is jouw Villa Happ herinnering? · Villa Happ"
@@ -191,8 +198,9 @@ const fotoGrenzen = { maxZijde: MAX_ZIJDE, maxBytes: MAX_BYTES };
   </section>
 </Base>
 
-<script define:vars={{ fotoGrenzen }}>
+<script define:vars={{ fotoGrenzen, minWoorden }}>
   window.__vhFotoGrenzen = fotoGrenzen;
+  window.__vhMinWoorden = minWoorden;
 </script>
 
 <script>
@@ -206,10 +214,18 @@ const fotoGrenzen = { maxZijde: MAX_ZIJDE, maxBytes: MAX_BYTES };
 
   // Teller onder het tekstvak. Niet als waarschuwing maar als aanmoediging:
   // een langer verhaal is een beter verhaal, en het vak oogt leeg.
+  // De teller telt woorden, want dat is waar de server op keurt. Een teller die
+  // tekens laat zien terwijl de server woorden eist, laat iemand doorschrijven
+  // tot hij bij het versturen alsnog wordt afgewezen.
+  const minWoorden = (window as any).__vhMinWoorden as number;
+
   if (veld && teller) {
     const tel = () => {
-      const n = veld.value.trim().length;
-      teller.textContent = n === 0 ? '' : `${n} tekens`;
+      const n = veld.value.trim().split(/\s+/).filter(Boolean).length;
+      if (n === 0) { teller.textContent = ''; return; }
+      teller.textContent = n < minWoorden
+        ? `${n} van minstens ${minWoorden} woorden`
+        : `${n} woorden`;
     };
     veld.addEventListener('input', tel);
     tel();

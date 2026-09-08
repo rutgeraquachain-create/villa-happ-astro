@@ -16,7 +16,7 @@ import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import {
   ACTIE, isGesloten, naamGeldig, herinneringGeldig, nummerGeldig, prijsInEuro,
-  HERINNERING_MIN, HERINNERING_MAX,
+  woorden, HERINNERING_MIN, HERINNERING_MAX, HERINNERING_MIN_WOORDEN,
 } from '../src/lib/herinnering';
 
 const lees = (pad: string) => readFileSync(new URL(`../${pad}`, import.meta.url), 'utf-8');
@@ -51,6 +51,7 @@ describe('wat er ingevuld mag worden', () => {
 
   it('laat een korte maar echte herinnering door', () => {
     expect(herinneringGeldig('Ik kreeg er mijn eerste winterjas.')).toBe(true);
+    expect(herinneringGeldig('Mijn moeder kocht daar alles.')).toBe(true);
   });
 
   it('weigert een lege inzending, ook eentje met alleen spaties', () => {
@@ -58,6 +59,44 @@ describe('wat er ingevuld mag worden', () => {
     expect(herinneringGeldig(' '.repeat(40))).toBe(false);
     expect(herinneringGeldig('x'.repeat(HERINNERING_MIN - 1))).toBe(false);
     expect(herinneringGeldig('x'.repeat(HERINNERING_MAX + 1))).toBe(false);
+  });
+
+  /**
+   * De echte invoer van de acht botinzendingen van 8 september 2026. Alle acht
+   * kwamen langs de lengtegrens van vijftien tekens, want ze waren zestien tot
+   * vierentwintig tekens lang. Geen ervan bevatte een spatie.
+   *
+   * Dit is de toets die de misser vastlegt: lengte zegt niets over of er taal
+   * staat. Verlaag `HERINNERING_MIN_WOORDEN` niet zonder hier langs te gaan.
+   */
+  it('weigert de tekst die de bots werkelijk instuurden', () => {
+    const echt = [
+      'ihmgccURCSwmoMWmAjGIpzMi',
+      'KhhpwdXEmSQnnOdxvwyGl',
+      'ULEcGcJwVVxWwzyMA',
+      'LhorJPUyjbNbAQZJD',
+      'cSptweeAKQaewuMSarSNVAf',
+      'twfYueCXJcHpSRQZl',
+      'jNimALVqRMPLuyoAGsEZbcVx',
+      'vobMhiMFmGlIhKPA',
+    ];
+    for (const rommel of echt) {
+      // Ze halen de lengtegrens wel, en dat is precies waarom die niet volstond.
+      expect(rommel.length).toBeGreaterThanOrEqual(HERINNERING_MIN);
+      expect(herinneringGeldig(rommel)).toBe(false);
+    }
+  });
+
+  it('telt woorden en niet spaties', () => {
+    expect(woorden('  een   twee \n drie \t vier  ')).toBe(4);
+    expect(woorden('eenwoord')).toBe(1);
+    expect(woorden('   ')).toBe(0);
+  });
+
+  it('laat drie woorden niet door en vier wel', () => {
+    expect(woorden('drie losse woordjes')).toBe(3);
+    expect(herinneringGeldig('drie losse woordjes hier')).toBe(true);
+    expect(herinneringGeldig('een twee drie vierenveertig')).toBe(true);
   });
 });
 

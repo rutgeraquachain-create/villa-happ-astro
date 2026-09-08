@@ -73,18 +73,26 @@ export function schoneBron(bron: string | undefined | null): string {
 }
 
 /**
- * Mag er nu nog een bevestigingsmail uit?
+ * Mag er nu nog een mail van dit soort uit?
  *
- * Telt wat er het afgelopen uur is klaargezet. Faalt de telling, dan laten we
- * hem door: een kapotte rem mag geen echte aanmelding blokkeren.
+ * Telt wat er het afgelopen uur van deze soort is klaargezet. Faalt de telling,
+ * dan laten we hem door: een kapotte rem mag geen echte aanmelding blokkeren.
+ *
+ * Per soort en niet over alles heen, want de soorten hebben verschillende
+ * grenzen nodig. Eén rem over de hele wachtrij zou een piek in orderbevestiging
+ * de nieuwsbriefmail laten blokkeren, en dat is een verband dat niet bestaat.
  */
-export async function magBevestigingVersturen(sb: SupabaseClient): Promise<boolean> {
+export async function magSoortVersturen(
+  sb: SupabaseClient,
+  soort: string,
+  grens: number,
+): Promise<boolean> {
   const eenUurGeleden = new Date(Date.now() - 60 * 60_000).toISOString();
 
   const { count, error } = await sb
     .from('uitgaande_mail')
     .select('id', { count: 'exact', head: true })
-    .eq('soort', 'nieuwsbrief-bevestiging')
+    .eq('soort', soort)
     .gte('created_at', eenUurGeleden);
 
   if (error) {
@@ -92,12 +100,31 @@ export async function magBevestigingVersturen(sb: SupabaseClient): Promise<boole
     return true;
   }
 
-  const vol = (count ?? 0) >= MAX_BEVESTIGINGEN_PER_UUR;
+  const vol = (count ?? 0) >= grens;
   if (vol) {
     console.error(
-      '[aanmeldrem] Bovengrens bereikt:', count, 'bevestigingsmails in het laatste uur.',
-      'Nieuwe aanmeldingen worden wel vastgelegd maar krijgen geen mail.',
+      '[aanmeldrem] Bovengrens bereikt voor', soort + ':', count, 'in het laatste uur.',
+      'Wat binnenkomt wordt wel vastgelegd, maar krijgt geen mail.',
     );
   }
   return !vol;
+}
+
+/** De rem op de nieuwsbriefbevestiging. Zie `MAX_BEVESTIGINGEN_PER_UUR`. */
+export async function magBevestigingVersturen(sb: SupabaseClient): Promise<boolean> {
+  return magSoortVersturen(sb, 'nieuwsbrief-bevestiging', MAX_BEVESTIGINGEN_PER_UUR);
+}
+
+/**
+ * De rem op de inzendbevestiging van de herinneringsactie.
+ *
+ * Deze mail ging als enige ongeremd naar buiten, en dat bleek te tellen: de
+ * acht botinzendingen van 8 september leverden zestien mails op, want elke
+ * inzending stuurde er twee. Twaalf is ruim boven wat deze actie organisch
+ * haalt en ver onder wat een bot in een nacht doet.
+ */
+export const MAX_INZENDINGEN_PER_UUR = 12;
+
+export async function magInzendbevestigingVersturen(sb: SupabaseClient): Promise<boolean> {
+  return magSoortVersturen(sb, 'herinnering-ontvangen', MAX_INZENDINGEN_PER_UUR);
 }
