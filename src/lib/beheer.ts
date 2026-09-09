@@ -191,7 +191,7 @@ export async function leesKerncijfers(sb: SupabaseClient) {
 export async function leesExport(sb: SupabaseClient, vanaf?: string) {
   let q = sb
     .from('orders')
-    .select('order_number, created_at, status, payment_status, customer_name, customer_email, subtotal_cents, shipping_cents, total_cents, refunded_cents, shipping_address, tracking_number, order_items(product_name, variant_label, sku, quantity, unit_price_cents, total_cents)')
+    .select('order_number, created_at, status, payment_status, customer_name, customer_email, subtotal_cents, shipping_cents, korting_cents, tegoedbon_code, total_cents, refunded_cents, shipping_address, tracking_number, order_items(product_name, variant_label, sku, quantity, unit_price_cents, total_cents)')
     .order('created_at', { ascending: false })
     .limit(5000);
   if (vanaf) q = q.gte('created_at', vanaf);

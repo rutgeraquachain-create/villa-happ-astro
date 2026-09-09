@@ -91,6 +91,13 @@ interface OrderForMail {
   subtotal_cents: number;
   shipping_cents: number;
   total_cents: number;
+  /**
+   * Korting van een tegoedbon. Optioneel omdat elke bestelling van vóór
+   * september 2026 hem niet heeft; ontbreekt hij, dan valt de regel weg in
+   * plaats van dat er "0,00" komt te staan.
+   */
+  korting_cents?: number | null;
+  tegoedbon_code?: string | null;
   shipping_address?: {
     street?: string; house_number?: string; postal_code?: string; city?: string; country?: string;
   };
@@ -185,6 +192,12 @@ export function renderOrderConfirmation(order: OrderForMail): { subject: string;
 
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
       ${bedrag('Subtotaal', formatPrice(order.subtotal_cents))}
+      ${order.korting_cents
+        ? bedrag(
+            `Tegoedbon${order.tegoedbon_code ? ` ${order.tegoedbon_code}` : ''}`,
+            `- ${formatPrice(order.korting_cents)}`,
+          )
+        : ''}
       ${bedrag('Verzending', order.shipping_cents === 0 ? 'Gratis' : formatPrice(order.shipping_cents))}
       ${bedrag('Totaal', formatPrice(order.total_cents), true)}
       <tr><td colspan="2" style="padding:4px 0 0;font-family:${LETTERTYPE};font-size:12px;color:${KLEUR.zacht};">Inclusief ${BUSINESS.vatRate}% btw (${formatPrice(vatIncluded)})</td></tr>

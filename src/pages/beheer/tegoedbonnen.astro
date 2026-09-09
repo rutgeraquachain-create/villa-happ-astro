@@ -1,0 +1,198 @@
+---
+/**
+ * /beheer/tegoedbonnen — bonnen uitgeven en terugzien
+ *
+ * Server-gerenderd en niet cachebaar: een geldige code is geld, en die hoort
+ * niet in een CDN te belanden.
+ *
+ * WAAROM DIT SCHERM ER IS
+ * De herinneringsactie belooft de winnaar een tegoedbon van 75 euro. Tot 9
+ * september 2026 bestond die bon nergens in de code: er was geen manier om hem
+ * uit te geven en geen manier om hem in te wisselen. De prijs zou dus falen bij
+ * de winnaar, ná de campagne. Zie de raad van 9 september in de projectnotitie.
+ */
+export const prerender = false;
+
+import BeheerLayout from '../../layouts/BeheerLayout.astro';
+import { BEHEER_COOKIE, beheerToegang, beheerGeconfigureerd } from '../../lib/beheer-sessie';
+import { getSupabaseAdmin } from '../../lib/supabase';
+import { BEHEER_HEADERS } from '../../lib/beheer';
+import { euro } from '../../lib/order-status';
+import { ACTIE } from '../../lib/herinnering';
+
+for (const [k, v] of Object.entries(BEHEER_HEADERS)) Astro.response.headers.set(k, v);
+
+const ingelogd = beheerToegang(Astro.cookies.get(BEHEER_COOKIE)?.value);
+const geconfigureerd = beheerGeconfigureerd();
+const sb = getSupabaseAdmin();
+
+interface BonRij {
+  code: string;
+  waarde_cents: number;
+  notitie: string | null;
+  verloopt_op: string;
+  geclaimd_op: string | null;
+  ingewisseld_op: string | null;
+  created_at: string;
+}
+
+let bonnen: BonRij[] = [];
+let lezenMislukt = false;
+
+if (ingelogd && sb) {
+  const { data, error } = await sb
+    .from('tegoedbonnen')
+    .select('code, waarde_cents, notitie, verloopt_op, geclaimd_op, ingewisseld_op, created_at')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) {
+    console.error('[tegoedbon] Lijst lezen mislukte:', error.message);
+    lezenMislukt = true;
+  }
+  bonnen = (data || []) as BonRij[];
+}
+
+/**
+ * De toestand in één woord.
+ *
+ * Volgorde is belangrijk: ingewisseld gaat vóór verlopen, want een bon die
+ * gebruikt is en daarna verloopt, is gebruikt. En verlopen gaat vóór geclaimd,
+ * want een claim op een verlopen bon levert niets meer op.
+ */
+function staat(b: BonRij): { label: string; toon: string } {
+  if (b.ingewisseld_op) return { label: 'Ingewisseld', toon: 'af' };
+  if (Date.parse(b.verloopt_op) < Date.now()) return { label: 'Verlopen', toon: 'stop' };
+  if (b.geclaimd_op && Date.now() - Date.parse(b.geclaimd_op) < 30 * 60_000) {
+    return { label: 'In afrekening', toon: 'wacht' };
+  }
+  return { label: 'Geldig', toon: 'goed' };
+}
+
+const datum = (iso: string) =>
+  new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' });
+
+const prijsInEuro = (ACTIE.prijsCents / 100).toFixed(0);
+---
+
+<BeheerLayout
+  title="Tegoedbonnen · Beheer"
+  ingelogd={ingelogd}
+  geconfigureerd={geconfigureerd}
+  terug={{ href: '/beheer', label: '← Bestellingen' }}
+>
+  {!sb && (
+    <p class="bh-melding is-let">
+      Er is geen database gekoppeld, dus er zijn geen bonnen te tonen.
+    </p>
+  )}
+
+  {sb && lezenMislukt && (
+    <p class="bh-melding is-fout">
+      De lijst met bonnen was niet te lezen. Dat is iets anders dan een lege lijst:
+      er kunnen geldige bonnen bestaan die hier niet staan.
+    </p>
+  )}
+
+  {sb && (
+    <>
+      <section class="bh-blok">
+        <h2>Nieuwe bon</h2>
+        <p class="bh-melding">
+          De code wordt hier gemaakt, niet door jou bedacht. Noteer hem meteen:
+          hij staat hieronder in de lijst en verder nergens. De winnaar van de
+          herinneringsactie krijgt {prijsInEuro} euro, twaalf maanden geldig.
+        </p>
+        <div class="bh-bonform">
+          <label for="bon-waarde">Waarde in euro</label>
+          <input id="bon-waarde" type="number" min="1" max="500" step="1" value={prijsInEuro} />
+
+          <label for="bon-notitie">Waarvoor</label>
+          <input id="bon-notitie" type="text" maxlength="200" placeholder="Winnaar herinneringsactie oktober 2026" />
+
+          <label for="bon-maanden">Geldig (maanden)</label>
+          <input id="bon-maanden" type="number" min="1" max="60" step="1" value="12" />
+
+          <button type="button" class="bh-knop" id="bon-maak">Bon aanmaken</button>
+        </div>
+        <p class="bh-melding" id="bon-uitslag" hidden></p>
+      </section>
+
+      <div class="bh-tabelwrap">
+        <table class="bh-tabel">
+          <thead>
+            <tr>
+              <th>Code</th><th>Waarde</th><th>Waarvoor</th>
+              <th>Geldig tot</th><th>Staat</th>
+            </tr>
+          </thead>
+          <tbody>
+            {bonnen.length === 0 && (
+              <tr><td colspan="5">Nog geen bonnen uitgegeven.</td></tr>
+            )}
+            {bonnen.map((b) => (
+              <tr>
+                <td><code>{b.code}</code></td>
+                <td>{euro(b.waarde_cents)}</td>
+                <td>{b.notitie}</td>
+                <td>{datum(b.verloopt_op)}</td>
+                <td><span class="bh-badge" data-toon={staat(b).toon}>{staat(b).label}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  )}
+</BeheerLayout>
+
+<script>
+  const knop = document.getElementById('bon-maak') as HTMLButtonElement | null;
+  const uitslag = document.getElementById('bon-uitslag') as HTMLParagraphElement | null;
+
+  knop?.addEventListener('click', async () => {
+    const waarde = Number((document.getElementById('bon-waarde') as HTMLInputElement).value);
+    const notitie = (document.getElementById('bon-notitie') as HTMLInputElement).value.trim();
+    const maanden = Number((document.getElementById('bon-maanden') as HTMLInputElement).value);
+
+    if (!uitslag) return;
+    uitslag.hidden = false;
+    uitslag.className = 'bh-melding';
+
+    if (notitie.length < 2) {
+      uitslag.classList.add('is-let');
+      uitslag.textContent = 'Vul in waarvoor deze bon is. Over een jaar weet niemand dat nog.';
+      return;
+    }
+
+    knop.disabled = true;
+    uitslag.textContent = 'Een moment…';
+
+    try {
+      const res = await fetch('/api/beheer/tegoedbon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          waardeEuro: waarde,
+          notitie,
+          maanden,
+          csrf: document.body.dataset.csrf || '',
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        // De code staat maar één keer op het scherm voordat de pagina herlaadt,
+        // dus hij komt hier groot in beeld en niet als terloopse melding.
+        uitslag.innerHTML = `Aangemaakt: <code>${data.bon.code}</code>. Noteer deze code.`;
+        setTimeout(() => window.location.reload(), 8000);
+      } else {
+        uitslag.classList.add('is-fout');
+        uitslag.textContent = data.error || 'Aanmaken lukte niet.';
+        knop.disabled = false;
+      }
+    } catch {
+      uitslag.classList.add('is-fout');
+      uitslag.textContent = 'Verbinding mislukt. Probeer het opnieuw.';
+      knop.disabled = false;
+    }
+  });
+</script>

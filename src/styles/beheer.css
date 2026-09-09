@@ -170,6 +170,23 @@
 .bh-knop--zacht { background: transparent; color: var(--vh-ink); }
 .bh-knop--zacht:hover { background: var(--vh-paper-soft); }
 
+/* Tegoedbonnen: het invoerblok. Labels boven de velden, want de waardes zijn
+   kort en een tabelindeling breekt op een telefoon. */
+.bh-bonform { display: grid; gap: 6px; max-width: 420px; }
+.bh-bonform label { font-size: 12px; color: var(--vh-ink-muted); margin-top: 8px; }
+.bh-bonform input {
+  padding: 9px 12px;
+  border: 1px solid var(--vh-ink-faint);
+  border-radius: var(--vh-radius-sm, 4px);
+  background: #fff; color: inherit; font: inherit; font-size: 14px;
+}
+.bh-bonform .bh-knop { margin-top: 14px; justify-self: start; }
+/* Een code moet over te typen zijn, dus mono en wat lucht tussen de tekens. */
+.bh-tabel code, #bon-uitslag code {
+  font-family: var(--vh-font-mono, monospace);
+  letter-spacing: 0.06em;
+}
+
 .bh-melding { padding: 11px 14px; border-radius: var(--vh-radius-sm, 4px); font-size: 13px; margin-bottom: 14px; line-height: 1.55; }
 .bh-melding.is-fout { background: rgba(192, 57, 43, 0.08); border: 1px solid rgba(192, 57, 43, 0.25); color: var(--vh-danger); }
 .bh-melding.is-goed { background: #E2EFE2; border: 1px solid #C4DEC6; color: #2C5E33; }

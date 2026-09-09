@@ -24,6 +24,7 @@ import { reserveInventory, releaseInventory } from '../../../lib/inventory';
 import { begrens, clientSleutel, teVeelVerzoeken } from '../../../lib/rate-limit-db';
 import { maakOrderToken, authSecretOntbreekt } from '../../../lib/order-token';
 import { logGebeurtenis } from '../../../lib/order-events';
+import { claimBon } from '../../../lib/tegoedbon';
 import { checkBotId } from 'botid/server';
 
 export const prerender = false;
@@ -210,9 +211,64 @@ export const POST: APIRoute = async ({ request }) => {
     billing_address: body.shipping,
   }).select().single();
 
+  /**
+   * De tegoedbon, ná het aanmaken van de bestelling.
+   *
+   * De claim heeft een bestelling nodig om aan te hangen, want dat is wat hem
+   * atomair maakt: de code kan maar aan één order tegelijk vastzitten. Gaat de
+   * betaling niet door, dan geeft de webhook hem weer vrij, net zoals hij de
+   * gereserveerde voorraad vrijgeeft.
+   *
+   * De korting gaat van het subtotaal af en nooit van de verzending, want dat
+   * staat zo in de actievoorwaarden. Het te betalen bedrag blijft minstens één
+   * cent: een betaling van nul euro bestaat bij Mollie niet, en die grens is
+   * met een bon van 75 euro en verzending vanaf 8,95 nu niet te raken. De
+   * clamp staat er voor de volgende bon, die groter kan zijn.
+   */
+
   if (orderErr || !order) {
     await rollback();
     return new Response(JSON.stringify({ error: 'Kon bestelling niet aanmaken.' }), { status: 500 });
+  }
+
+  let korting = 0;
+  let bonCode: string | null = null;
+
+  if (body.tegoedbon?.trim()) {
+    const uitslag = await claimBon(sb, body.tegoedbon, order.id, subtotal);
+    if (uitslag.ok) {
+      // Minstens één cent te betalen houden. Zie de toelichting hierboven.
+      korting = Math.min(uitslag.korting, total - 1);
+      bonCode = uitslag.bon.code;
+    } else {
+      /**
+       * Werkt de code niet, dan stopt het afrekenen hier.
+       *
+       * De verleiding is om door te gaan zonder korting en er een melding bij
+       * te zetten, maar dan staat de bezoeker bij Mollie met een bedrag dat
+       * hoger is dan waar hij op rekende, en op dat scherm is niets meer uit te
+       * leggen. Wie een bon invoert, verwacht korting of een reden waarom niet.
+       */
+      await rollback();
+      await sb.from('orders').update({ status: 'cancelled', payment_status: 'failed' }).eq('id', order.id);
+      return new Response(JSON.stringify({
+        error: uitslag.melding,
+        veld: 'tegoedbon',
+      }), { status: 400 });
+    }
+  }
+
+  const teBetalen = total - korting;
+  if (korting > 0) {
+    await sb.from('orders').update({
+      korting_cents: korting,
+      tegoedbon_code: bonCode,
+      total_cents: teBetalen,
+      // De btw zit in het bedrag dat werkelijk betaald wordt, niet in het
+      // bedrag van vóór de korting. Zonder deze herberekening klopt de
+      // boekhoudexport niet meer zodra er één bon gebruikt is.
+      tax_cents: vatFromGross(teBetalen, BUSINESS.vatRate),
+    }).eq('id', order.id);
   }
 
   const { error: itemsErr } = await sb.from('order_items').insert(
@@ -225,7 +281,8 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   await logGebeurtenis(sb, order.id, 'aangemaakt', {
-    toelichting: `${lineItems.length} regel(s), ${(total / 100).toFixed(2)} EUR`,
+    toelichting: `${lineItems.length} regel(s), ${(teBetalen / 100).toFixed(2)} EUR`
+      + (korting ? ` (tegoedbon ${bonCode}, ${(korting / 100).toFixed(2)} EUR korting)` : ''),
   });
 
   // 5. Mollie payment; bij falen niets gereserveerd of open laten hangen
@@ -234,7 +291,7 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const mollie = getMollie();
     payment = await mollie.payments.create({
-      amount: { currency: 'EUR', value: (total / 100).toFixed(2) },
+      amount: { currency: 'EUR', value: (teBetalen / 100).toFixed(2) },
       description: `Villa Happ ${orderNumber}`,
       redirectUrl: `${siteUrl}/checkout/success?t=${maakOrderToken(order.id, 'status')}`,
       cancelUrl: `${siteUrl}/checkout/cancelled?order=${order.order_number}`,
@@ -262,6 +319,13 @@ export const POST: APIRoute = async ({ request }) => {
     success: true,
     order_number: order.order_number,
     checkout_url: payment.getCheckoutUrl(),
+    /**
+     * Wat er werkelijk af ging, uit de database gerekend en niet uit wat de
+     * browser dacht. Een code die niet werkt komt hier nooit langs: die geeft
+     * hierboven een 400 met de reden.
+     */
+    korting_cents: korting,
+    tegoedbon: bonCode,
   }), {
     status: 200,
     headers: { 'Content-Type': 'application/json' },

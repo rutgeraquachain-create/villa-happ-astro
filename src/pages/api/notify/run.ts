@@ -1,17 +1,22 @@
 /**
- * GET /api/notify/run — dagelijkse mailtaak
+ * GET /api/notify/run — terugkerende mailtaak
  *
  * Twee dingen, in deze volgorde:
  *  1. de mail-outbox legen (vangnet voor transactionele mail die bij het
  *     wegschrijven niet meteen weg kon);
  *  2. de back-in-stock-meldingen versturen.
  *
- * Frequentie: één keer per dag is het maximum op Vercel Hobby. Draait het
- * project op Pro, zet de schedule in vercel.json dan op '0 * * * *'. Een
- * orderbevestiging die bij het wegschrijven niet weg kon blijft dan hooguit
- * een uur liggen in plaats van een dag. (Deze toelichting stond eerst in
- * vercel.json zelf; JSON kent geen commentaar en Vercel weigert onbekende
- * sleutels, waardoor elke build faalde.)
+ * Frequentie: elk kwartier (`*​/15 * * * *` in vercel.json). Dat stond tot 9
+ * september 2026 op één keer per dag om 08:00, wat het maximum was op Vercel
+ * Hobby. Het project draait sinds die maand op Pro, en de herinneringsactie
+ * loopt maar drie dagen: een mail die bij het wegschrijven niet weg kon lag
+ * met de oude stand tot 24 uur stil, oftewel een derde van de looptijd. Nu
+ * hooguit een kwartier. (Deze toelichting stond eerst in vercel.json zelf;
+ * JSON kent geen commentaar en Vercel weigert onbekende sleutels, waardoor
+ * elke build faalde.)
+ *
+ * De taak is idempotent en doet niets als er niets klaarstaat, dus vaker
+ * draaien kost een lege query per kwartier en verder niets.
  *
  * Draait via de Vercel-cron (zie vercel.json) of handmatig met
  * `Authorization: Bearer <CRON_SECRET>`. Loopt de open meldingen na,
@@ -51,9 +56,8 @@ export const GET: APIRoute = async ({ request }) => {
   // iemand handmatig op de knop in het beheerportaal drukte, en dat weet je
   // alleen als je gaat kijken.
   //
-  // Een cron per dag is traag voor een orderbevestiging; de snelle route
-  // blijft de directe poging bij het wegschrijven. Draait dit project ooit
-  // op Vercel Pro, zet deze cron dan op elk uur (zie vercel.json).
+  // De snelle route blijft de directe poging bij het wegschrijven; deze cron
+  // is het vangnet daaronder en draait elk kwartier (zie vercel.json).
   const outbox = await verwerkWachtrij();
 
   /**

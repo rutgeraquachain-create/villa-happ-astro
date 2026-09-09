@@ -30,6 +30,13 @@ export const CheckoutSchema = z.object({
     country: z.enum(['NL', 'BE', 'DE']).default('NL'),
     phone: z.string().max(30).optional(),
   }),
+  /**
+   * Code van een tegoedbon. Optioneel, en alleen een voorstel: de waarde, de
+   * geldigheid en de vraag of hij al gebruikt is komen uit de database. Zie
+   * `lib/tegoedbon.ts`. Ruim genomen qua lengte omdat een bezoeker spaties en
+   * streepjes meetypt; `normaliseerCode` haalt die eruit.
+   */
+  tegoedbon: z.string().max(32).optional(),
 });
 
 export type CheckoutPayload = z.infer<typeof CheckoutSchema>;

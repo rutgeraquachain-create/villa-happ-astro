@@ -54,9 +54,20 @@ export function keurFoto(type: string, bytes: number): FotoFout {
   return 'geen';
 }
 
+/**
+ * De grens zoals een bezoeker hem leest.
+ *
+ * Afgeleid uit `MAX_BYTES` en niet apart opgeschreven. Toen de grens op 7
+ * september 2026 van 5 naar 4 MB ging omdat 5 boven de afkapgrens van Vercel
+ * lag, bleef de melding op 5 MB staan. De code weigerde vanaf 4 MB en de tekst
+ * beloofde 5, dus een foto van 4,5 MB kreeg een melding die zei dat hij mocht.
+ * Eén bron, zodat een volgende verschuiving de tekst meeneemt.
+ */
+export const MAX_MB_TEKST = `${MAX_BYTES / (1024 * 1024)} MB`;
+
 export const FOTO_MELDING: Record<Exclude<FotoFout, 'geen'>, string> = {
   type: 'Kies een foto als JPG, PNG of WebP.',
-  groot: 'Deze foto is te groot. Kies er een van maximaal 5 MB.',
+  groot: `Deze foto is te groot. Kies er een van maximaal ${MAX_MB_TEKST}.`,
   leeg: 'Dit bestand is leeg. Kies een andere foto.',
 };
 

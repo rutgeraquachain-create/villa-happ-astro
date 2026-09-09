@@ -21,7 +21,7 @@ import { renderNieuwsbriefBevestiging } from '../../lib/mail';
 import { zetInWachtrij } from '../../lib/outbox';
 import { getSiteOrigin } from '../../lib/site';
 import { authSecretOntbreekt } from '../../lib/order-token';
-import { magBevestigingVersturen, domeinGeweigerd, schoneBron } from '../../lib/aanmeldrem';
+import { magBevestigingVersturen, domeinGeweigerd, schoneBron, MELDING_REM } from '../../lib/aanmeldrem';
 import { isFormulierPost, formulierVelden, geenFormulier } from '../../lib/formulierpost';
 import { checkBotId } from 'botid/server';
 import { geweigerdDoorBotId } from '../../lib/botid-routes';
@@ -185,11 +185,15 @@ export const POST: APIRoute = async ({ request }) => {
    * honderd bevestigingsmails naar mensen die er niet om vroegen, want daar
    * hangt de verzendreputatie aan waarmee de campagne straks moet landen.
    *
-   * Het antwoord aan de bezoeker verandert niet. Wie hier legitiem staat en
-   * geen mail krijgt, kan het over een uur opnieuw proberen.
+   * Het antwoord aan de bezoeker verandert hier wél, sinds 9 september 2026.
+   * Tot die dag stond er "kijk in je mail", ook als er niets uitging, en dan
+   * zoekt iemand in zijn postvak naar iets wat er niet is. De rem is een
+   * toestand van de hele site, dus dit verklapt niets over dit adres.
    */
   if (!(await magBevestigingVersturen(sb))) {
-    return new Response(JSON.stringify(KIJK_IN_JE_MAIL));
+    // `success: true`, want de aanmelding is echt vastgelegd. Alleen de mail
+    // wacht, en dat staat er nu ook. Zie MELDING_REM in lib/aanmeldrem.ts.
+    return new Response(JSON.stringify({ success: true, message: MELDING_REM }));
   }
 
   const mail = renderNieuwsbriefBevestiging(email, bevestigUrl(getSiteOrigin(), email));

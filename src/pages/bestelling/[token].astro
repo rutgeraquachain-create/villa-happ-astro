@@ -36,7 +36,7 @@ let stappen: ReturnType<typeof bouwTijdlijn> = [];
 if (inhoud && sb) {
   const { data } = await sb
     .from('orders')
-    .select('id, order_number, created_at, status, payment_status, customer_name, shipping_address, subtotal_cents, shipping_cents, total_cents, refunded_cents, tracking_number, tracking_carrier, order_items(product_name, variant_label, quantity, total_cents)')
+    .select('id, order_number, created_at, status, payment_status, customer_name, shipping_address, subtotal_cents, shipping_cents, korting_cents, tegoedbon_code, total_cents, refunded_cents, tracking_number, tracking_carrier, order_items(product_name, variant_label, quantity, total_cents)')
     .eq('id', inhoud.orderId)
     .maybeSingle();
   order = data;
@@ -131,6 +131,12 @@ const voornaam = (order?.customer_name || '').split(' ')[0];
                     <td>{euro(r.total_cents)}</td>
                   </tr>
                 ))}
+                {order.korting_cents > 0 && (
+                  <tr>
+                    <td>Tegoedbon {order.tegoedbon_code}</td>
+                    <td>- {euro(order.korting_cents)}</td>
+                  </tr>
+                )}
                 <tr><td>Verzending</td><td>{order.shipping_cents === 0 ? 'Gratis' : euro(order.shipping_cents)}</td></tr>
                 <tr><td><b>Totaal</b></td><td><b>{euro(order.total_cents)}</b></td></tr>
                 {order.refunded_cents > 0 && (

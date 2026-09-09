@@ -104,6 +104,32 @@ import '../../styles/shop.css';
           <div class="vh-summary-row total"><span>Totaal</span><b id="vh-co-total"></b></div>
           <p class="vh-co-vat" id="vh-co-vat"></p>
 
+          {/**
+            * Tegoedbon.
+            *
+            * Buiten het adresformulier, want hij hoort bij het bedrag en niet
+            * bij de bezorging. Het veld staat er zonder aanprijzing: wie geen
+            * bon heeft, hoeft er niets mee.
+            *
+            * De korting wordt hier niet uitgerekend. Wat de browser zou
+            * uitrekenen is een gok, want de waarde en de geldigheid staan in de
+            * database. Het bedrag dat telt staat op het Mollie-scherm en in de
+            * bevestigingsmail. De regel eronder zegt daarom eerlijk wat er
+            * gebeurt in plaats van een bedrag te tonen dat nog kan wijzigen.
+            */}
+          <div class="vh-co-bon">
+            <label for="co-tegoedbon">Tegoedbon (optioneel)</label>
+            <input
+              id="co-tegoedbon" name="tegoedbon" type="text" form="vh-co-form"
+              placeholder="VH-XXXX-XXXX" autocomplete="off" spellcheck="false"
+              inputmode="text" maxlength="32"
+            />
+            <p class="vh-co-bon-uitleg">
+              De waarde gaat van het subtotaal af, niet van de verzendkosten. Is
+              je bestelling lager dan de bon, dan vervalt het verschil.
+            </p>
+          </div>
+
           <div class="vh-demo-note" id="vh-co-demo" hidden>
             <b>Demo-modus.</b> Dit zijn voorbeeldproducten. Koppel Supabase en
             Mollie (echte API-keys in Vercel) om betalingen te activeren.
@@ -350,6 +376,11 @@ import '../../styles/shop.css';
         city: String(fd.get('city')),
         country: String(fd.get('country')),
       },
+      // Leeg veld gaat niet mee: het schema laat de sleutel weg zijn, en een
+      // lege reeks zou de route onnodig een claim laten proberen.
+      ...(String(fd.get('tegoedbon') || '').trim()
+        ? { tegoedbon: String(fd.get('tegoedbon')).trim() }
+        : {}),
     };
 
     payBtn.disabled = true;

@@ -1020,6 +1020,45 @@
 	text-underline-offset: 2px;
 }
 
+/* Checkout: tegoedbon. Bewust rustig, want de meeste bezoekers hebben er geen. */
+.vh-co-bon {
+	margin: 16px 0 0;
+	padding: 14px 0 0;
+	border-top: 1px solid var(--vh-ink-hairline);
+}
+.vh-co-bon label {
+	display: block;
+	font-size: 12px;
+	color: var(--vh-ink-muted);
+	margin: 0 0 6px;
+}
+.vh-co-bon input {
+	width: 100%;
+	/* Zonder deze regel telt de padding buiten de breedte en steekt het veld
+	   uit de kolom zodra die krap wordt. */
+	box-sizing: border-box;
+	padding: 10px 12px;
+	border: 1px solid var(--vh-ink-faint);
+	border-radius: 2px;
+	background: var(--vh-paper);
+	color: var(--vh-ink);
+	font: inherit;
+	/* Codes lezen als codes, en hoofdletters schelen een mislukte poging. */
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+.vh-co-bon input::placeholder {
+	letter-spacing: 0.08em;
+	color: var(--vh-ink-muted);
+	opacity: 0.7;
+}
+.vh-co-bon-uitleg {
+	font-size: 12px;
+	line-height: 1.6;
+	color: var(--vh-ink-muted);
+	margin: 8px 0 0;
+}
+
 /* ============================================================
    Raakvlakken — WCAG 2.2 (2.5.8) vraagt minimaal 24×24 CSS-px.
    De knoppen hieronder waren visueel prima maar te klein om

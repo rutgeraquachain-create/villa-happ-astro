@@ -237,6 +237,32 @@ keer één deur gesloten, drie keer verhuisde de bot, en de vierde golf kwam ter
 op de route die bij de derde ronde was overgeslagen. Dat was juist de route die
 mail verstuurt.
 
+**Een tegoedbon wordt geclaimd bij het afrekenen en pas ingewisseld bij de
+betaling.** `src/lib/tegoedbon.ts` is de enige weg naar een bon, en het claimen
+gaat via de RPC `claim_tegoedbon`: één voorwaardelijke UPDATE beslist wie hem
+krijgt, want een SELECT gevolgd door een UPDATE laat er bij twee gelijktijdige
+kassa's twee door. De webhook maakt de claim definitief bij `finalize` en geeft
+hem terug bij `release`, precies zoals hij dat met de gereserveerde voorraad
+doet. Een claim vervalt na dertig minuten, anders zet één weggeklikt betaalscherm
+de bon voorgoed vast. De korting gaat van het **subtotaal** af en nooit van de
+verzendkosten; dat staat zo in `src/pages/actievoorwaarden.astro` en die tekst is
+leidend, niet de code.
+
+**De grenzen die een bezoeker leest, worden afgeleid uit de grens die de code
+hanteert.** `FOTO_MELDING.groot` rekent zijn megabytes uit `MAX_BYTES`. Toen die
+grens op 7 september 2026 van 5 naar 4 MB ging, bleef de melding op 5 MB staan en
+kreeg een foto van 4,5 MB een weigering met een tekst die zei dat hij mocht. Zet
+zo'n getal nooit twee keer neer.
+
+**De remmen in `src/lib/aanmeldrem.ts` staan tijdelijk hoger, met een
+sluitvoorwaarde.** Ze gingen op 9 september 2026 van 12 naar 60 per uur voor de
+campagne, en `tests/campagnestand.test.ts` valt om zodra `CAMPAGNE_TOT` voorbij
+is en ze nog verhoogd staan. Dat rood is het signaal om ze op
+`RUSTSTAND_PER_UUR` terug te zetten, niet een toets om aan te passen. Loopt een
+rem vol, dan krijgt de bezoeker `MELDING_REM` en niet het gewone antwoord: een
+verzendkant die zichzelf geslaagd verklaart is de fout die deze site vijf keer op
+één dag maakte.
+
 **Een honeypot bestaat uit twee helften in twee bestanden.** De route die het
 veld uitleest is de helft die je ziet; het verborgen veld in de HTML is de helft
 die het werk doet. Gemeten 9 september 2026: `notify.ts` en `reviews.ts` keken
@@ -324,6 +350,8 @@ wat de code doet, voegt niets toe.
 | Juridische zinnen, verzendtabel | `src/lib/legal.ts` |
 | Catalogus, Supabase met demo-fallback | `src/lib/catalog.ts` |
 | Scroll- en pinanimaties | `src/lib/motion.ts` |
+| Tegoedbonnen | `src/lib/tegoedbon.ts` |
+| Campagnetellers in `/beheer` | `src/lib/campagnestand.ts` |
 | CI-poort | `.github/workflows/ci.yml` |
 | Redirects en headers | `vercel.json` |
 
