@@ -16,6 +16,8 @@ import { rateLimit, clientKey, tooManyRequests } from '../../../lib/rate-limit';
 import { ClaimSchema, nextNumber, EDITION } from '../../../lib/atelier';
 import { domeinGeweigerd, schoneBron } from '../../../lib/aanmeldrem';
 import { isFormulierPost } from '../../../lib/formulierpost';
+import { checkBotId } from 'botid/server';
+import { geweigerdDoorBotId } from '../../../lib/botid-routes';
 
 export const prerender = false;
 
@@ -47,6 +49,11 @@ export const POST: APIRoute = async ({ request }) => {
       error: 'Claim je nummer via het formulier op de site.',
     }), { status: 415 });
   }
+
+  // BotID ná de goedkope controle hierboven; zie src/lib/botid-routes.ts. Hier
+  // is de inzet het hoogst: van de vierenvijftig claims op de oplage van 500
+  // waren er eenenvijftig van een bot, en zo'n nummer komt niet terug.
+  if ((await checkBotId()).isBot) return geweigerdDoorBotId('atelier', 'error');
 
   const sb = getSupabaseAdmin();
   if (!sb) return new Response(JSON.stringify({ error: 'no-db' }), { status: 503 });

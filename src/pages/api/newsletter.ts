@@ -23,6 +23,8 @@ import { getSiteOrigin } from '../../lib/site';
 import { authSecretOntbreekt } from '../../lib/order-token';
 import { magBevestigingVersturen, domeinGeweigerd, schoneBron } from '../../lib/aanmeldrem';
 import { isFormulierPost, formulierVelden, geenFormulier } from '../../lib/formulierpost';
+import { checkBotId } from 'botid/server';
+import { geweigerdDoorBotId } from '../../lib/botid-routes';
 
 export const prerender = false;
 
@@ -71,6 +73,19 @@ export const POST: APIRoute = async ({ request }) => {
   if (!isFormulierPost(request)) {
     return geenFormulier('nieuwsbrief', request.headers.get('content-type') || '');
   }
+
+  /**
+   * BotID, ná de formuliercontrole en niet ervoor.
+   *
+   * Die volgorde is een kostenkeuze. De controle hierboven is gratis en lokaal;
+   * `checkBotId()` telt mee voor de Deep Analysis-facturering. Een bot die JSON
+   * stuurt, ketst dus af zonder dat het iets kost.
+   *
+   * Dit is de laag die de vierde golf moet stoppen. Die stuurde een echt
+   * formulier met een kloppende herkomst en liet de honeypot leeg, dus alles
+   * wat hierboven staat liet hem door.
+   */
+  if ((await checkBotId()).isBot) return geweigerdDoorBotId('nieuwsbrief');
 
   let body;
   try {

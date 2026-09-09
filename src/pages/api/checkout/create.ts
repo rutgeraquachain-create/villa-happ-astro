@@ -24,6 +24,7 @@ import { reserveInventory, releaseInventory } from '../../../lib/inventory';
 import { begrens, clientSleutel, teVeelVerzoeken } from '../../../lib/rate-limit-db';
 import { maakOrderToken, authSecretOntbreekt } from '../../../lib/order-token';
 import { logGebeurtenis } from '../../../lib/order-events';
+import { checkBotId } from 'botid/server';
 
 export const prerender = false;
 
@@ -49,6 +50,27 @@ const LOCALE_PER_LAND = {
 export const POST: APIRoute = async ({ request }) => {
   const limiet = await begrens('checkout', clientSleutel(request), 10);
   if (!limiet.toegestaan) return teVeelVerzoeken(limiet);
+
+  /**
+   * BotID, vóór er voorraad gereserveerd wordt en vóór er een betaling bij
+   * Mollie ontstaat.
+   *
+   * Deze route stuurt JSON en heeft dus geen formuliercontrole zoals de andere
+   * publieke adressen. Hij staat er wel bij, want hij heeft dezelfde vorm: een
+   * publiek adres dat onze eigen pagina aanroept. De bot van september is in
+   * zes dagen vier keer verhuisd naar de deur die nog openstond, en dit is de
+   * enige die daarna nog over was.
+   *
+   * Let op bij het beoordelen van een storing: gaat er hier iets mis met de
+   * BotID-controle, dan kan niemand meer afrekenen. Dat is het duurste geval
+   * in deze codebase, en de reden dat deze route in de PR apart is nagemeten.
+   */
+  if ((await checkBotId()).isBot) {
+    console.warn('[checkout] BotID: verzoek geweigerd.');
+    return new Response(JSON.stringify({
+      error: 'We konden dit verzoek niet verwerken. Probeer het opnieuw vanaf de site.',
+    }), { status: 403 });
+  }
 
   const sb = getSupabaseAdmin();
   if (!sb) {
