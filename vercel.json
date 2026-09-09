@@ -252,7 +252,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://www.googletagmanager.com https://www.google-analytics.com https://googleads.g.doubleclick.net https://www.google.com https://www.google.nl; font-src 'self'; connect-src 'self' https://api.pdok.nl https://va.vercel-scripts.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://stats.g.doubleclick.net; form-action 'self'; frame-src 'self' https://www.googletagmanager.com https://td.doubleclick.net; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://www.googletagmanager.com https://www.google-analytics.com https://googleads.g.doubleclick.net https://www.google.com https://www.google.nl; font-src 'self'; connect-src 'self' https://api.pdok.nl https://va.vercel-scripts.com https://www.googletagmanager.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://stats.g.doubleclick.net; form-action 'self'; frame-src 'self' https://www.googletagmanager.com https://td.doubleclick.net; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
         }
       ]
     },
