@@ -257,5 +257,25 @@ const gtmId = !preview ? (import.meta.env.PUBLIC_GTM_ID || '') : '';
     if (document.readyState !== 'loading') markReloadLinks();
     else document.addEventListener('DOMContentLoaded', markReloadLinks, { once: true });
   </script>
+
+  <script>
+    /**
+     * BotID: de clienthelft. Hangt aan elk verzoek naar een pad uit
+     * BOTID_PADEN een kenmerk dat de route daarna met `checkBotId()`
+     * controleert.
+     *
+     * Bewust geen `onPageReady`: dit bindt niets aan de DOM en hoeft niet per
+     * paginaweergave opnieuw. Onder de ClientRouter draait een module-script
+     * één keer per sitebezoek, en dat is precies wat hier moet.
+     *
+     * De lijst staat in src/lib/botid-routes.ts, want de route en deze regel
+     * zijn twee helften van dezelfde controle. Loopt er één uit de pas, dan
+     * faalt `checkBotId()` en krijgt een echte bezoeker een 403.
+     */
+    import { initBotId } from 'botid/client/core';
+    import { BOTID_PADEN } from '../lib/botid-routes';
+
+    initBotId({ protect: BOTID_PADEN });
+  </script>
 </body>
 </html>

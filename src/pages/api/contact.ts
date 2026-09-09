@@ -18,6 +18,8 @@ import { sendContactMessage, isMailConfigured } from '../../lib/mail';
 import { BUSINESS } from '../../lib/business';
 import { rateLimit, clientKey, tooManyRequests } from '../../lib/rate-limit';
 import { isFormulierPost, formulierVelden, geenFormulier } from '../../lib/formulierpost';
+import { checkBotId } from 'botid/server';
+import { geweigerdDoorBotId } from '../../lib/botid-routes';
 
 export const prerender = false;
 
@@ -42,6 +44,9 @@ export const POST: APIRoute = async ({ request }) => {
   if (!isFormulierPost(request)) {
     return geenFormulier('contact', request.headers.get('content-type') || '', 'error');
   }
+
+  // BotID ná de goedkope controle hierboven; zie src/lib/botid-routes.ts.
+  if ((await checkBotId()).isBot) return geweigerdDoorBotId('contact', 'error');
 
   let body;
   try {

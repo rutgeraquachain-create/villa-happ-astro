@@ -36,6 +36,8 @@ import {
 } from '../../lib/aanmeldrem';
 import { keurFoto, FOTO_MELDING, fotoPad } from '../../lib/herinnering-foto';
 import { isMultipartPost } from '../../lib/formulierpost';
+import { checkBotId } from 'botid/server';
+import { geweigerdDoorBotId } from '../../lib/botid-routes';
 
 export const prerender = false;
 
@@ -87,6 +89,11 @@ export const POST: APIRoute = async ({ request }) => {
     console.warn('[herinnering] Verzoek zonder multipart geweigerd:', contentType.slice(0, 40));
     return fout('Stuur je inzending via het formulier op de site.', 415);
   }
+
+  // BotID ná de goedkope controle hierboven; zie de toelichting in
+  // src/lib/botid-routes.ts. Hier hangt bovendien een nummer uit een oplage
+  // aan, en dat komt niet terug.
+  if ((await checkBotId()).isBot) return geweigerdDoorBotId('herinnering');
 
   let body;
   let foto: File | null = null;
