@@ -116,6 +116,26 @@ Met Tag Assistant en GA4 DebugView:
 
 Punt 6 en 9 zijn waar dit soort opstellingen in de praktijk stukgaat.
 
+> **Doe dit testscenario op de live site en met de console open.** Gemeten
+> 9 september 2026: elke `page_view` en elke `view_item` op villahapp.nl werd
+> geblokkeerd door onze eigen CSP, en er is nooit iets in GA4 aangekomen.
+>
+> ```
+> Connecting to 'https://region1.google-analytics.com/g/collect?...' violates
+> the following Content Security Policy directive: "connect-src ..."
+> ```
+>
+> GA4 verstuurt in Europa naar een regionaal adres, `region1.google-analytics.com`.
+> De CSP stond `www.google-analytics.com` en `*.analytics.google.com` toe, en dat
+> zijn allebei andere domeinen. `connect-src` staat sindsdien op
+> `https://*.google-analytics.com`, en `tests/csp-meting.test.ts` bewaakt dat.
+>
+> **Waarom niemand het zag:** een geblokkeerd meetverzoek geeft geen fout op de
+> server en geen lege grafiek die opvalt. Het staat alleen in de console van de
+> bezoeker. Tag Assistant en DebugView draaien bovendien vaak op een omgeving
+> zonder deze headers, en dan lijkt alles te werken. Controleer daarom altijd op
+> het echte domein.
+
 ---
 
 ## Importbestand voor GTM
