@@ -32,6 +32,34 @@ export interface Toestemmingen {
   magNaam: boolean;
 }
 
+/**
+ * De wachtrijsleutel van een inzendbevestiging.
+ *
+ * WAAROM DIT EEN EIGEN FUNCTIE IS
+ * Gemeten 9 september 2026. De sleutel was `herinnering:<nummer>`. Bij het
+ * opruimen van de botinzendingen van 7 en 8 september zijn die rijen verwijderd
+ * en is de nummerreeks teruggezet, terwijl de wachtrijrijen met hun sleutel
+ * bleven staan. De nummers HH-2026-0002 tot en met 0008 werden daarna opnieuw
+ * uitgegeven, elke sleutel botste op de unieke index, en de bevestigingsmail
+ * verdween met een 409 zonder dat iemand iets merkte. Drie echte deelnemers
+ * zagen hun nummer op de pagina en kregen nooit een mail.
+ *
+ * De uuid van een rij komt na een verwijdering nooit terug. Een nummer wel,
+ * zodra iemand de reeks terugzet.
+ *
+ * De terugval is er voor het geval de database de id niet meegeeft. Zonder die
+ * terugval zou de sleutel `herinnering:undefined` worden, en dan botst elke
+ * inzending met elke andere en gaat er nog maar één mail ooit uit. Dat is
+ * stiller en erger dan het probleem dat we hier repareren.
+ *
+ * De terugval gebruikt geen tijdstempel. `Date.now()` telt in milliseconden, en
+ * twee inzendingen binnen dezelfde milliseconde zouden dan alsnog botsen. Dat
+ * is precies dezelfde fout een laag dieper, en de toets viel er ook op om.
+ */
+export function inzendingSleutel(id: string | undefined, nummer: string): string {
+  return id ? `herinnering:${id}` : `herinnering:${nummer}:${crypto.randomUUID()}`;
+}
+
 export const ACTIE = {
   /** Waarde van de tegoedbon, in centen. */
   prijsCents: 7500,

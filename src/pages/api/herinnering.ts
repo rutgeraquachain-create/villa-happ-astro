@@ -29,7 +29,7 @@ import { getSiteOrigin } from '../../lib/site';
 import { authSecretOntbreekt } from '../../lib/order-token';
 import {
   ACTIE, isGesloten, naamGeldig, herinneringGeldig, nummerGeldig,
-  HERINNERING_MIN_WOORDEN, HERINNERING_MAX,
+  HERINNERING_MIN_WOORDEN, HERINNERING_MAX, inzendingSleutel,
 } from '../../lib/herinnering';
 import {
   magBevestigingVersturen, magInzendbevestigingVersturen, domeinGeweigerd,
@@ -179,7 +179,7 @@ export const POST: APIRoute = async ({ request }) => {
    * Het foto-veld wordt daarna bijgewerkt. Mislukt het uploaden, dan blijft de
    * inzending staan zonder foto en zegt het antwoord dat erbij.
    */
-  const { error } = await sb.from('herinneringen').insert({
+  const { data: rij, error } = await sb.from('herinneringen').insert({
     nummer,
     naam: body.naam.trim(),
     email,
@@ -187,7 +187,7 @@ export const POST: APIRoute = async ({ request }) => {
     mag_archief: body.magArchief,
     mag_naam: body.magNaam,
     nieuwsbrief: body.nieuwsbrief,
-  });
+  }).select('id').single();
 
   if (error) {
     // Unieke index op het adres: deze persoon deed al mee.
@@ -251,7 +251,21 @@ export const POST: APIRoute = async ({ request }) => {
         ontvanger: email,
         onderwerp: mail.subject,
         html: mail.html,
-        dedupeSleutel: `herinnering:${nummer}`,
+        /**
+         * Op de id van de rij en niet op het nummer.
+         *
+         * Gemeten 9 september 2026. De sleutel was `herinnering:<nummer>`. Bij
+         * het opruimen van de botinzendingen zijn die rijen verwijderd en is de
+         * teller teruggezet, terwijl de wachtrijrijen met hun sleutel bleven
+         * staan. De nummers HH-2026-0002 tot en met 0008 werden opnieuw
+         * uitgegeven, elke sleutel botste, en de bevestigingsmail verdween met
+         * een 409 zonder dat iemand iets zag. Drie echte deelnemers kregen een
+         * nummer te zien op de pagina en nooit een mail.
+         *
+         * Een uuid van een verwijderde rij komt nooit terug. Een nummer wel,
+         * zodra iemand de reeks terugzet.
+         */
+        dedupeSleutel: inzendingSleutel(rij?.id, nummer!),
       })
     : { vastgelegd: false };
 
