@@ -14,6 +14,7 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
+import { zetHeroKlikbaar } from './hero-klik';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -163,13 +164,16 @@ function initHeroCinema() {
         anticipatePin: 1,
         invalidateOnRefresh: true,
         refreshPriority: pinPrioriteit(hero),
-        onUpdate: (self) => { if (self.progress > 0.02) clearEntrance(); },
+        onUpdate: (self) => {
+          if (self.progress > 0.02) clearEntrance();
+          zetHeroKlikbaar(hero, self.progress);
+        },
       },
     });
 
     tl.to(img, { yPercent: -6, scale: 1.08, ease: 'none', duration: 1 }, 0);
     if (lines.length) tl.to(lines, { yPercent: -130, duration: 0.3, stagger: 0.05, ease: 'power1.in' }, 0);
-    tl.to('.vh-hero-bottom', { opacity: 0, y: -30, pointerEvents: 'none', duration: 0.22, ease: 'power1.in' }, 0)
+    tl.to('.vh-hero-bottom', { opacity: 0, y: -30, duration: 0.22, ease: 'power1.in' }, 0)
       .to(['.vh-viewfinder', '.vh-hero-scroll-cue', '.vh-hero-corner'], { opacity: 0, duration: 0.16 }, 0.05)
       .to(media, { clipPath: 'inset(11% 7% 27% 7% round 18px)', duration: 0.5, ease: 'power2.inOut' }, 0.3);
     // Overvloeien naar het archief terwijl het frame dichtklapt.
@@ -193,11 +197,12 @@ function initHeroCinema() {
       anticipatePin: 1,
       invalidateOnRefresh: true,
       refreshPriority: pinPrioriteit(hero),
+      onUpdate: (self) => { zetHeroKlikbaar(hero, self.progress); },
     },
   });
 
   tl.to(img, { yPercent: -8, ease: 'none', duration: 1 }, 0)
-    .to('.vh-hero-inner', { opacity: 0, y: -60, pointerEvents: 'none', duration: 0.22, ease: 'power1.in' }, 0)
+    .to('.vh-hero-inner', { opacity: 0, y: -60, duration: 0.22, ease: 'power1.in' }, 0)
     .to(['.vh-viewfinder', '.vh-seal', '.vh-hero-scroll-cue'], { opacity: 0, duration: 0.15 }, 0.04)
     .to(media, {
       clipPath: 'inset(15% 31% 23% 31% round 14px)',
