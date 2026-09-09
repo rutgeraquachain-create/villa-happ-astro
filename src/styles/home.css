@@ -380,6 +380,18 @@
 	transition: opacity 1s var(--vh-ease-out) 0.5s, transform 1s var(--vh-ease-out) 0.5s;
 }
 .vh-hero.is-ready .vh-hero-bottom { opacity: 1; transform: translateY(0); }
+
+/*
+ * Weggescrold: de hero vangt geen kliks meer.
+ *
+ * Deze klasse wordt gezet door `zetHeroKlikbaar()` in src/lib/motion.ts, vanuit
+ * de voortgang van de ScrollTrigger. Eerder stond `pointerEvents: 'none'` in de
+ * tween zelf, en dat schreef GSAP meteen bij de start weg in plaats van aan het
+ * eind. De heroknoppen waren daardoor altijd onklikbaar. Zie de toelichting bij
+ * die functie.
+ */
+.vh-hero.is-weggescrold .vh-hero-inner,
+.vh-hero.is-weggescrold .vh-hero-bottom { pointer-events: none; }
 .vh-hero-sub {
 	font-size: clamp(15px, 1.3vw, 18px);
 	line-height: 1.55;
