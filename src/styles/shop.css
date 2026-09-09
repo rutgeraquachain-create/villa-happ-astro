@@ -145,15 +145,9 @@
 .vh-contact-error.is-visible { display: block; }
 .vh-contact-error a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 
-/* Honeypot: buiten beeld maar wel invulbaar voor bots (niet display:none,
-   dat slaan sommige bots juist over) */
-.vh-hp {
-	position: absolute;
-	left: -9999px;
-	width: 1px;
-	height: 1px;
-	overflow: hidden;
-}
+/* De honeypot-regel stond hier en is naar base.css verhuisd. Reden staat daar:
+   de voettekst gebruikt hem en die staat op elke pagina, ook op pagina's die
+   dit winkelstijlblad niet laden. */
 .vh-contact-aside { display: grid; gap: 30px; padding-top: 6px; }
 .vh-contact-done { padding: 20px 0; }
 .vh-contact-done-mark { color: var(--vh-accent-ink); font-size: 26px; margin: 0 0 12px; }
