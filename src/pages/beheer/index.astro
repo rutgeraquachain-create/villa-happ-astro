@@ -15,6 +15,7 @@ import { BEHEER_COOKIE, beheerToegang, beheerGeconfigureerd } from '../../lib/be
 import { getSupabaseAdmin } from '../../lib/supabase';
 import { leesOrders, leesKerncijfers, BEHEER_HEADERS } from '../../lib/beheer';
 import { wachtrijStatus } from '../../lib/outbox';
+import { leesCampagneStand, beginVanDagNL, vraagtAandacht } from '../../lib/campagnestand';
 import { STATUS_KORT, STATUS_TOON, euro, type OrderStatus } from '../../lib/order-status';
 
 for (const [k, v] of Object.entries(BEHEER_HEADERS)) Astro.response.headers.set(k, v);
@@ -31,11 +32,18 @@ let lijst = { rijen: [] as any[], totaal: 0, pagina: 1, paginas: 1 };
 let cijfers = { teVerzenden: 0, onderweg: 0, wachtOpBetaling: 0, omzet30: 0 };
 let outbox = { wachtendVooraf: 0, oudsteSecondenVooraf: 0, opgegeven: 0, nietAfgeleverd: 0 };
 
+/**
+ * De campagnestand van vandaag. `null` betekent dat de telling niet gelukt is,
+ * en dat is iets anders dan nul: zie de toelichting in lib/campagnestand.ts.
+ */
+let stand = null as Awaited<ReturnType<typeof leesCampagneStand>>;
+
 if (ingelogd && sb) {
-  [lijst, cijfers, outbox] = await Promise.all([
+  [lijst, cijfers, outbox, stand] = await Promise.all([
     leesOrders(sb, { status: filterStatus || undefined, zoek: zoek || undefined, pagina }),
     leesKerncijfers(sb),
     wachtrijStatus(),
+    leesCampagneStand(sb, beginVanDagNL()),
   ]);
 }
 
@@ -82,6 +90,32 @@ const datum = (iso: string) =>
           <b>{euro(cijfers.omzet30)}</b><span>Omzet 30 dagen</span>
         </div>
       </div>
+
+      {/**
+        * De campagneregel van vandaag.
+        *
+        * Drie tellingen naast elkaar, want alleen het verschil ertussen zegt
+        * iets. Ingezonden zonder afgeleverd betekent dat deelnemers geen
+        * bevestiging krijgen. Aangemeld zonder bevestigd betekent dat de dubbele
+        * opt-in niet rondloopt, en zonder die klik telt een aanmelding niet mee.
+        *
+        * "Afgeleverd" komt uit de Resend-webhook en niet uit de wachtrij. Dat
+        * onderscheid is het hele punt: de wachtrij weet alleen dat hij een mail
+        * heeft aangenomen.
+        */}
+      <p class={`bh-melding ${stand && vraagtAandacht(stand) ? 'is-let' : ''}`} id="bh-campagnestand">
+        {!stand && 'De campagnestand van vandaag was niet te lezen. Dat is niet hetzelfde als nul.'}
+        {stand && (
+          <>
+            <b>Vandaag:</b>{' '}
+            {stand.ingezonden} ingezonden ·{' '}
+            {stand.aangemeld} aangemeld, waarvan {stand.bevestigd} bevestigd ·{' '}
+            {stand.verstuurd} mail verstuurd, {stand.afgeleverd} afgeleverd volgens Resend
+            {stand.zonderStempel > 0 && ` (${stand.zonderStempel} nog zonder stempel)`}
+            {vraagtAandacht(stand) && '. Kijk hiernaar: er gaat iets in stilte mis.'}
+          </>
+        )}
+      </p>
 
       {(outbox.wachtendVooraf > 0 || outbox.opgegeven > 0) && (
         <p class={`bh-melding ${outbox.opgegeven ? 'is-fout' : 'is-let'}`} id="bh-outbox-melding">

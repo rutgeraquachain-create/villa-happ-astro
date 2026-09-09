@@ -40,6 +40,7 @@ const BUITEN_BEELD: Record<string, string> = {
   'beheer/actie.ts': 'Achter de beheersessie plus een CSRF-token in de body.',
   'beheer/outbox.ts': 'Achter de beheersessie plus een CSRF-token in de body.',
   'beheer/voorraad.ts': 'Achter de beheersessie plus een CSRF-token in de body.',
+  'beheer/tegoedbon.ts': 'Achter de beheersessie plus een CSRF-token in de body.',
   /**
    * De kassa stuurt een winkelmandje als JSON. Die hoort hier op termijn ook
    * bij, maar de afweging is een andere: hier hangt geen mail aan een adres dat

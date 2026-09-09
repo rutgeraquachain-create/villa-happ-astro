@@ -343,8 +343,10 @@ Wat je na de eerste echte bestelling controleert:
 Mail loopt via een outbox: elke mail wordt eerst vastgelegd in
 `uitgaande_mail` en pas daarna verstuurd. Blijft er iets op `wacht` staan, dan
 gaat het alsnog de deur uit bij de volgende cron of via "Nu verwerken" in
-`/beheer`. Vercel Hobby staat één cron per dag toe; bij drops van honderden
-stuks wil je Pro met een cron per uur.
+`/beheer`. Het project draait op Vercel Pro en de cron staat sinds 9 september
+2026 op elk kwartier (`*/15 * * * *`). Daarvoor was het één keer per dag om
+08:00, het maximum op Hobby, en dat is te traag voor een actie van drie dagen:
+een mail die bij het wegschrijven niet weg kon lag dan tot 24 uur stil.
 
 ---
 

@@ -23,6 +23,7 @@ import { getSupabaseAdmin } from '../../../lib/supabase';
 import { getMollie } from '../../../lib/mollie';
 import { mapMollieStatus } from '../../../lib/checkout-logic';
 import { finalizeInventory, releaseInventory } from '../../../lib/inventory';
+import { wisselBonIn, geefBonVrij } from '../../../lib/tegoedbon';
 import {
   renderOrderConfirmation,
   renderNieuweBestelling,
@@ -119,11 +120,23 @@ export const POST: APIRoute = async ({ request }) => {
       const ok = await finalizeInventory(sb, item.variant_id, item.quantity);
       if (!ok) console.error('[webhook] finalize_inventory faalde voor variant', item.variant_id);
     }
+    /**
+     * Een tegoedbon volgt de voorraad.
+     *
+     * Bij het afrekenen is hij geclaimd, niet ingewisseld. Pas hier staat vast
+     * dat er betaald is, en pas dan is de bon op. Beide functies zijn
+     * idempotent (`WHERE ingewisseld_op IS NULL`), want Mollie mag deze webhook
+     * meer dan eens aanroepen.
+     */
+    await wisselBonIn(sb, order.id);
   } else if (transition.action === 'release') {
     for (const item of order.order_items || []) {
       const ok = await releaseInventory(sb, item.variant_id, item.quantity);
       if (!ok) console.error('[webhook] release_inventory faalde voor variant', item.variant_id);
     }
+    // Betaling ging niet door: de bon hoort weer bruikbaar te zijn. Zonder dit
+    // kost één afgebroken afrekening de winnaar zijn prijs.
+    await geefBonVrij(sb, order.id);
   }
 
   await sb.from('orders').update({

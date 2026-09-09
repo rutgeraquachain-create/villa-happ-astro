@@ -22,22 +22,72 @@
  * uur de deur uit mag, ongeacht van wie het verzoek komt.
  *
  * Die grens beschermt niet de database maar het domein. Loopt hij vol, dan wordt
- * de aanmelding wel vastgelegd maar de mail niet verstuurd; de bezoeker krijgt
- * hetzelfde antwoord als anders. Een echte aanmelder verliest dan zijn
- * bevestigingsmail, en dat is vervelend. Honderd mails naar vreemden is erger.
+ * de aanmelding wel vastgelegd maar de mail niet verstuurd. Een echte aanmelder
+ * verliest dan zijn bevestigingsmail, en dat is vervelend. Honderd mails naar
+ * vreemden is erger.
+ *
+ * WAT DE BEZOEKER TE HOREN KRIJGT, SINDS 9 SEPTEMBER 2026
+ * Tot die dag kreeg hij exact hetzelfde antwoord als iemand van wie de mail wél
+ * uitging: "kijk in je mail". Dat is de faalvorm die deze site vijf keer op één
+ * dag opleverde, namelijk een verzendkant die zichzelf geslaagd verklaart. Wie
+ * dan in zijn postvak niets vindt, denkt dat hij zich vergist heeft. De remmen
+ * geven daarom nu `MELDING_REM` terug, en dat is geen foutmelding maar een
+ * eerlijke: je staat genoteerd, de mail komt niet nu.
+ *
+ * Dit lekt niets over het adres. De rem is een toestand van de hele site en
+ * zegt niets over de vraag of dit adres al op de lijst stond.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { ACTIE } from './herinnering';
+
+/**
+ * Tot wanneer de verhoogde grenzen gelden.
+ *
+ * Dezelfde datum als de sluiting van de herinneringsactie, uit één bron, plus
+ * een dag lucht voor de naloop. Zie `campagneVenster()` hieronder: dit is de
+ * sluitvoorwaarde die deze verruiming vanzelf laat opvallen zodra hij niet meer
+ * nodig is.
+ */
+export const CAMPAGNE_TOT = new Date(Date.parse(ACTIE.sluit) + 24 * 60 * 60_000);
+
+/**
+ * Staan de verhoogde grenzen nog open?
+ *
+ * Een tijdelijk ruimere instelling geeft uit zichzelf geen signaal wanneer hij
+ * overbodig wordt; hij blijft gewoon staan. Vandaar een expliciete einddatum en
+ * een toets die omvalt zodra die datum voorbij is en de grenzen nog verhoogd
+ * staan. Dat is het signaal om ze terug te zetten.
+ */
+export function campagneVenster(nu: Date = new Date()): boolean {
+  return nu.getTime() <= CAMPAGNE_TOT.getTime();
+}
 
 /**
  * Hoeveel bevestigingsmails er per uur de deur uit mogen, over de hele site.
  *
- * Twaalf is ruim boven wat dit merk organisch haalt (vier aanmeldingen in de
- * hele maand augustus) en ver onder wat de aanval deed (33 op één dag). Gaat de
- * campagne straks lopen en komen er echt pieken, dan mag dit omhoog; noteer er
- * dan bij op grond van welke meting.
+ * WAAROM DIT VAN 12 NAAR 60 GING, OP 9 SEPTEMBER 2026
+ * Twaalf was gekozen op de organische stand: vier aanmeldingen in de hele maand
+ * augustus, tegen 33 op één dag tijdens de aanval. Voor de campagne van oktober
+ * klopt dat getal niet meer. De aankondiging gaat via social, en één post kan in
+ * één uur meer dan twaalf mensen naar het formulier sturen. Wat er dan gebeurde:
+ * de aanmelding werd vastgelegd, de bevestigingsmail ging niet uit, en de
+ * bezoeker kreeg exact hetzelfde antwoord als iemand die zijn mail wél kreeg.
+ * Zonder die bevestiging is er geen dubbele opt-in en telt de aanmelding niet
+ * mee. De rem kneep dus precies de maat af waarop deze campagne gestuurd wordt.
+ *
+ * Zestig is geen meting maar een afweging: het past een realistische piek uit
+ * één social post, en het houdt een bot die er alsnog doorheen komt op zestig
+ * mails per uur in plaats van honderden. De echte poorten ervóór zijn de
+ * formuliercontrole en BotID; dit is de bodem daaronder.
+ *
+ * Na `CAMPAGNE_TOT` hoort dit terug naar twaalf. `tests/aanmeldrem.test.ts`
+ * valt om zodra die datum voorbij is en dit getal nog op de campagnestand staat.
  */
-export const MAX_BEVESTIGINGEN_PER_UUR = 12;
+export const MAX_BEVESTIGINGEN_PER_UUR = 60;
+
+/** De stand van vóór de campagne, waar we na `CAMPAGNE_TOT` naar terug gaan. */
+export const RUSTSTAND_PER_UUR = 12;
 
 /**
  * Adressen waar dit merk niets te zoeken heeft.
@@ -110,6 +160,18 @@ export async function magSoortVersturen(
   return !vol;
 }
 
+/**
+ * Wat de bezoeker leest als de rem dichtstaat.
+ *
+ * Eén zin, en hij moet drie dingen waarmaken: je invoer is bewaard, de mail komt
+ * niet nu, en er is iets dat je zelf kunt doen. Geen excuus en geen foutcode:
+ * een bezoeker die dit leest heeft niets fout gedaan.
+ */
+export const MELDING_REM =
+  'We hebben je gegevens. Er gaan op dit moment veel mails tegelijk uit, ' +
+  'dus je bevestigingsmail kan een uur op zich laten wachten. Komt hij niet, ' +
+  'meld je dan later opnieuw aan.';
+
 /** De rem op de nieuwsbriefbevestiging. Zie `MAX_BEVESTIGINGEN_PER_UUR`. */
 export async function magBevestigingVersturen(sb: SupabaseClient): Promise<boolean> {
   return magSoortVersturen(sb, 'nieuwsbrief-bevestiging', MAX_BEVESTIGINGEN_PER_UUR);
@@ -120,10 +182,12 @@ export async function magBevestigingVersturen(sb: SupabaseClient): Promise<boole
  *
  * Deze mail ging als enige ongeremd naar buiten, en dat bleek te tellen: de
  * acht botinzendingen van 8 september leverden zestien mails op, want elke
- * inzending stuurde er twee. Twaalf is ruim boven wat deze actie organisch
- * haalt en ver onder wat een bot in een nacht doet.
+ * inzending stuurde er twee. Stond op twaalf, en gaat mee omhoog met
+ * `MAX_BEVESTIGINGEN_PER_UUR` om dezelfde reden: dit is de mail die een
+ * deelnemer zijn inzendnummer geeft, en zonder dat nummer weet hij niet of zijn
+ * inzending is aangekomen. Zie de toelichting daar.
  */
-export const MAX_INZENDINGEN_PER_UUR = 12;
+export const MAX_INZENDINGEN_PER_UUR = 60;
 
 export async function magInzendbevestigingVersturen(sb: SupabaseClient): Promise<boolean> {
   return magSoortVersturen(sb, 'herinnering-ontvangen', MAX_INZENDINGEN_PER_UUR);
