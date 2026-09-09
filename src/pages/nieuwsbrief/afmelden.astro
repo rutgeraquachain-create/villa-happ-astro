@@ -13,6 +13,10 @@
 export const prerender = false;
 
 import Base from '../../layouts/Base.astro';
+// De vh-page-klassen staan in shop.css; zonder deze regel valt de opmaak weg.
+// Zie de toelichting in bevestigen.astro. Deze pagina had dezelfde fout, en hier
+// weegt hij zwaarder: uitschrijven moet net zo makkelijk zijn als aanmelden.
+import '../../styles/shop.css';
 import { emailUitToken } from '../../lib/nieuwsbrief';
 import { BUSINESS } from '../../lib/business';
 

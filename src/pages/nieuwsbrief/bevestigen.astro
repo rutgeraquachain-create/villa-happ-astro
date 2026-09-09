@@ -20,6 +20,15 @@
 export const prerender = false;
 
 import Base from '../../layouts/Base.astro';
+/**
+ * De opmaakklassen `vh-page`, `vh-page-inner`, `vh-page-head` en `vh-page-title`
+ * staan in shop.css. Zonder deze regel gebruikt de pagina die namen wel en
+ * krijgt ze de opmaak niet: geen kader, geen marge, en de tekst loopt onder de
+ * vaste balk door. Gemeten 9 september 2026 op de live pagina, gevonden doordat
+ * iemand op de knop in zijn bevestigingsmail klikte en een kale pagina zag.
+ * Elke andere pagina met deze klassen importeert het bestand wel.
+ */
+import '../../styles/shop.css';
 import { emailUitToken } from '../../lib/nieuwsbrief';
 
 const token = Astro.url.searchParams.get('t');
@@ -79,9 +88,6 @@ const email = emailUitToken(token, 'aanmelding');
         </p>
       </div>
 
-      <p class="vh-acties">
-        <a href="/shop" class="vh-btn vh-btn--primary"><span>Bekijk de collectie</span></a>
-      </p>
     </div>
   </section>
 </Base>

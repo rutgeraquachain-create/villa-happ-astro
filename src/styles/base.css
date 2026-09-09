@@ -179,3 +179,26 @@ p {
 	margin: 0 auto;
 	padding: 0 var(--vh-gutter);
 }
+
+/*
+ * Honeypot: buiten beeld maar wel invulbaar voor bots. Bewust geen
+ * display:none, want dat slaan sommige bots juist over.
+ *
+ * WAAROM DEZE REGEL HIER STAAT EN NIET IN shop.css
+ * Daar stond hij tot 9 september 2026, en de voettekst gebruikt hem. De
+ * voettekst staat op elke pagina, ook op pagina's die het winkelstijlblad niet
+ * laden. Op de homepage stonden daardoor twee velden met het label "Bedrijf
+ * (niet invullen)" gewoon zichtbaar in beeld, 300 bij 69 en 298 bij 46 pixels.
+ * Gemeten op de live site.
+ *
+ * Twee dingen gingen daardoor mis tegelijk: het ziet er slordig uit, en een
+ * bezoeker die het veld invult wordt stilletjes als bot behandeld en komt nooit
+ * op de lijst. base.css wordt door Base.astro geladen en dus door elke pagina.
+ */
+.vh-hp {
+	position: absolute;
+	left: -9999px;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}
