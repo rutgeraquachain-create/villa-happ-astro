@@ -163,17 +163,16 @@ const registered = BUSINESS.businessAddress;
     // pagina dat eerlijk en biedt ze een mailadres als alternatief.
     let data: any = null;
     try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: String(fd.get('name') || ''),
-          email: String(fd.get('email') || ''),
-          subject: String(fd.get('subject') || 'Overig'),
-          message: String(fd.get('message') || ''),
-          company: String(fd.get('company') || ''),
-        }),
-      });
+      // Als formulier en niet als JSON; zie src/lib/formulierpost.ts.
+      const verzending = new FormData();
+      verzending.set('name', String(fd.get('name') || ''));
+      verzending.set('email', String(fd.get('email') || ''));
+      verzending.set('subject', String(fd.get('subject') || 'Overig'));
+      verzending.set('message', String(fd.get('message') || ''));
+      const hp = String(fd.get('company') || '');
+      if (hp) verzending.set('company', hp);
+
+      const res = await fetch('/api/contact', { method: 'POST', body: verzending });
       data = await res.json().catch(() => null);
     } catch { /* netwerkfout: hieronder afgehandeld */ }
 

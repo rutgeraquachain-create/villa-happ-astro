@@ -15,6 +15,7 @@ import { getSupabaseAdmin } from '../../../lib/supabase';
 import { rateLimit, clientKey, tooManyRequests } from '../../../lib/rate-limit';
 import { ClaimSchema, nextNumber, EDITION } from '../../../lib/atelier';
 import { domeinGeweigerd, schoneBron } from '../../../lib/aanmeldrem';
+import { isFormulierPost } from '../../../lib/formulierpost';
 
 export const prerender = false;
 
@@ -39,10 +40,8 @@ export const POST: APIRoute = async ({ request }) => {
    * geldt die controle niet, en dat was precies de weg naar binnen. De pagina
    * stuurt sinds deze wijziging een formulier, dus dit kost de bezoeker niets.
    */
-  const contentType = request.headers.get('content-type') || '';
-  const isFormulier = contentType.includes('multipart/form-data')
-    || contentType.includes('application/x-www-form-urlencoded');
-  if (!isFormulier) {
+  if (!isFormulierPost(request)) {
+    const contentType = request.headers.get('content-type') || '';
     console.warn('[atelier] Claim zonder formulier geweigerd:', contentType.slice(0, 40));
     return new Response(JSON.stringify({
       error: 'Claim je nummer via het formulier op de site.',

@@ -455,6 +455,10 @@ const pdpData = {
             <p class="vh-mono">Mail me als <b id="vh-pdp-notify-size">deze maat</b> terug is</p>
             <form id="vh-pdp-notify-form">
               <input type="email" required placeholder="jouw@email.nl" id="vh-pdp-notify-email" autocomplete="email" aria-label="E-mailadres voor voorraadmelding" />
+              <div class="vh-hp" aria-hidden="true">
+                <label for="vh-pdp-notify-bedrijf">Bedrijf (niet invullen)</label>
+                <input id="vh-pdp-notify-bedrijf" name="bedrijf" type="text" tabindex="-1" autocomplete="off" />
+              </div>
               <button type="submit" class="vh-btn vh-btn--ghost"><span>Houd me op de hoogte</span></button>
             </form>
             <p class="vh-pdp-notify-done" id="vh-pdp-notify-done" hidden>Top, we mailen je zodra deze maat er weer is.</p>
@@ -540,6 +544,10 @@ const pdpData = {
           <div class="vh-reviews-field">
             <label for="vh-rev-text">Je ervaring</label>
             <textarea id="vh-rev-text" rows="3" required maxlength="500" placeholder="Hoe zit het, hoe voelt het, zou je het aanraden?"></textarea>
+          </div>
+          <div class="vh-hp" aria-hidden="true">
+            <label for="vh-rev-bedrijf">Bedrijf (niet invullen)</label>
+            <input id="vh-rev-bedrijf" name="bedrijf" type="text" tabindex="-1" autocomplete="off" />
           </div>
           <button type="submit" class="vh-btn vh-btn--accent"><span>Plaats review</span></button>
           <p class="vh-reviews-note vh-mono" id="vh-reviews-note">Demo: reviews worden lokaal in je browser bewaard tot de database live staat.</p>
@@ -921,11 +929,17 @@ const pdpData = {
     const size = (notifySize.textContent || '').replace(/^maat\s+/i, '');
     let saved = false;
     try {
-      const res = await fetch('/api/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug: data.slug, size, email: notifyEmail.value }),
-      });
+      // Als formulier en niet als JSON; zie src/lib/formulierpost.ts.
+      const melding = new FormData();
+      melding.set('slug', data.slug);
+      melding.set('size', size);
+      melding.set('email', notifyEmail.value);
+      // Honeypot. Alleen meesturen als hij gevuld is; de route slikt de melding
+      // dan stil. Zonder het veld in de HTML controleerde de route iets dat
+      // geen bot ooit kon invullen.
+      const notifyPot = (document.getElementById('vh-pdp-notify-bedrijf') as HTMLInputElement | null)?.value;
+      if (notifyPot) melding.set('bedrijf', notifyPot);
+      const res = await fetch('/api/notify', { method: 'POST', body: melding });
       saved = res.ok;
     } catch {}
     if (!saved) {
@@ -1146,11 +1160,15 @@ const pdpData = {
       let toastMsg = 'Bedankt voor je review ✦';
       if (serverMode) {
         try {
-          const res = await fetch('/api/reviews', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ slug: data.slug, ...review }),
-          });
+          // Als formulier en niet als JSON; zie src/lib/formulierpost.ts.
+          const inzending = new FormData();
+          inzending.set('slug', data.slug);
+          inzending.set('name', String(review.name ?? ''));
+          inzending.set('rating', String(review.rating ?? ''));
+          inzending.set('text', String(review.text ?? ''));
+          const revPot = (document.getElementById('vh-rev-bedrijf') as HTMLInputElement | null)?.value;
+          if (revPot) inzending.set('bedrijf', revPot);
+          const res = await fetch('/api/reviews', { method: 'POST', body: inzending });
           if (!res.ok) throw new Error();
           toastMsg = 'Bedankt! Je review verschijnt na een korte controle ✦';
         } catch {

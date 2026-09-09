@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { sendContactMessage, isMailConfigured } from '../../lib/mail';
 import { BUSINESS } from '../../lib/business';
 import { rateLimit, clientKey, tooManyRequests } from '../../lib/rate-limit';
+import { isFormulierPost, formulierVelden, geenFormulier } from '../../lib/formulierpost';
 
 export const prerender = false;
 
@@ -37,9 +38,21 @@ const json = (body: unknown, status = 200) =>
 export const POST: APIRoute = async ({ request }) => {
   if (!rateLimit(clientKey(request, 'contact'), 3)) return tooManyRequests();
 
+  // Alleen via het formulier. Zie src/lib/formulierpost.ts.
+  if (!isFormulierPost(request)) {
+    return geenFormulier('contact', request.headers.get('content-type') || '', 'error');
+  }
+
   let body;
   try {
-    body = Schema.parse(await request.json());
+    const velden = await formulierVelden(request);
+    body = Schema.parse({
+      name: velden.name ?? '',
+      email: velden.email ?? '',
+      subject: velden.subject ?? '',
+      message: velden.message ?? '',
+      company: velden.company,
+    });
   } catch {
     return json({ success: false, error: 'Controleer je gegevens en probeer het opnieuw.' }, 400);
   }

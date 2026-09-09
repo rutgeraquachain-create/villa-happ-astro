@@ -35,6 +35,7 @@ import {
   magBevestigingVersturen, magInzendbevestigingVersturen, domeinGeweigerd,
 } from '../../lib/aanmeldrem';
 import { keurFoto, FOTO_MELDING, fotoPad } from '../../lib/herinnering-foto';
+import { isMultipartPost } from '../../lib/formulierpost';
 
 export const prerender = false;
 
@@ -81,8 +82,8 @@ export const POST: APIRoute = async ({ request }) => {
    * dus niets aan de bezoeker en zet de deur dicht voor wie het adres
    * rechtstreeks aanroept.
    */
-  const contentType = request.headers.get('content-type') || '';
-  if (!contentType.includes('multipart/form-data')) {
+  if (!isMultipartPost(request)) {
+    const contentType = request.headers.get('content-type') || '';
     console.warn('[herinnering] Verzoek zonder multipart geweigerd:', contentType.slice(0, 40));
     return fout('Stuur je inzending via het formulier op de site.', 415);
   }

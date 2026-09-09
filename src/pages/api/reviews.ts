@@ -14,6 +14,7 @@ import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { getSupabaseAdmin } from '../../lib/supabase';
 import { rateLimit, clientKey, tooManyRequests } from '../../lib/rate-limit';
+import { isFormulierPost, formulierVelden, geenFormulier } from '../../lib/formulierpost';
 
 export const prerender = false;
 
@@ -61,12 +62,29 @@ export const GET: APIRoute = async ({ url }) => {
 export const POST: APIRoute = async ({ request }) => {
   if (!rateLimit(clientKey(request, 'reviews'), 3)) return tooManyRequests();
 
+  // Alleen via het formulier, en vóór de database. Zie src/lib/formulierpost.ts.
+  if (!isFormulierPost(request)) {
+    return geenFormulier('reviews', request.headers.get('content-type') || '', 'error');
+  }
+
   const sb = getSupabaseAdmin();
   if (!sb) return new Response(JSON.stringify({ error: 'no-db' }), { status: 503 });
 
   let body;
   try {
-    body = PostSchema.parse(await request.json());
+    const velden = await formulierVelden(request);
+    // Honeypot: gevuld betekent bot. Doen alsof het gelukt is en niets opslaan.
+    if (velden.bedrijf) {
+      console.warn('[reviews] Honeypot gevuld; review genegeerd.');
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
+    body = PostSchema.parse({
+      slug: velden.slug,
+      name: velden.name ?? '',
+      // Een formulierveld is altijd tekst; het schema wil een getal.
+      rating: Number(velden.rating),
+      text: velden.text ?? '',
+    });
   } catch {
     return new Response(JSON.stringify({ error: 'Ongeldige review.' }), { status: 400 });
   }

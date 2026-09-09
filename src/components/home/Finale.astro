@@ -98,11 +98,17 @@ import Pic from '../Pic.astro';
       }, 380);
 
       try {
-        const res = await fetch('/api/newsletter', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, source: 'finale' }),
-        });
+        /**
+         * Als formulier en niet als JSON. Zie de toelichting in
+         * src/pages/api/newsletter.ts: op JSON greep Astro's herkomstcontrole
+         * niet, en daar kwam de bot doorheen.
+         */
+        const verzending = new FormData();
+        verzending.set('email', email);
+        verzending.set('source', 'finale');
+        if (pot?.value) verzending.set('bedrijf', pot.value);
+
+        const res = await fetch('/api/newsletter', { method: 'POST', body: verzending });
         const data = await res.json();
         const gelukt = res.ok && data.success;
         if (msg) {

@@ -122,7 +122,11 @@ describe('de inzendroute accepteert alleen een formulier', () => {
    * multipart, dus dit pad sluiten kost de bezoeker niets.
    */
   it('weigert alles wat geen multipart is', () => {
-    expect(route).toContain("multipart/form-data");
+    // De controle zelf staat sinds 9 september in src/lib/formulierpost.ts, met
+    // een eigen toets die alle publieke POST-routes langsloopt. Hier blijft
+    // alleen staan dát deze route hem gebruikt, en in de strenge vorm: er komt
+    // een foto mee, dus urlencoded hoort er ook niet in.
+    expect(route).toContain('isMultipartPost');
     expect(route).toContain('Stuur je inzending via het formulier op de site.');
   });
 
