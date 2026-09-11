@@ -32,7 +32,30 @@ loopt via één GTM-container. Een tweede meetlijn ernaast levert dubbele
 | `add_to_cart` | stuk toegevoegd aan mandje | nee | nee | prijs × aantal |
 | `begin_checkout` | checkoutpagina geladen met een gevuld mandje | nee | nee | subtotaal |
 | `purchase` | **bevestigde** betaling op de bedanktpagina | **ja** | **ja** | ordertotaal |
-| `generate_lead` | contactformulier of merkaanmelding succesvol verstuurd | **ja** | optioneel | — |
+| `generate_lead` | een formulier succesvol verstuurd; `lead_type` zegt welk | **ja** | optioneel | — |
+
+`lead_type` kent vijf waarden: `contact`, `merkaanmelding`, `verkooppunt-aanvraag`,
+`herinnering` en `nieuwsbrief`. De laatste twee kwamen erbij op 11 september 2026
+voor de campagne van oktober. Tot die dag vuurde een ingestuurde herinnering of
+een nieuwsbriefaanmelding niets af: GA4 zag wel hoeveel mensen er via LinkedIn
+binnenkwamen, maar niet hoeveel er iets deden.
+
+**Twee dingen in GA4 zelf, die niet in de code staan:**
+
+1. **Beheer → Aangepaste definities → Dimensie maken:** `lead_type`, bereik
+   *Gebeurtenis*. Zonder die dimensie komen alle leads op één hoop.
+2. **Beheer → Belangrijke gebeurtenissen:** `purchase` en `generate_lead`
+   aangevinkt.
+
+Stuur je `generate_lead` door naar Google Ads, filter dan op `lead_type`. Een
+nieuwsbriefaanmelding is geen commerciële lead, en Ads die daarop biedt koopt
+aanmeldingen in plaats van klanten.
+
+**Een adres dat al op de lijst stond telt niet.** De route geeft dan
+`alOpLijst: true` mee en de pagina meet niets. Andersom, een vlag op de échte
+aanmeldingen, mag niet: de honeypot en een geweigerd domein antwoorden met
+opzet exact als een geslaagde aanmelding, en zo'n vlag zou verraden wanneer
+een bot gevangen is.
 
 ### Waarom `purchase` pas bij een bevestigde betaling
 
@@ -103,7 +126,10 @@ worden — let daarop als er ooit een redirect of URL-opschoner bij komt.
 
 Met Tag Assistant en GA4 DebugView:
 
-1. Eerste bezoek → banner verschijnt, geen enkele hit vóór de keuze
+1. Eerste bezoek → banner verschijnt, vóór de keuze alleen cookieloze pings
+   (`gcs=G100` in de `/g/collect`-aanvraag), geen cookies. Stond hier eerst als
+   "geen enkele hit", en dat is niet hoe Consent Mode v2 werkt: nagemeten op
+   11 september 2026 gaat er één `page_view` met `G100` uit.
 2. Alleen noodzakelijk → signalen blijven `denied`, cookieloze pings
 3. Analytics toestaan → `analytics_storage` op `granted`
 4. Advertentie toestaan → alle vier op `granted`
@@ -135,6 +161,47 @@ Punt 6 en 9 zijn waar dit soort opstellingen in de praktijk stukgaat.
 > bezoeker. Tag Assistant en DebugView draaien bovendien vaak op een omgeving
 > zonder deze headers, en dan lijkt alles te werken. Controleer daarom altijd op
 > het echte domein.
+
+## Herkomst in de eigen database
+
+GA4 weet per bezoek waar iemand vandaan kwam, maar kent geen bestelnummer en
+geen aanmelding die later wel of niet bevestigd werd. Sinds 11 september 2026
+staat de herkomst daarom ook op de rij zelf, in `herkomst` (de signalen) en
+`herkomst_kanaal` (het uitgerekende kanaal), op `orders`,
+`newsletter_subscribers` en `herinneringen`. De regels staan in
+`src/lib/herkomst.ts`.
+
+**Meet bij het begin van het bezoek, niet bij het versturen.** Wie eerst
+rondkijkt, heeft bij het versturen de eigen site als verwijzer en is de echte
+bron kwijt. `src/lib/herkomst-client.ts` legt daarom de ingang vast op de eerste
+pagina. Zonder toestemming voor statistiek alleen in het geheugen, en dat
+overleeft geen volledige pageload. De homepage en het atelier openen elke link
+zo; wie daar landt en doorklikt, komt zonder toestemming binnen als `ONBEKEND`.
+
+**Link een campagne daarom rechtstreeks naar de pagina van de actie**, met de
+utm-velden in de link:
+
+```
+https://villahapp.nl/herinnering?utm_source=linkedin&utm_medium=social&utm_campaign=herinnering-2026
+```
+
+Dan staat alles op de pagina zelf en is er geen opslag nodig. De in-app
+browser van LinkedIn stuurt vaak geen verwijzer mee; zonder utm-velden telt zo'n
+bezoek dus als `DIRECT`.
+
+**Het rapport is één query:**
+
+```sql
+select herkomst_kanaal, herkomst->>'utm_source' as bron, count(*)
+from herinneringen
+where herkomst_kanaal is not null
+group by 1, 2 order by 3 desc;
+```
+
+`NULL` is van vóór de meting en is iets anders dan `DIRECT` of `ONBEKEND`; die
+twee zijn gemeten uitkomsten. Houd GA4-cijfers en deze cijfers in aparte
+tabellen: ze tellen niet hetzelfde (bezoeken tegenover rijen), en één tabel uit
+twee bronnen levert regels op waarvan de kolommen niet bij elkaar horen.
 
 ---
 

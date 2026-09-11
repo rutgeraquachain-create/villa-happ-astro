@@ -25,6 +25,7 @@ import { begrens, clientSleutel, teVeelVerzoeken } from '../../../lib/rate-limit
 import { maakOrderToken, authSecretOntbreekt } from '../../../lib/order-token';
 import { logGebeurtenis } from '../../../lib/order-events';
 import { claimBon } from '../../../lib/tegoedbon';
+import { herkomstKolommen } from '../../../lib/herkomst';
 import { checkBotId } from 'botid/server';
 
 export const prerender = false;
@@ -209,6 +210,7 @@ export const POST: APIRoute = async ({ request }) => {
     total_cents: total,
     shipping_address: body.shipping,
     billing_address: body.shipping,
+    ...herkomstKolommen(body.herkomst),
   }).select().single();
 
   /**

@@ -59,6 +59,8 @@ import Pic from '../Pic.astro';
 </section>
 
 <script>
+  import { herkomstVoorVerzending } from '../../lib/herkomst-client';
+  import { trackGenerateLead } from '../../lib/analytics';
   const form = document.getElementById('vh-finale-form') as HTMLFormElement | null;
   const polaroid = document.querySelector('[data-finale-polaroid]') as HTMLElement | null;
   const cap = document.querySelector('[data-finale-cap]') as HTMLElement | null;
@@ -106,6 +108,7 @@ import Pic from '../Pic.astro';
         const verzending = new FormData();
         verzending.set('email', email);
         verzending.set('source', 'finale');
+        verzending.set('herkomst', herkomstVoorVerzending());
         if (pot?.value) verzending.set('bedrijf', pot.value);
 
         const res = await fetch('/api/newsletter', { method: 'POST', body: verzending });
@@ -119,6 +122,7 @@ import Pic from '../Pic.astro';
         }
         if (cap) cap.textContent = gelukt ? 'Bevestig in je mail ✦' : 'Nog niet gelukt ✦';
         if (gelukt) input.value = '';
+        if (gelukt && !data.alOpLijst) trackGenerateLead('nieuwsbrief');
       } catch {
         if (msg) { msg.textContent = 'Verbinding mislukt. Probeer opnieuw.'; msg.className = 'vh-finale-msg vh-mono is-error'; }
         if (cap) cap.textContent = 'Nog niet gelukt ✦';

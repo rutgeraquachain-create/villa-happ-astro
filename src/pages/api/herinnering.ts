@@ -35,6 +35,7 @@ import {
   magBevestigingVersturen, magInzendbevestigingVersturen, domeinGeweigerd,
 } from '../../lib/aanmeldrem';
 import { keurFoto, FOTO_MELDING, fotoPad } from '../../lib/herinnering-foto';
+import { herkomstKolommen, herkomstVoorNieuwsbrief } from '../../lib/herkomst';
 import { isMultipartPost } from '../../lib/formulierpost';
 import { checkBotId } from 'botid/server';
 import { geweigerdDoorBotId } from '../../lib/botid-routes';
@@ -55,6 +56,10 @@ const Schema = z.object({
   magNaam: z.boolean().optional().default(false),
   /** Honeypot. De pagina houdt hem al tegen; dit dekt een rechtstreekse POST. */
   bedrijf: z.string().optional(),
+  /** Herkomst als JSON-tekst uit de browser. Wordt opgeschoond in lib/herkomst.ts. */
+  // Geen .max() hier: een te lang meetveld mag nooit de hele aanmelding of
+  // bestelling laten afketsen. schoneHerkomst() laat te lange invoer stil vallen.
+  herkomst: z.string().optional(),
 });
 
 function fout(message: string, status = 400) {
@@ -113,6 +118,7 @@ export const POST: APIRoute = async ({ request }) => {
       magArchief: fd.get('magArchief') === '1',
       magNaam: fd.get('magNaam') === '1',
       bedrijf: kies('bedrijf'),
+      herkomst: kies('herkomst'),
     });
     const bestand = fd.get('foto');
     if (bestand instanceof File && bestand.size > 0) foto = bestand;
@@ -194,6 +200,7 @@ export const POST: APIRoute = async ({ request }) => {
     mag_archief: body.magArchief,
     mag_naam: body.magNaam,
     nieuwsbrief: body.nieuwsbrief,
+    ...herkomstKolommen(body.herkomst),
   }).select('id').single();
 
   if (error) {
@@ -276,7 +283,7 @@ export const POST: APIRoute = async ({ request }) => {
       })
     : { vastgelegd: false };
 
-  await meldAanVoorNieuwsbrief(sb, email, body.nieuwsbrief);
+  await meldAanVoorNieuwsbrief(sb, email, body.nieuwsbrief, body.herkomst);
 
   return new Response(JSON.stringify({
     success: true,
@@ -304,12 +311,13 @@ async function meldAanVoorNieuwsbrief(
   sb: NonNullable<ReturnType<typeof getSupabaseAdmin>>,
   email: string,
   wil: boolean,
+  herkomst: string | undefined,
 ): Promise<void> {
   if (!wil || authSecretOntbreekt()) return;
 
   const { data: bestaand } = await sb
     .from('newsletter_subscribers')
-    .select('confirmed, unsubscribed_at')
+    .select('confirmed, unsubscribed_at, herkomst_kanaal')
     .eq('email', email)
     .maybeSingle();
 
@@ -330,6 +338,7 @@ async function meldAanVoorNieuwsbrief(
     email,
     source: 'herinnering',
     confirmed: false,
+    ...herkomstVoorNieuwsbrief(bestaand, herkomst),
   }, { onConflict: 'email' });
 
   if (error) {

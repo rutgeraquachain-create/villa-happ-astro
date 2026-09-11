@@ -178,7 +178,7 @@ export const POST: APIRoute = async ({ request }) => {
       .eq('email', order.customer_email)
       .maybeSingle();
 
-    const inschrijving = await meldAanViaCheckout(sb, order.customer_email, klant?.accepts_marketing);
+    const inschrijving = await meldAanViaCheckout(sb, order.customer_email, klant?.accepts_marketing, order.herkomst);
 
     // Bevestiging aan de klant
     const bevestiging = renderOrderConfirmation({

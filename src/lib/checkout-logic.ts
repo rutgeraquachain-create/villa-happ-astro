@@ -37,6 +37,13 @@ export const CheckoutSchema = z.object({
    * streepjes meetypt; `normaliseerCode` haalt die eruit.
    */
   tegoedbon: z.string().max(32).optional(),
+  /**
+   * Herkomst van het bezoek als JSON-tekst. Alleen een voorstel; de server
+   * schoont hem op in lib/herkomst.ts en vertrouwt geen enkel veld letterlijk.
+   */
+  // Geen .max() hier: een te lang meetveld mag nooit de hele aanmelding of
+  // bestelling laten afketsen. schoneHerkomst() laat te lange invoer stil vallen.
+  herkomst: z.string().optional(),
 });
 
 export type CheckoutPayload = z.infer<typeof CheckoutSchema>;

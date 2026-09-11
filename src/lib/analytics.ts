@@ -112,9 +112,16 @@ export function trackPurchase(opts: {
  * dat via Villa Happ verkocht wil worden, en een winkel die Villa Happ wil
  * inkopen. Die laatste twee zijn tegengestelde stromen en horen in de
  * rapportage niet op één hoop.
+ *
+ * `herinnering` en `nieuwsbrief` kwamen erbij op 11 september 2026, voor de
+ * campagne van oktober. Tot die dag vuurde een ingestuurde herinnering of een
+ * nieuwsbriefaanmelding niets af, en was in GA4 wel te zien hoeveel mensen er
+ * via LinkedIn kwamen maar niet hoeveel er iets deden. `lead_type` gaat al mee
+ * in de GTM-container, dus hiervoor hoeft de container niet te veranderen; in
+ * GA4 moet `lead_type` wel als aangepaste dimensie bestaan om erop te filteren.
  */
 export function trackGenerateLead(
-  leadType: 'contact' | 'merkaanmelding' | 'verkooppunt-aanvraag',
+  leadType: 'contact' | 'merkaanmelding' | 'verkooppunt-aanvraag' | 'herinnering' | 'nieuwsbrief',
 ) {
   push({ event: 'generate_lead', lead_type: leadType });
 }

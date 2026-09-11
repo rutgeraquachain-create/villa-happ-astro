@@ -11,7 +11,7 @@ import { BUSINESS } from './business';
 import { FREE_SHIPPING_CENTS, SHIPPING_RATES_CENTS } from './shipping';
 
 /** Datum onder aan elke juridische pagina. Handmatig bijwerken bij wijziging. */
-export const LEGAL_UPDATED = '3 augustus 2026';
+export const LEGAL_UPDATED = '11 september 2026';
 
 /** Bedrag in centen als "€ 8,95". Eén notatie voor alle juridische teksten. */
 export function eur(cents: number): string {

@@ -22,6 +22,7 @@ import { zetInWachtrij } from '../../lib/outbox';
 import { getSiteOrigin } from '../../lib/site';
 import { authSecretOntbreekt } from '../../lib/order-token';
 import { magBevestigingVersturen, domeinGeweigerd, schoneBron, MELDING_REM } from '../../lib/aanmeldrem';
+import { herkomstVoorNieuwsbrief } from '../../lib/herkomst';
 import { isFormulierPost, formulierVelden, geenFormulier } from '../../lib/formulierpost';
 import { checkBotId } from 'botid/server';
 import { geweigerdDoorBotId } from '../../lib/botid-routes';
@@ -36,6 +37,10 @@ const Schema = z.object({
    * dat ze tegenkomen. Zie de toelichting bij het gebruik verderop.
    */
   bedrijf: z.string().optional(),
+  /** Herkomst als JSON-tekst uit de browser. Wordt opgeschoond in lib/herkomst.ts. */
+  // Geen .max() hier: een te lang meetveld mag nooit de hele aanmelding of
+  // bestelling laten afketsen. schoneHerkomst() laat te lange invoer stil vallen.
+  herkomst: z.string().optional(),
 });
 
 /**
@@ -94,6 +99,7 @@ export const POST: APIRoute = async ({ request }) => {
       email: velden.email ?? '',
       source: velden.source,
       bedrijf: velden.bedrijf,
+      herkomst: velden.herkomst,
     });
   } catch {
     return new Response(JSON.stringify({
@@ -144,7 +150,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   const { data: bestaand } = await sb
     .from('newsletter_subscribers')
-    .select('confirmed, unsubscribed_at')
+    .select('confirmed, unsubscribed_at, herkomst_kanaal')
     .eq('email', email)
     .maybeSingle();
 
@@ -153,8 +159,20 @@ export const POST: APIRoute = async ({ request }) => {
   // Al actief: geen tweede bevestigingsmail. Dat leest als spam en het levert
   // niets op.
   if (stand === 'actief') {
+    /**
+     * `alOpLijst` laat de pagina weten dat dit geen nieuwe aanmelding is, zodat
+     * GA4 hem niet als lead telt.
+     *
+     * WAAROM ALLEEN HIER EN NIET OMGEKEERD
+     * Een vlag `nieuw` op de échte aanmeldingen zou het verschil zichtbaar maken
+     * dat deze route met opzet verbergt: de honeypot en het geweigerde domein
+     * antwoorden exact als een geslaagde aanmelding, zodat een bot niet merkt
+     * dat hij gevangen is. Dit antwoord verraadt met zijn tekst al dat het adres
+     * bekend is, dus de vlag voegt hier niets toe aan wat een bot kan aflezen.
+     */
     return new Response(JSON.stringify({
       success: true,
+      alOpLijst: true,
       message: 'Je staat al op de lijst. Je hoort vanzelf van ons.',
     }));
   }
@@ -169,6 +187,8 @@ export const POST: APIRoute = async ({ request }) => {
     // het verkeerde kanaal.
     source: schoneBron(body.source),
     confirmed: false,
+    // Alleen bij de eerste aanmelding; zie herkomstVoorNieuwsbrief.
+    ...herkomstVoorNieuwsbrief(bestaand, body.herkomst),
   }, { onConflict: 'email' });
 
   if (error) {

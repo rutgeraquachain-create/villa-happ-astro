@@ -204,6 +204,8 @@ const minWoorden = HERINNERING_MIN_WOORDEN;
 </script>
 
 <script>
+  import { herkomstVoorVerzending } from '../lib/herkomst-client';
+  import { trackGenerateLead } from '../lib/analytics';
   const form = document.getElementById('vh-hh-form') as HTMLFormElement | null;
   const gelukt = document.getElementById('hh-gelukt');
   const fout = document.getElementById('hh-fout');
@@ -356,6 +358,7 @@ const minWoorden = HERINNERING_MIN_WOORDEN;
         if (fd.get('magArchief') === '1') verzending.set('magArchief', '1');
         if (fd.get('magNaam') === '1') verzending.set('magNaam', '1');
         if (klaarZetteFoto) verzending.set('foto', klaarZetteFoto, klaarNaam);
+        verzending.set('herkomst', herkomstVoorVerzending());
 
         // Geen Content-Type meezetten: de browser vult hem aan met de
         // boundary, en die zelf schrijven maakt de body onleesbaar.
@@ -368,6 +371,10 @@ const minWoorden = HERINNERING_MIN_WOORDEN;
           if (knopLabel) knopLabel.textContent = 'Stuur mijn herinnering in';
           return;
         }
+
+        // Pas hier meten: de server heeft een nummer uitgegeven, dus de inzending
+        // staat. Op de klik meten telt ook de inzendingen die afketsten.
+        trackGenerateLead('herinnering');
 
         const nummerEl = document.querySelector('[data-hh-nummer]');
         if (nummerEl) nummerEl.textContent = data.nummer;
