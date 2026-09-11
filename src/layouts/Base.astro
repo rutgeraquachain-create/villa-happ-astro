@@ -277,5 +277,18 @@ const gtmId = !preview ? (import.meta.env.PUBLIC_GTM_ID || '') : '';
 
     initBotId({ protect: BOTID_PADEN });
   </script>
+
+  <script>
+    /**
+     * De ingang van het bezoek vastleggen, voordat de bezoeker doorklikt.
+     *
+     * Een module-script draait onder de ClientRouter één keer per volledige
+     * pageload, en dat is precies het moment waarop de verwijzer en de
+     * utm-velden nog kloppen. Zie src/lib/herkomst-client.ts voor waarom dit
+     * zonder toestemming alleen in het geheugen blijft.
+     */
+    import { legIngangVast } from '../lib/herkomst-client';
+    legIngangVast();
+  </script>
 </body>
 </html>

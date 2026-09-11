@@ -9,8 +9,15 @@ import { LEGAL_UPDATED } from '../lib/legal';
  * Privacyverklaring — beschrijft uitsluitend wat de site feitelijk doet.
  * Elke verwerker hieronder komt terug in de code: Supabase (database),
  * Mollie (betalingen), Resend (transactiemail), Vercel (hosting en
- * cookieloze statistiek) en PDOK (postcodecheck vanuit de browser).
+ * cookieloze statistiek), Google (statistiek via Tag Manager, zie
+ * docs/meetplan.md) en PDOK (postcodecheck vanuit de browser).
  * Verandert de stack, dan verandert deze lijst mee.
+ *
+ * Google stond hier tot 11 september 2026 niet, terwijl GA4 al live draaide.
+ * De pagina belooft dat er met elke partij in deze lijst een
+ * verwerkersovereenkomst is; voor Google zijn de verwerkingsvoorwaarden
+ * geaccepteerd, bevestigd door Geoffrey op die dag. Komt er een partij bij,
+ * zet hem dan pas hier als dat voor hem ook vaststaat.
  */
 
 const processors = [
@@ -47,6 +54,14 @@ const processors = [
     where: 'Nederland',
   },
   {
+    name: 'Google',
+    role: 'Bezoekstatistiek (Google Analytics, via Tag Manager), alleen met je toestemming',
+    data: "Bekeken pagina's, apparaat- en browsertype, globale locatie, wat er in je mandje lag, en bij een bestelling het bestelnummer en bedrag. Nooit je naam, e-mailadres of adres",
+    // Google Ireland is de contractpartij voor Europese klanten, maar de
+    // gegevens worden ook in de VS verwerkt. "EU" alleen zou meer beloven.
+    where: 'Ierland (Google Ireland), verwerking ook in de VS',
+  },
+  {
     name: 'PDOK (Kadaster)',
     role: 'Postcodecheck bij het afrekenen',
     data: 'Postcode en huisnummer die je intypt, plus je IP-adres',
@@ -77,7 +92,11 @@ const retention = [
     <ul>
       <li>We verzamelen alleen wat nodig is om je bestelling uit te voeren.</li>
       <li>We verkopen je gegevens niet, aan niemand.</li>
-      <li>We gebruiken geen trackingcookies en geen advertentienetwerken.</li>
+      <li>
+        Statistiek- en advertentiecookies plaatsen we alleen als je daar
+        toestemming voor geeft. Wat dat precies is, staat in ons
+        <a href="/cookies">cookiebeleid</a>.
+      </li>
       <li>Je kunt je gegevens altijd opvragen of laten verwijderen.</li>
     </ul>
   </section>
@@ -150,6 +169,24 @@ const retention = [
       die invult, en het stuk dat je koos. Je krijgt bericht wanneer de
       betreffende oplage live gaat. Wil je daarnaast onze nieuwsbrief, dan vink
       je dat apart aan.
+    </p>
+
+    <h3>Waar je vandaan kwam</h3>
+    <p>
+      Bij een bestelling, een nieuwsbriefaanmelding en een inzending voor de
+      herinneringsactie leggen we vast via welk kanaal je op de site kwam: de
+      naam van de campagne als die in de link stond, de website die naar ons
+      verwees (alleen de naam van die site, niet het adres van de pagina), en
+      de eerste pagina die je bij ons bekeek. Zo zien we welke berichten en
+      campagnes werken. Dat doen we op grond van ons gerechtvaardigd belang
+      (art. 6 lid 1 sub f AVG).
+    </p>
+    <p>
+      Het bewaren van die eerste pagina tijdens je bezoek gebeurt in je browser,
+      en alleen als je toestemming gaf voor statistiek. Zonder die toestemming
+      kijken we alleen naar de pagina waar je het formulier invult. Het kanaal
+      staat bij de bestelling, aanmelding of inzending zelf en wordt samen
+      daarmee bewaard en verwijderd.
     </p>
 
     <h3>Als je ons een bericht stuurt</h3>

@@ -168,6 +168,7 @@ import '../../styles/shop.css';
 <script>
   import { getCart, cartSubtotal, shippingCostCents, cartHasDemo } from '../../lib/cart';
   import { trackBeginCheckout } from '../../lib/analytics';
+  import { herkomstVoorVerzending } from '../../lib/herkomst-client';
   import { onPageReady } from '../../lib/page';
 
   onPageReady(() => {
@@ -378,6 +379,7 @@ import '../../styles/shop.css';
       },
       // Leeg veld gaat niet mee: het schema laat de sleutel weg zijn, en een
       // lege reeks zou de route onnodig een claim laten proberen.
+      herkomst: herkomstVoorVerzending(),
       ...(String(fd.get('tegoedbon') || '').trim()
         ? { tegoedbon: String(fd.get('tegoedbon')).trim() }
         : {}),

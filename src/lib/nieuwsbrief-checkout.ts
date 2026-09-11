@@ -27,6 +27,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { normaliseerEmail, inschrijfstand } from './nieuwsbrief';
+import { herkomstVoorNieuwsbrief } from './herkomst';
 
 export type Inschrijfuitslag =
   /** Nieuw op de lijst gezet, of teruggezet na een eerdere uitschrijving. */
@@ -47,6 +48,11 @@ export async function meldAanViaCheckout(
   sb: SupabaseClient,
   email: string,
   wil: boolean | null | undefined,
+  /**
+   * De herkomst van de bestelling. Wie via de kassa op de lijst komt, kwam
+   * binnen via het kanaal van die bestelling; dat hoort mee op de rij.
+   */
+  herkomst?: unknown,
 ): Promise<Inschrijfuitslag> {
   if (!wil) return 'niet';
 
@@ -55,7 +61,7 @@ export async function meldAanViaCheckout(
 
   const { data: bestaand, error: leesFout } = await sb
     .from('newsletter_subscribers')
-    .select('confirmed, unsubscribed_at')
+    .select('confirmed, unsubscribed_at, herkomst_kanaal')
     .eq('email', adres)
     .maybeSingle();
 
@@ -85,6 +91,7 @@ export async function meldAanViaCheckout(
       confirmed: true,
       confirmed_at: nu,
       unsubscribed_at: null,
+      ...herkomstVoorNieuwsbrief(bestaand, herkomst),
     }, { onConflict: 'email' });
 
   if (error) {

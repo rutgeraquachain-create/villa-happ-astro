@@ -263,6 +263,22 @@ rem vol, dan krijgt de bezoeker `MELDING_REM` en niet het gewone antwoord: een
 verzendkant die zichzelf geslaagd verklaart is de fout die deze site vijf keer op
 één dag maakte.
 
+**Herkomst gaat op de rij bij het schrijven, en de eerste aanraking wint.**
+`src/lib/herkomst.ts` classificeert, `src/lib/herkomst-client.ts` legt de ingang
+van het bezoek vast. Drie regels die elk een keer bijna misgingen:
+
+- Een nieuwsbriefrij krijgt zijn herkomst alleen als hij er nog geen heeft
+  (`herkomstVoorNieuwsbrief`). Er zijn vier plekken die op het e-mailadres
+  upserten; zonder die check meet de kolom de laatste klik in plaats van de
+  eerste.
+- Het herkomstveld krijgt in geen enkel zod-schema een `.max()`. Is het te lang,
+  dan wijst zod het hele verzoek af en verlies je een bestelling om een meetveld.
+  `schoneHerkomst()` laat te lange invoer al stil vallen.
+- Verandert de uitkomst van `classificeer()` voor een invoer, ook door een host
+  toe te voegen aan een lijst, verhoog dan `HERKOMST_VERSIE`. De vingerafdruk in
+  `tests/herkomst.test.ts` valt om zodra dat nodig is; dat rood is een beslissing
+  over de rijen die al in de database staan, geen toets om bij te werken.
+
 **Een honeypot bestaat uit twee helften in twee bestanden.** De route die het
 veld uitleest is de helft die je ziet; het verborgen veld in de HTML is de helft
 die het werk doet. Gemeten 9 september 2026: `notify.ts` en `reviews.ts` keken
@@ -352,6 +368,7 @@ wat de code doet, voegt niets toe.
 | Scroll- en pinanimaties | `src/lib/motion.ts` |
 | Tegoedbonnen | `src/lib/tegoedbon.ts` |
 | Campagnetellers in `/beheer` | `src/lib/campagnestand.ts` |
+| Herkomst van bestellingen en aanmeldingen | `src/lib/herkomst.ts`, `docs/meetplan.md` |
 | CI-poort | `.github/workflows/ci.yml` |
 | Redirects en headers | `vercel.json` |
 

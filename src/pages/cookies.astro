@@ -18,8 +18,23 @@ import { isPreviewHost } from '../lib/site';
  * precies waar een AVG-klacht op landt.
  *
  * Elke regel over localStorage is terug te vinden in de code: zie
- * src/lib/cart.ts, wishlist.ts, recent.ts, consent.ts en de sleutels in de
- * PDP en Het Atelier.
+ * src/lib/cart.ts, wishlist.ts, recent.ts, consent.ts, herkomst-client.ts en
+ * de sleutels in de PDP en Het Atelier.
+ *
+ * NAGEMETEN 11 SEPTEMBER 2026, en zo meet je het opnieuw:
+ * - Sleutelnamen: grep op `'vh_` in src/. De tabel noemde `vh_wishlist` en
+ *   `vh_recent`, de code schreef `vh_wishlist_v1` en `vh_recent_v1`.
+ * - Zonder toestemming: op de live site `document.cookie`, `localStorage` en
+ *   `sessionStorage` na het laden van /shop, plus `curl -D -` op de pagina's
+ *   voor HttpOnly-cookies. Uitkomst: niets.
+ * - De cookies van Google: uit de GTM-container zelf (alleen `__googtag` en
+ *   `__gaawe`, geen `AW-`-id) en uit Googles documentatie
+ *   (support.google.com/analytics/answer/11397207): `_ga` en `_ga_<id>`,
+ *   twee jaar. `_gcl_*` komt er pas bij als GA4 aan Google Ads gekoppeld is.
+ *   GEBEURT DAT, DAN MOET DEZE PAGINA MEE, en de keuze opnieuw gevraagd
+ *   worden (verhoog `CONSENT_KEY` in src/lib/consent.ts).
+ * - `vh_reviews_<product>` staat bewust niet in de tabel: de productpagina
+ *   schrijft hem alleen in de demostand zonder database, nooit op productie.
  */
 
 const canonical = new URL(Astro.url.pathname, Astro.site || Astro.url.origin);
@@ -27,12 +42,15 @@ const meting = !isPreviewHost(canonical.origin) && !!import.meta.env.PUBLIC_GTM_
 
 const stored = [
   { key: 'vh_cart_v1', what: 'Wat er in je winkelmandje ligt', why: 'Anders is je mandje weg zodra je een andere pagina opent', how: 'Tot je het mandje leegt' },
-  { key: 'vh_wishlist', what: 'Je verlanglijst', why: 'Zodat je bewaarde stukken terugvindt', how: 'Tot je ze verwijdert' },
-  { key: 'vh_recent', what: 'Onlangs bekeken stukken', why: 'Voor de rail "onlangs bekeken" op de productpagina', how: 'Laatste 8 stuks' },
+  { key: 'vh_wishlist_v1', what: 'Je verlanglijst', why: 'Zodat je bewaarde stukken terugvindt', how: 'Tot je ze verwijdert' },
+  { key: 'vh_recent_v1', what: 'Onlangs bekeken stukken', why: 'Voor de rail "onlangs bekeken" op de productpagina', how: 'Laatste 8 stuks' },
   { key: 'vh_checkout_form_v1', what: 'Je ingevulde bezorggegevens', why: 'Zodat een refresh of een afgebroken betaling je formulier niet wist', how: 'Tot je de browsertab sluit' },
   { key: 'vh_atelier_claim', what: 'Je geclaimde nummer in Het Atelier', why: 'Om je certificaat terug te kunnen tonen', how: 'Tot je het wist' },
   { key: 'vh_backinstock', what: 'Aangevraagde voorraadmeldingen', why: 'Alleen als de aanvraag niet bij ons aankwam, als vangnet', how: 'Tot je het wist' },
-  ...(meting ? [{ key: 'vh_consent_v1', what: 'Je cookiekeuze', why: 'Zodat we het niet elk bezoek opnieuw vragen', how: '12 maanden, daarna vragen we opnieuw' }] : []),
+  ...(meting ? [
+    { key: 'vh_consent_v1', what: 'Je cookiekeuze', why: 'Zodat we het niet elk bezoek opnieuw vragen', how: '12 maanden, daarna vragen we opnieuw' },
+    { key: 'vh_ingang_v1', what: 'De pagina waarop je binnenkwam en de campagne in de link', why: 'Alleen met toestemming voor statistiek: om te zien welke campagne je bracht', how: 'Tot je de browsertab sluit' },
+  ] : []),
 ];
 ---
 <LegalLayout
@@ -56,6 +74,13 @@ const stored = [
           de winkel volledig door: je kunt bestellen, betalen en retourneren zonder
           ergens toestemming voor te geven.
         </p>
+        <p>
+          Zolang je geen toestemming gaf, stuurt de site Google wel een melding
+          zonder cookie dat er een pagina bekeken is. Daar zit geen herkenbaar
+          kenmerk van jou in, en je bent er tussen twee bezoeken niet mee te
+          herkennen. Google gebruikt die meldingen om het totale bezoek te
+          schatten.
+        </p>
         <div class="vh-legal-tablewrap">
           <table class="vh-legal-table">
             <thead><tr><th>Categorie</th><th>Waarvoor</th><th>Toestemming</th></tr></thead>
@@ -67,19 +92,58 @@ const stored = [
               </tr>
               <tr>
                 <td><b>Statistieken</b></td>
-                <td>Google Analytics 4: welke pagina's worden bekeken en waar mensen afhaken.</td>
+                <td>
+                  Google Analytics 4: welke pagina's worden bekeken en waar mensen
+                  afhaken. Met deze toestemming onthouden we tijdens je bezoek ook de
+                  pagina waarop je binnenkwam, zodat we zien welke campagne je bracht.
+                </td>
                 <td>Vooraf, per categorie</td>
               </tr>
               <tr>
                 <td><b>Advertenties</b></td>
-                <td>Google Ads: meten welke advertentie tot een bestelling leidde, en advertenties afstemmen op je bezoek.</td>
+                <td>
+                  We adverteren nog niet en er staat geen advertentietag op de site.
+                  Geef je hiervoor toestemming, dan mag Google de gegevens uit de
+                  statistiek ook gebruiken om advertenties af te stemmen. Beginnen we
+                  met adverteren, dan passen we deze pagina aan en vragen we je keuze
+                  opnieuw.
+                </td>
                 <td>Vooraf, per categorie</td>
               </tr>
             </tbody>
           </table>
         </div>
+        <h3>Welke cookies dat zijn</h3>
         <p>
-          De statistiek- en advertentietags worden geladen via Google Tag Manager.
+          Alleen als je toestemming geeft voor statistiek. Zonder die toestemming
+          plaatsen we er geen enkele.
+        </p>
+        <div class="vh-legal-tablewrap">
+          <table class="vh-legal-table">
+            <thead><tr><th>Naam</th><th>Van</th><th>Waarvoor</th><th>Hoe lang</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><code>_ga</code></td>
+                <td>Google Analytics</td>
+                <td>Onderscheidt bezoekers van elkaar, zonder te weten wie je bent</td>
+                <td>2 jaar</td>
+              </tr>
+              <tr>
+                <td><code>_ga_KJH1QEH8HZ</code></td>
+                <td>Google Analytics</td>
+                <td>Houdt bij welk bezoek bij elkaar hoort</td>
+                <td>2 jaar</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Beheerders van de winkel krijgen bij het inloggen een sessiecookie
+          (<code>vh_beheer</code>) die na twaalf uur verloopt. Bezoekers krijgen
+          die nooit.
+        </p>
+        <p>
+          De statistiektags worden geladen via Google Tag Manager.
           Wij sturen daarbij nooit je naam, e-mailadres, telefoonnummer of adres
           mee — ook niet bij een bestelling. Wat Google meekrijgt is welke pagina's
           je bekeek, wat er in je mandje lag en, bij een afgeronde bestelling, het
@@ -122,9 +186,10 @@ const stored = [
     <h2>Wat we lokaal bewaren</h2>
     <p>
       Een paar dingen slaan we op in je eigen browser, in de zogeheten
-      localStorage. Die gegevens blijven op jouw apparaat en worden niet naar
-      ons of naar derden gestuurd, behalve wanneer je zelf een bestelling
-      plaatst.
+      localStorage of, als het alleen voor dit bezoek is, in de sessionStorage.
+      Die gegevens blijven op jouw apparaat en worden niet naar ons of naar
+      derden gestuurd, behalve wanneer je zelf een bestelling plaatst of een
+      formulier verstuurt.
     </p>
     <div class="vh-legal-tablewrap">
       <table class="vh-legal-table">

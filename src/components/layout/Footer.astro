@@ -355,6 +355,8 @@ const identityLine = [
 </style>
 
 <script>
+  import { herkomstVoorVerzending } from '../../lib/herkomst-client';
+  import { trackGenerateLead } from '../../lib/analytics';
   // Mega wordmark: letters stijgen op zodra de footer in beeld komt
   const mega = document.getElementById('vh-footer-mega');
   if (mega && 'IntersectionObserver' in window) {
@@ -391,6 +393,7 @@ const identityLine = [
         const verzending = new FormData();
         verzending.set('email', email);
         verzending.set('source', 'footer');
+        verzending.set('herkomst', herkomstVoorVerzending());
         const pot = form.querySelector('input[name="bedrijf"]') as HTMLInputElement | null;
         if (pot?.value) verzending.set('bedrijf', pot.value);
 
@@ -403,6 +406,7 @@ const identityLine = [
           // terugval mag daarom niets beloven wat nog niet gebeurd is.
           msgEl.textContent = data.message || 'Kijk in je mail om je aanmelding te bevestigen.';
           emailInput.value = '';
+          if (!data.alOpLijst) trackGenerateLead('nieuwsbrief');
         } else {
           msgEl.className = 'vh-newsletter-msg is-error';
           msgEl.textContent = data.message || 'Er ging iets mis. Probeer opnieuw.';
