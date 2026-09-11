@@ -9,8 +9,15 @@ import { LEGAL_UPDATED } from '../lib/legal';
  * Privacyverklaring — beschrijft uitsluitend wat de site feitelijk doet.
  * Elke verwerker hieronder komt terug in de code: Supabase (database),
  * Mollie (betalingen), Resend (transactiemail), Vercel (hosting en
- * cookieloze statistiek) en PDOK (postcodecheck vanuit de browser).
+ * cookieloze statistiek), Google (statistiek via Tag Manager, zie
+ * docs/meetplan.md) en PDOK (postcodecheck vanuit de browser).
  * Verandert de stack, dan verandert deze lijst mee.
+ *
+ * Google stond hier tot 11 september 2026 niet, terwijl GA4 al live draaide.
+ * De pagina belooft dat er met elke partij in deze lijst een
+ * verwerkersovereenkomst is; voor Google zijn de verwerkingsvoorwaarden
+ * geaccepteerd, bevestigd door Geoffrey op die dag. Komt er een partij bij,
+ * zet hem dan pas hier als dat voor hem ook vaststaat.
  */
 
 const processors = [
@@ -45,6 +52,14 @@ const processors = [
     role: 'Bezorging van je bestelling',
     data: 'Naam, bezorgadres',
     where: 'Nederland',
+  },
+  {
+    name: 'Google',
+    role: 'Bezoekstatistiek (Google Analytics, via Tag Manager), alleen met je toestemming',
+    data: "Bekeken pagina's, apparaat- en browsertype, globale locatie, wat er in je mandje lag, en bij een bestelling het bestelnummer en bedrag. Nooit je naam, e-mailadres of adres",
+    // Google Ireland is de contractpartij voor Europese klanten, maar de
+    // gegevens worden ook in de VS verwerkt. "EU" alleen zou meer beloven.
+    where: 'Ierland (Google Ireland), verwerking ook in de VS',
   },
   {
     name: 'PDOK (Kadaster)',
