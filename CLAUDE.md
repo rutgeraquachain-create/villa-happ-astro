@@ -289,6 +289,19 @@ hier groen.
 
 ## Valkuilen, gemeten
 
+**Een geplande taak telt pas als werkend als je in de productielogs een
+geslaagde run hebt gezien.** Dat geldt zodra je een cron aanmaakt, van
+frequentie verandert, een omgevingsvariabele raakt waar hij van afhangt, of in
+documentatie opschrijft wat hij doet. Groepeer na de deploy de runtime-logs van
+de route op statuscode over minstens twee runs, en roep hem één keer zonder
+sleutel aan om te zien welke weigering hij geeft. Pas bij een 2xx van het
+platform zelf schrijf je op wat de taak doet. Gemeten 11 september 2026:
+`/api/notify/run` gaf zeven dagen lang 161 keer 503 omdat `CRON_SECRET`
+ontbrak, terwijl de planning goed stond, de toets op de planning groen was, en
+een PR beweerde dat mail nu hooguit een kwartier bleef liggen. Het viel niet op
+omdat de eerste verzendpoging wel werkt: een vangnet dat nooit iets hoefde op te
+vangen, laat niet zien dat het er niet hangt. Les 0158 in het lessendagboek.
+
 **Twee werkmappen, één repo.** `vh-domein-villahapp` en `Astro_Website` zijn
 worktrees van dezelfde repository. `main` staat uitgechecked in `Astro_Website`,
 dus `git checkout main` in de andere map faalt met "already used by worktree".

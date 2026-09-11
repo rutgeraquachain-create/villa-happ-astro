@@ -99,7 +99,7 @@ een checklist:
 | `MOLLIE_API_KEY` | geen betalingen; `test_` of `live_` |
 | `AUTH_SECRET` | **afrekenen geeft 503**, minimaal 32 tekens |
 | `ADMIN_PASSWORD_HASH` | geen toegang tot `/beheer` |
-| `CRON_SECRET` | back-in-stock-verzender staat open |
+| `CRON_SECRET` | **de hele cron ligt stil (503)**: geen herkansing van mail, geen vrijgave van vastgezette voorraad, geen voorraadmeldingen. Zie hieronder |
 | `RESEND_API_KEY` | geen transactiemail |
 | `MAIL_FROM` | valt terug op de default in `src/lib/mail.ts` |
 | `RESEND_WEBHOOK_SECRET` | `/api/mail/webhook` geeft 503; geen zicht op aflevering |
@@ -347,6 +347,19 @@ gaat het alsnog de deur uit bij de volgende cron of via "Nu verwerken" in
 2026 op elk kwartier (`*/15 * * * *`). Daarvoor was het één keer per dag om
 08:00, het maximum op Hobby, en dat is te traag voor een actie van drie dagen:
 een mail die bij het wegschrijven niet weg kon lag dan tot 24 uur stil.
+
+**De cron draait pas sinds 11 september 2026 echt.** Tot die dag stond
+`CRON_SECRET` niet in de productieomgeving, en dan weigert de route elke
+aanroep, ook die van Vercel zelf. De runtime-logs lieten 161 aanroepen in zeven
+dagen zien, allemaal 503, geen enkele 200. Het viel niet op omdat de eerste
+verzendpoging wel werkt en de wachtrij daardoor leeg bleef. Na het zetten van de
+sleutel: 401 op een aanroep zonder sleutel, en 200 op de cronruns van 16:15 en
+16:30 UTC. Er bleek geen schade: nul vastgezette reserveringen, nul mail in de
+wachtrij, nul openstaande voorraadmeldingen.
+
+Controleer na elke wijziging aan de cron of aan de omgevingsvariabelen de
+runtime-logs van `/api/notify/run`, gegroepeerd op statuscode. Een planning in
+`vercel.json` zegt dat de route wordt aangeroepen, niet dat hij iets doet.
 
 ---
 
