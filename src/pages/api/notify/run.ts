@@ -1,17 +1,25 @@
 /**
  * GET /api/notify/run — terugkerende mailtaak
  *
- * Twee dingen, in deze volgorde:
+ * Drie dingen, in deze volgorde:
  *  1. de mail-outbox legen (vangnet voor transactionele mail die bij het
  *     wegschrijven niet meteen weg kon);
- *  2. de back-in-stock-meldingen versturen.
+ *  2. voorraad vrijgeven die langer dan 24 uur gereserveerd staat voor een
+ *     betaling die nooit terugmeldde;
+ *  3. de back-in-stock-meldingen versturen.
+ *
+ * (Hier stonden er twee. Stap 2 kwam er later bij en de kop ging niet mee, dus
+ * wie alleen dit las, wist niet dat er ook voorraad vastzat als deze route
+ * stillag.)
  *
  * Frequentie: elk kwartier (`*​/15 * * * *` in vercel.json). Dat stond tot 9
  * september 2026 op één keer per dag om 08:00, wat het maximum was op Vercel
  * Hobby. Het project draait sinds die maand op Pro, en de herinneringsactie
  * loopt maar drie dagen: een mail die bij het wegschrijven niet weg kon lag
  * met de oude stand tot 24 uur stil, oftewel een derde van de looptijd. Nu
- * hooguit een kwartier. (Deze toelichting stond eerst in vercel.json zelf;
+ * hooguit een kwartier, maar pas sinds 11 september 2026: tot die dag stond
+ * `CRON_SECRET` niet in productie en gaf elke run 503 (161 in zeven dagen).
+ * Zie docs/workflow.md. (Deze toelichting stond eerst in vercel.json zelf;
  * JSON kent geen commentaar en Vercel weigert onbekende sleutels, waardoor
  * elke build faalde.)
  *
