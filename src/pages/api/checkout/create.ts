@@ -24,7 +24,7 @@ import { reserveInventory, releaseInventory } from '../../../lib/inventory';
 import { begrens, clientSleutel, teVeelVerzoeken } from '../../../lib/rate-limit-db';
 import { maakOrderToken, authSecretOntbreekt } from '../../../lib/order-token';
 import { logGebeurtenis } from '../../../lib/order-events';
-import { claimBon } from '../../../lib/tegoedbon';
+import { claimBon, geefBonVrij } from '../../../lib/tegoedbon';
 import { herkomstKolommen } from '../../../lib/herkomst';
 import { checkBotId } from 'botid/server';
 
@@ -260,9 +260,21 @@ export const POST: APIRoute = async ({ request }) => {
     }
   }
 
+  /**
+   * Vanaf hier hangt er mogelijk een bon aan deze bestelling. Elke uitgang moet
+   * hem teruggeven, anders is de prijs van de winnaar een half uur onbruikbaar
+   * en krijgt hij bij een tweede poging te zien dat zijn code niet werkt.
+   */
+  const stop = async (bericht: string, status: number) => {
+    await rollback();
+    if (bonCode) await geefBonVrij(sb, order.id);
+    await sb.from('orders').update({ status: 'cancelled', payment_status: 'failed' }).eq('id', order.id);
+    return new Response(JSON.stringify({ error: bericht }), { status });
+  };
+
   const teBetalen = total - korting;
   if (korting > 0) {
-    await sb.from('orders').update({
+    const { error: kortingErr } = await sb.from('orders').update({
       korting_cents: korting,
       tegoedbon_code: bonCode,
       total_cents: teBetalen,
@@ -271,15 +283,28 @@ export const POST: APIRoute = async ({ request }) => {
       // boekhoudexport niet meer zodra er één bon gebruikt is.
       tax_cents: vatFromGross(teBetalen, BUSINESS.vatRate),
     }).eq('id', order.id);
+
+    /**
+     * Deze fout werd niet gelezen, en dat is duurder dan het lijkt.
+     *
+     * Het bedrag dat naar Mollie gaat is `teBetalen`, dus mét korting. Mislukt
+     * deze regel, dan betaalt de klant het verlaagde bedrag terwijl de order
+     * het volle bedrag voert, staat er geen boncode bij de bestelling, en wordt
+     * de bon bij het afronden niet ingewisseld omdat niemand weet dat hij er
+     * was. Doorgaan is hier het slechtste van de twee: opnieuw afrekenen kost
+     * de klant een minuut, een verkeerd geboekte bestelling kost uitzoekwerk.
+     */
+    if (kortingErr) {
+      console.error('[checkout] Korting wegschrijven mislukte:', kortingErr.message);
+      return stop('Afrekenen lukt nu even niet. Probeer het opnieuw.', 500);
+    }
   }
 
   const { error: itemsErr } = await sb.from('order_items').insert(
     lineItems.map(li => ({ ...li, order_id: order.id }))
   );
   if (itemsErr) {
-    await rollback();
-    await sb.from('orders').update({ status: 'cancelled', payment_status: 'failed' }).eq('id', order.id);
-    return new Response(JSON.stringify({ error: 'Kon bestelling niet aanmaken.' }), { status: 500 });
+    return stop('Kon bestelling niet aanmaken.', 500);
   }
 
   await logGebeurtenis(sb, order.id, 'aangemaakt', {
@@ -303,13 +328,10 @@ export const POST: APIRoute = async ({ request }) => {
     });
   } catch (err) {
     console.error('[checkout] Mollie payment create faalde:', err);
-    await rollback();
-    await sb.from('orders').update({ status: 'cancelled', payment_status: 'failed' }).eq('id', order.id);
-    return new Response(JSON.stringify({ error: 'Betaling kon niet worden gestart. Probeer het opnieuw.' }), { status: 502 });
+    return stop('Betaling kon niet worden gestart. Probeer het opnieuw.', 502);
   }
   if (!payment) {
-    await rollback();
-    return new Response(JSON.stringify({ error: 'Betaling kon niet worden gestart. Probeer het opnieuw.' }), { status: 502 });
+    return stop('Betaling kon niet worden gestart. Probeer het opnieuw.', 502);
   }
 
   // 6. Save Mollie id op order

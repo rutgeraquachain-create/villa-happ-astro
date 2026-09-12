@@ -182,28 +182,16 @@ async function probeerEen(
   return false;
 }
 
-export interface OutboxUitslag {
+export interface OutboxUitslag extends Achterstand {
   verzonden: number;
   mislukt: number;
-  /** Wachtend vóór deze run; achteraf meten wist het bewijs van een uitval uit. */
-  wachtendVooraf: number;
-  oudsteSecondenVooraf: number;
-  opgegeven: number;
-  /**
-   * Mail die wél de deur uit ging en aantoonbaar niet is aangekomen: gebounced
-   * of als spam gemarkeerd. Staat los van `mislukt`, want dat telt alleen
-   * mislukte verzendpogingen. Dit onderscheid bestaat sinds de webhook er is;
-   * daarvoor was zulke mail onzichtbaar en telde hij mee als geslaagd.
-   */
-  nietAfgeleverd: number;
 }
 
 /** Verwerkt de wachtrij. Aangeroepen door de cron en door het beheerportaal. */
 export async function verwerkWachtrij(): Promise<OutboxUitslag> {
   const start = Date.now();
   const leeg: OutboxUitslag = {
-    verzonden: 0, mislukt: 0, wachtendVooraf: 0, oudsteSecondenVooraf: 0,
-    opgegeven: 0, nietAfgeleverd: 0,
+    verzonden: 0, mislukt: 0, ...NIET_GEMETEN,
   };
 
   const sb = getSupabaseAdmin();
@@ -234,20 +222,54 @@ export async function verwerkWachtrij(): Promise<OutboxUitslag> {
   return { verzonden, mislukt, ...achterstand };
 }
 
-async function leesAchterstand(sb: SupabaseClient) {
-  const { data } = await sb.rpc('outbox_achterstand');
+/**
+ * De achterstand van de wachtrij.
+ *
+ * `gemeten` is geen sierveld. Deze functie negeerde de fout van de RPC en gaf
+ * dan vier keer nul terug, en vier keer nul leest als "alles in orde". Dat is
+ * precies de fout die deze site op 11 september een week stille cron kostte:
+ * het bewakingsscherm dat niet kón meten, meldde rust. Faalt de meting, dan
+ * staat dat er nu bij en toont het beheerscherm dat er niets gemeten is.
+ */
+export interface Achterstand {
+  /** Wachtend vóór deze run; achteraf meten wist het bewijs van een uitval uit. */
+  wachtendVooraf: number;
+  oudsteSecondenVooraf: number;
+  opgegeven: number;
+  /**
+   * Mail die wél de deur uit ging en aantoonbaar niet is aangekomen: gebounced
+   * of als spam gemarkeerd. Staat los van `mislukt`, want dat telt alleen
+   * mislukte verzendpogingen. Dit onderscheid bestaat sinds de webhook er is;
+   * daarvoor was zulke mail onzichtbaar en telde hij mee als geslaagd.
+   */
+  nietAfgeleverd: number;
+  /** False betekent: deze getallen zeggen niets, de query kwam er niet door. */
+  gemeten: boolean;
+}
+
+const NIET_GEMETEN: Achterstand = {
+  wachtendVooraf: 0, oudsteSecondenVooraf: 0, opgegeven: 0, nietAfgeleverd: 0, gemeten: false,
+};
+
+async function leesAchterstand(sb: SupabaseClient): Promise<Achterstand> {
+  const { data, error } = await sb.rpc('outbox_achterstand');
+  if (error) {
+    console.error('[outbox] Achterstand meten mislukte:', error.message);
+    return NIET_GEMETEN;
+  }
   const rij = Array.isArray(data) ? data[0] : data;
   return {
     wachtendVooraf: Number(rij?.wachtend ?? 0),
     oudsteSecondenVooraf: Number(rij?.oudste_seconden ?? 0),
     opgegeven: Number(rij?.opgegeven ?? 0),
     nietAfgeleverd: Number(rij?.niet_afgeleverd ?? 0),
+    gemeten: true,
   };
 }
 
 /** Status voor het beheerportaal, zonder iets te verwerken. */
-export async function wachtrijStatus() {
+export async function wachtrijStatus(): Promise<Achterstand> {
   const sb = getSupabaseAdmin();
-  if (!sb) return { wachtendVooraf: 0, oudsteSecondenVooraf: 0, opgegeven: 0, nietAfgeleverd: 0 };
+  if (!sb) return NIET_GEMETEN;
   return leesAchterstand(sb);
 }

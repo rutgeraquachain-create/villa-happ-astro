@@ -115,10 +115,28 @@ export const POST: APIRoute = async ({ request }) => {
   if (noChange) return new Response('', { status: 200 });
 
   if (transition.action === 'finalize') {
-    // Reservering wordt verkoop: quantity en reserved beide omlaag
-    for (const item of order.order_items || []) {
-      const ok = await finalizeInventory(sb, item.variant_id, item.quantity);
-      if (!ok) console.error('[webhook] finalize_inventory faalde voor variant', item.variant_id);
+    /**
+     * Tweede slot op de voorraadaftrek.
+     *
+     * `mapMollieStatus` laat een afgeronde order met rust, en dat is het echte
+     * slot. Dit is het reservesolt: `finalize_inventory` telt onvoorwaardelijk
+     * af (`quantity - qty`, zonder enige `WHERE` op de order), dus één verkeerde
+     * doorgang kost meteen voorraad die er nog ligt. `paid_at` staat alleen
+     * gevuld als deze order al eens is afgerond.
+     */
+    if (order.paid_at) {
+      // Alleen de voorraad overslaan. De statusregel hieronder loopt door, want
+      // een order die wél is afgerekend maar niet op 'paid' staat moet dat
+      // alsnog worden; dat is een andere fout dan deze en die los je niet op
+      // door hier weg te lopen.
+      console.error('[webhook] Voorraadaftrek overgeslagen: order', order.order_number,
+        'was al afgerond op', order.paid_at);
+    } else {
+      // Reservering wordt verkoop: quantity en reserved beide omlaag
+      for (const item of order.order_items || []) {
+        const ok = await finalizeInventory(sb, item.variant_id, item.quantity);
+        if (!ok) console.error('[webhook] finalize_inventory faalde voor variant', item.variant_id);
+      }
     }
     /**
      * Een tegoedbon volgt de voorraad.
@@ -128,7 +146,29 @@ export const POST: APIRoute = async ({ request }) => {
      * idempotent (`WHERE ingewisseld_op IS NULL`), want Mollie mag deze webhook
      * meer dan eens aanroepen.
      */
-    await wisselBonIn(sb, order.id);
+    const bonIngewisseld = await wisselBonIn(sb, order.id);
+    if (order.tegoedbon_code && !bonIngewisseld) {
+      /**
+       * Er hing een bon aan deze bestelling en er is er geen ingewisseld.
+       *
+       * Dat kan twee dingen betekenen: de bon is al ingewisseld door deze
+       * bestelling (een herhaalde webhook, onschuldig, en dan staat `paid_at`
+       * al gevuld en komen we hier niet), of de bon hoort inmiddels bij een
+       * andere bestelling. Dat tweede is de dubbelgebruik-fout, en die hoort
+       * zichtbaar te zijn in het beheerscherm en niet alleen in een logregel
+       * die niemand leest.
+       */
+      console.error('[webhook] Tegoedbon', order.tegoedbon_code,
+        'niet ingewisseld voor order', order.order_number, '- controleer handmatig.');
+      // 'opmerking' en geen eigen soort: dat is de enige soort zonder unieke
+      // index per order, dus hij verdwijnt niet als het twee keer gebeurt, en
+      // hij staat gewoon in de tijdlijn die beheer al openslaat.
+      await logGebeurtenis(sb, order.id, 'opmerking', {
+        bron: 'systeem',
+        toelichting: `Let op: tegoedbon ${order.tegoedbon_code} kon niet worden ingewisseld bij deze bestelling. Controleer of hij niet elders is gebruikt.`,
+        meta: { tegoedbon: order.tegoedbon_code },
+      });
+    }
   } else if (transition.action === 'release') {
     for (const item of order.order_items || []) {
       const ok = await releaseInventory(sb, item.variant_id, item.quantity);

@@ -38,8 +38,22 @@ export function clientKey(request: Request, scope: string): string {
   return `${scope}:${ip}`;
 }
 
+/**
+ * Het antwoord draagt dezelfde tekst onder twee namen, en dat is geen slordigheid.
+ *
+ * GEMETEN 12 SEPTEMBER 2026. Dit antwoord gaf alleen `error`, terwijl de
+ * formulierpagina's `data.message` uitlezen (zo geeft `fout()` in de routes zijn
+ * meldingen terug). Wie op de herinneringspagina tegen de rem liep, kreeg dus
+ * niet "wacht even" te zien maar de terugval "Er ging iets mis. Probeer
+ * opnieuw." — een tekst die uitnodigt tot precies de herhaling die wordt
+ * geweigerd. Het geheel werkte, er was niets rood, en de deelnemer stond stil.
+ *
+ * `error` blijft erin omdat de beheerroutes en `het-atelier.astro` daarop
+ * leunen. Twee namen voor één tekst is hier goedkoper dan tien aanroepplekken
+ * omzetten vlak voor een campagne.
+ */
 export function tooManyRequests(message = 'Te veel verzoeken. Probeer het over een minuut opnieuw.'): Response {
-  return new Response(JSON.stringify({ error: message }), {
+  return new Response(JSON.stringify({ error: message, message, success: false }), {
     status: 429,
     headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
   });

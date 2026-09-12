@@ -107,10 +107,29 @@ function isAi(waarde: string): boolean {
   return eindigtOp(h, AI_HOSTS) || AI_NAMEN.includes(h);
 }
 
-/** Google draait op tientallen landdomeinen; een lijst mist er altijd een. */
+/**
+ * Google draait op tientallen landdomeinen; een lijst mist er altijd een.
+ *
+ * DE EERSTE VERSIE KEEK NAAR HET VERKEERDE STUK VAN DE NAAM.
+ * Die deed `host.startsWith('google.') || host.includes('.google.')`, en dat
+ * matcht `google.iets-anders.nl` en `nep.google.phishing.com` net zo goed als
+ * `google.de`. Een verwijzer die niets met Google te maken heeft, kwam dan in
+ * de rapportage terecht als ORGANISCH. Geen fout, geen rode toets, alleen een
+ * getal dat niet klopt — en juist dat getal is waarop deze campagne gestuurd
+ * wordt.
+ *
+ * Nu alleen het domein zelf: `google` gevolgd door een landcode, eventueel met
+ * subdomeinen ervoor. `www.google.co.uk` telt, `google.evil.com` niet.
+ *
+ * Het tweede deel is een korte lijst en geen `[a-z]+`, want anders matcht
+ * `google.evil.com` alsnog: `evil` als landcode en `com` als tweede laag. Zo'n
+ * gelede extensie bestaat alleen in de vorm co.uk, com.au, ac.nz en dergelijke.
+ */
+const GOOGLE_DOMEIN = /(?:^|\.)google\.(?:[a-z]{2,}|(?:co|com|net|org|edu|gov|ac)\.[a-z]{2,})$/;
+
 function isZoekmachine(host: string): boolean {
   if (!host) return false;
-  if (host.startsWith('google.') || host.includes('.google.')) return true;
+  if (GOOGLE_DOMEIN.test(host)) return true;
   return eindigtOp(host, ZOEKMACHINE_HOSTS) || ZOEKMACHINE_NAMEN.includes(host);
 }
 

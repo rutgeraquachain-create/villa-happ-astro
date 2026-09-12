@@ -127,10 +127,28 @@ export async function claimBon(
   return { ok: true, bon, korting: kortingBedrag(bon.waarde_cents, subtotaalCents) };
 }
 
-/** De claim definitief maken. Aangeroepen zodra Mollie zegt dat er betaald is. */
-export async function wisselBonIn(sb: SupabaseClient, orderId: string): Promise<void> {
-  const { error } = await sb.rpc('wissel_tegoedbon_in', { p_order: orderId });
-  if (error) console.error('[tegoedbon] Inwisselen mislukte:', error.message);
+/**
+ * De claim definitief maken. Aangeroepen zodra Mollie zegt dat er betaald is.
+ *
+ * Geeft terug of er werkelijk een bon is ingewisseld. Dat onderscheid ontbrak
+ * hier, en het is precies het onderscheid dat ertoe doet: `wissel_tegoedbon_in`
+ * matcht op `order_id`, dus als de bon intussen bij een andere bestelling hoort
+ * raakt de UPDATE nul rijen en geeft hij géén fout. De oude versie keek alleen
+ * naar `error` en meldde dus niets terwijl er zojuist korting was gegeven op een
+ * bon die aan iemand anders toebehoorde. Zie
+ * supabase/migrations/20260912_tegoedbon_dubbelgebruik.sql.
+ *
+ * `false` bij een order zonder bon is normaal en zegt niets; de aanroeper weet
+ * of er een bon aan hing.
+ */
+export async function wisselBonIn(sb: SupabaseClient, orderId: string): Promise<boolean> {
+  const { data, error } = await sb.rpc('wissel_tegoedbon_in', { p_order: orderId });
+  if (error) {
+    console.error('[tegoedbon] Inwisselen mislukte:', error.message);
+    return false;
+  }
+  const rijen = Array.isArray(data) ? data.length : data ? 1 : 0;
+  return rijen > 0;
 }
 
 /** De claim teruggeven, net als de gereserveerde voorraad bij een mislukte betaling. */
