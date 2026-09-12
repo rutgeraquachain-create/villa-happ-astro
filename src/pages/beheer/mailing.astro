@@ -158,8 +158,12 @@ mailings.sort((a, b) => a.id.localeCompare(b.id));
           } else if (actie === 'proef') {
             toon(`Proef naar ${data.naar} in de wachtrij gezet.`);
           } else {
+            // `resterend` boven nul betekent dat de lijst langer is dan één
+            // ronde. Dat hoort op het scherm te staan en niet in een logregel:
+            // eerder stopte de zending stil bij 200 en zag niemand dat.
             toon(`Klaargezet voor ${data.vastgelegd} van ${data.ontvangers} ontvangers.` +
-              (data.mislukt ? ` ${data.mislukt} mislukt.` : ''));
+              (data.mislukt ? ` ${data.mislukt} mislukt.` : '') +
+              (data.resterend ? ` Nog ${data.resterend} te gaan: druk nog een keer op Versturen.` : ''));
           }
         } finally {
           knop.disabled = actie === 'verstuur' ? true : false;

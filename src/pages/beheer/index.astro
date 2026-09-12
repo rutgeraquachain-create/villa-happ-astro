@@ -30,7 +30,15 @@ const pagina = Number(Astro.url.searchParams.get('p') || '1');
 
 let lijst = { rijen: [] as any[], totaal: 0, pagina: 1, paginas: 1 };
 let cijfers = { teVerzenden: 0, onderweg: 0, wachtOpBetaling: 0, omzet30: 0 };
-let outbox = { wachtendVooraf: 0, oudsteSecondenVooraf: 0, opgegeven: 0, nietAfgeleverd: 0 };
+/**
+ * `gemeten: false` betekent dat de telling zelf niet gelukt is. Dat is iets
+ * anders dan nul wachtende mail, en het scherm hoort dat verschil te tonen: een
+ * bewakingsmelding die "alles rustig" zegt omdat hij niet kón kijken, is de
+ * fout die deze site op 11 september een week stille cron kostte.
+ */
+let outbox = {
+  wachtendVooraf: 0, oudsteSecondenVooraf: 0, opgegeven: 0, nietAfgeleverd: 0, gemeten: true,
+};
 
 /**
  * De campagnestand van vandaag. `null` betekent dat de telling niet gelukt is,
@@ -117,7 +125,14 @@ const datum = (iso: string) =>
         )}
       </p>
 
-      {(outbox.wachtendVooraf > 0 || outbox.opgegeven > 0) && (
+      {!outbox.gemeten && (
+        <p class="bh-melding is-fout" id="bh-outbox-onmeetbaar">
+          De stand van de mailwachtrij kon niet worden opgehaald. De cijfers hieronder
+          ontbreken dus; ze zijn niet nul. Kijk in de logs van de database.
+        </p>
+      )}
+
+      {outbox.gemeten && (outbox.wachtendVooraf > 0 || outbox.opgegeven > 0) && (
         <p class={`bh-melding ${outbox.opgegeven ? 'is-fout' : 'is-let'}`} id="bh-outbox-melding">
           {outbox.wachtendVooraf > 0 && `${outbox.wachtendVooraf} mail wacht op verzending`}
           {outbox.wachtendVooraf > 0 && outbox.oudsteSecondenVooraf > 900 &&

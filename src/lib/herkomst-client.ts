@@ -98,8 +98,24 @@ export function legIngangVast(): void {
   if (typeof window === 'undefined' || geheugen) return;
 
   const binnenDeSite = hostVan(document.referrer) === zonderWww(location.hostname);
-  geheugen = leesOpslag() ?? signalenVanDezePagina(binnenDeSite ? 'pagina' : 'ingang');
-  if (magBewaren()) schrijfOpslag(geheugen);
+
+  /**
+   * Zonder toestemming niets uit de opslag halen, en wat er nog staat opruimen.
+   *
+   * Hier stond alleen `leesOpslag()`, onvoorwaardelijk. Schrijven gebeurde al
+   * netjes achter `magBewaren()`, maar lezen niet, en de opgeslagen sleutel
+   * werd alleen gewist als de bezoeker zijn keuze wijzigde terwijl deze pagina
+   * openstond. Wie zijn toestemming op een ander moment introk, werd daarna nog
+   * steeds gemeten uit wat er op zijn apparaat stond. Dat is niet wat het
+   * cookiebeleid belooft, en het beleid is hier leidend.
+   */
+  if (!magBewaren()) {
+    wisOpslag();
+    geheugen = signalenVanDezePagina(binnenDeSite ? 'pagina' : 'ingang');
+  } else {
+    geheugen = leesOpslag() ?? signalenVanDezePagina(binnenDeSite ? 'pagina' : 'ingang');
+    schrijfOpslag(geheugen);
+  }
 
   // Geeft iemand later alsnog toestemming, dan bewaren we de ingang die al in
   // het geheugen stond. Trekt hij hem in, dan gaat de opslag weg.

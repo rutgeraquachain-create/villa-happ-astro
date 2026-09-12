@@ -89,6 +89,15 @@ export function paymentState(mollieStatus: string): PaymentState {
   }
 }
 
+/**
+ * Betaalstatussen waarna deze functie niets meer mag veranderen.
+ *
+ * `paid` omdat een betaalde order niet nog eens betaald wordt, `refunded` omdat
+ * een terugbetaalde order geen betaalde order is. Beide gaan over dezelfde
+ * vraag: is het geld afgehandeld.
+ */
+const AFGEROND = new Set(['paid', 'refunded']);
+
 export function mapMollieStatus(
   mollieStatus: string,
   current: { payment_status: string; status: string },
@@ -100,8 +109,22 @@ export function mapMollieStatus(
     markPaidAt: false,
   };
 
-  // Eenmaal betaald blijft betaald: niets meer muteren.
-  if (current.payment_status === 'paid') return unchanged;
+  /**
+   * Eenmaal afgerond blijft afgerond: niets meer muteren.
+   *
+   * `refunded` hoort hier bij, en dat is gemeten op 12 september 2026. De
+   * webhook vangt een terugbetaling hierboven af en keert dan meteen terug,
+   * maar alleen zolang het terugbetaalde bedrag hoger is dan wat er al stond.
+   * Roept Mollie de webhook nog eens aan met dezelfde terugbetaling, en dat doet
+   * hij (de terugbetaling zelf wisselt van status), dan valt het verzoek door
+   * naar deze functie. De betaling staat bij Mollie nog steeds op `paid`, want
+   * een terugbetaling is daar een los object. Met alleen `'paid'` in deze regel
+   * gaf deze functie dan `finalize` terug: de voorraad ging een tweede keer van
+   * de plank, de order sprong van `refunded` terug naar `paid`, en de tegoedbon
+   * werd opnieuw ingewisseld. Geen foutmelding, en de eerstvolgende
+   * terugbetaling van Rutger zou hem raken.
+   */
+  if (AFGEROND.has(current.payment_status)) return unchanged;
 
   switch (mollieStatus) {
     case 'paid':

@@ -26,7 +26,22 @@ import { zetInWachtrij } from './outbox';
 import { afmeldUrl, afmeldToken, normaliseerEmail } from './nieuwsbrief';
 import { getSiteOrigin } from './site';
 
-/** Hoeveel adressen we per aanroep in de wachtrij zetten. */
+/**
+ * Hoeveel adressen we per aanroep in de wachtrij zetten.
+ *
+ * DIT WAS EEN PLAFOND EN GEEN PORTIE. GEMETEN 12 SEPTEMBER 2026.
+ * `zetMailingKlaar` riep `verzendlijst(sb)` aan zonder tweede argument en die
+ * pakt de eerste 200 op `created_at` oplopend. Wie als 201e op de lijst stond
+ * kreeg de mailing nooit, en een tweede klik op de knop hielp niet: dezelfde
+ * query gaf dezelfde eerste 200 terug, die allemaal op hun dedupe-sleutel
+ * afketsten. Geen foutmelding, geen rode toets, alleen mensen die niets kregen.
+ * Precies waar deze campagne de lijst voor laat groeien.
+ *
+ * Nu is het wél een portie: `verzendlijst` laat weg wie voor deze mailing al
+ * een rij heeft, dus elke volgende aanroep schuift op. `resterend` in de uitslag
+ * zegt hoeveel er nog wachten, zodat het beheerscherm het verschil kan tonen in
+ * plaats van het te verzwijgen.
+ */
 const BATCH = 200;
 
 export interface Mailing {
@@ -73,6 +88,88 @@ export async function verzendlijst(sb: SupabaseClient, limiet = BATCH): Promise<
   return (data || []).map((r: { email: string }) => normaliseerEmail(r.email));
 }
 
+/** Zo veel adressen halen we per query op bij het doorlopen van de lijst. */
+const PAGINA = 1000;
+
+/** Zo ver kijken we terug in de wachtrij naar wie deze mailing al heeft. */
+const MAX_AL_GEHAD = 50_000;
+
+/**
+ * Wie deze mailing nog niet heeft, en hoeveel er daarna nog wachten.
+ *
+ * De wachtrij is hier de boekhouding: staat er een rij `mailing:<slug>` voor een
+ * adres, dan is die mail klaargezet en hoeft hij niet nog eens. Dat is dezelfde
+ * waarheid als de dedupe-sleutel gebruikt, alleen vooraf gelezen in plaats van
+ * achteraf tegen een unieke index aangelopen. Zonder dit bleef elke aanroep op
+ * dezelfde eerste 200 adressen hangen.
+ */
+export async function nogTeVerzenden(
+  sb: SupabaseClient,
+  slug: string,
+  limiet = BATCH,
+): Promise<{ adressen: string[]; resterend: number; volledig: boolean }> {
+  const { data: alGehad, error: wachtrijFout } = await sb
+    .from('uitgaande_mail')
+    .select('ontvanger')
+    .eq('soort', `mailing:${slug}`)
+    .limit(MAX_AL_GEHAD);
+
+  if (wachtrijFout) {
+    // Niet weten wie hem al heeft is geen reden om iedereen opnieuw te mailen.
+    console.error('[mailing] Wachtrij lezen mislukte:', wachtrijFout.message);
+    return { adressen: [], resterend: 0, volledig: false };
+  }
+
+  const gehad = new Set(
+    (alGehad || []).map((r: { ontvanger: string }) => normaliseerEmail(r.ontvanger)),
+  );
+
+  const adressen: string[] = [];
+  let resterend = 0;
+  let vanaf = 0;
+  let volledig = true;
+
+  // Doorlopen tot de lijst op is. We stoppen niet zodra `limiet` vol is: de rest
+  // van de pagina's telt door voor `resterend`, want een teller die stopt met
+  // tellen zodra hij genoeg heeft, meldt een achterstand van nul.
+  for (;;) {
+    const { data, error } = await sb
+      .from('newsletter_subscribers')
+      .select('email')
+      .eq('confirmed', true)
+      .is('unsubscribed_at', null)
+      .order('created_at', { ascending: true })
+      .range(vanaf, vanaf + PAGINA - 1);
+
+    if (error) {
+      console.error('[mailing] Verzendlijst ophalen mislukte:', error.message);
+      return { adressen, resterend, volledig: false };
+    }
+
+    for (const rij of data || []) {
+      const email = normaliseerEmail((rij as { email: string }).email);
+      if (gehad.has(email)) continue;
+      // Dubbele adressen binnen één ronde: de unieke index vangt ze, maar dan
+      // telt `mislukt` op iets dat geen fout is.
+      if (adressen.includes(email)) continue;
+      if (adressen.length < limiet) adressen.push(email);
+      else resterend++;
+    }
+
+    if (!data || data.length < PAGINA) break;
+    vanaf += PAGINA;
+    if (vanaf >= MAX_AL_GEHAD) {
+      // Zo lang is deze lijst nooit geweest. Gebeurt het toch, dan is stil
+      // afkappen het laatste wat je wilt.
+      console.error('[mailing] Lijst langer dan', MAX_AL_GEHAD, 'adressen; rest niet geteld.');
+      volledig = false;
+      break;
+    }
+  }
+
+  return { adressen, resterend, volledig };
+}
+
 export interface MailingUitslag {
   /** Hoeveel adressen er in de lijst zaten. */
   ontvangers: number;
@@ -80,6 +177,12 @@ export interface MailingUitslag {
   vastgelegd: number;
   /** Hoeveel er niet konden worden vastgelegd; die krijgen niets. */
   mislukt: number;
+  /**
+   * Hoeveel er na deze ronde nog wachten. Boven nul betekent: druk nog een keer
+   * op de knop. Dit veld bestaat omdat het oude gedrag er niet was: de zending
+   * stopte bij 200 zonder dat iets dat zei.
+   */
+  resterend: number;
 }
 
 /**
@@ -100,13 +203,14 @@ export async function zetMailingKlaar(
   const sb = getSupabaseAdmin();
   if (!sb) {
     console.error('[mailing] Geen database; mailing niet klaargezet:', mailing.slug);
-    return { ontvangers: 0, vastgelegd: 0, mislukt: 0 };
+    return { ontvangers: 0, vastgelegd: 0, mislukt: 0, resterend: 0 };
   }
 
   const origin = getSiteOrigin();
-  const adressen = opties.alleenNaar
-    ? [normaliseerEmail(opties.alleenNaar)]
-    : await verzendlijst(sb);
+  const ronde = opties.alleenNaar
+    ? { adressen: [normaliseerEmail(opties.alleenNaar)], resterend: 0 }
+    : await nogTeVerzenden(sb, mailing.slug);
+  const adressen = ronde.adressen;
 
   let vastgelegd = 0;
   let mislukt = 0;
@@ -127,7 +231,7 @@ export async function zetMailingKlaar(
     uitslag.vastgelegd ? vastgelegd++ : mislukt++;
   }
 
-  return { ontvangers: adressen.length, vastgelegd, mislukt };
+  return { ontvangers: adressen.length, vastgelegd, mislukt, resterend: ronde.resterend };
 }
 
 /** Hoeveel mensen zouden deze mailing krijgen, en hoeveel kregen hem al? */
@@ -140,7 +244,20 @@ export async function mailingStand(slug: string): Promise<{
   const sb = getSupabaseAdmin();
   if (!sb) return { lijst: 0, alKlaargezet: 0, verzonden: 0, mislukt: 0 };
 
-  const lijst = (await verzendlijst(sb, 10_000)).length;
+  /**
+   * Tellen, niet ophalen en de rijen optellen.
+   *
+   * Hier stond `verzendlijst(sb, 10_000).length`. Dat is geen telling maar een
+   * plafond: bij meer dan tienduizend adressen was het antwoord tienduizend, en
+   * niemand had gezien waar dat getal vandaan kwam.
+   */
+  const { count, error: telFout } = await sb
+    .from('newsletter_subscribers')
+    .select('email', { count: 'exact', head: true })
+    .eq('confirmed', true)
+    .is('unsubscribed_at', null);
+  if (telFout) console.error('[mailing] Lijst tellen mislukte:', telFout.message);
+  const lijst = count ?? 0;
 
   const { data } = await sb
     .from('uitgaande_mail')
