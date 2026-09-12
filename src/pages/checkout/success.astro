@@ -151,9 +151,17 @@ const levEU = levertijdIndicatie('BE');
   let gemetenItems: AnalyticsItem[] = [];
 
   const params = new URLSearchParams(window.location.search);
-  // Alleen het token: het bestelnummer komt uit het antwoord van de API, zodat
-  // er geen oplopend nummer in de URL staat dat je kunt aftellen.
-  const token = params.get('t') || '';
+  /**
+   * Alleen het token: het bestelnummer komt uit het antwoord van de API, zodat
+   * er geen oplopend nummer in de URL staat dat je kunt aftellen.
+   *
+   * Het token komt uit `window.__vhOrderToken` en niet meer uit de query. Een
+   * script in de head van Base.astro haalt `t` uit de zichtbare URL vóór GTM
+   * laadt, want anders gaat die sleutel als `page_location` mee naar Google.
+   * De `params`-terugval blijft staan voor het geval dat script niet liep;
+   * zonder token laadt deze pagina helemaal niets.
+   */
+  const token = (window as any).__vhOrderToken || params.get('t') || '';
   const zetNummer = (nr: string) => {
     const label = nr ? `#${nr}` : 'Volgt per e-mail';
     document.getElementById('vh-ordernr')!.textContent = label;

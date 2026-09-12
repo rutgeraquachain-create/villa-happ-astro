@@ -24,7 +24,7 @@ Werk op een branch, nooit rechtstreeks op `main`.
 npm run dev      # astro dev, poort 4321
 npm run build    # astro build
 npx astro check  # moet 0 errors en 0 warnings geven
-npm test         # vitest, 151 tests
+npm test         # vitest, 758 tests
 ```
 
 `npm run beheer:hash -- 'wachtwoord'` genereert de hash voor `/beheer`.
@@ -243,8 +243,17 @@ gaat via de RPC `claim_tegoedbon`: één voorwaardelijke UPDATE beslist wie hem
 krijgt, want een SELECT gevolgd door een UPDATE laat er bij twee gelijktijdige
 kassa's twee door. De webhook maakt de claim definitief bij `finalize` en geeft
 hem terug bij `release`, precies zoals hij dat met de gereserveerde voorraad
-doet. Een claim vervalt na dertig minuten, anders zet één weggeklikt betaalscherm
-de bon voorgoed vast. De korting gaat van het **subtotaal** af en nooit van de
+doet. **Een claim gaat pas over als de vorige bestelling geannuleerd is, nooit op
+basis van verstreken tijd.** Hier stond "vervalt na dertig minuten". Dat kijkt
+naar de klok in plaats van naar de bestelling, en een bestelling van een half uur
+oud is niet dood: de betaallink van Mollie werkt nog. Wie twee keer begon en
+daarna beide links betaalde, kreeg twee keer korting uit één bon, en het
+inwisselen van de eerste matchte op niets zonder fout te geven. De vastloper waar
+die dertig minuten voor stonden kan nog steeds niet ontstaan: de webhook
+annuleert een afgebroken betaling binnen minuten, en de kwartiercron sluit na 24
+uur alles wat nooit terugmeldde. `wisselBonIn` geeft terug óf er werkelijk een
+bon is ingewisseld; dat antwoord negeren was de reden dat het dubbelgebruik geen
+enkel spoor achterliet. De korting gaat van het **subtotaal** af en nooit van de
 verzendkosten; dat staat zo in `src/pages/actievoorwaarden.astro` en die tekst is
 leidend, niet de code.
 
@@ -278,6 +287,26 @@ van het bezoek vast. Drie regels die elk een keer bijna misgingen:
   toe te voegen aan een lijst, verhoog dan `HERKOMST_VERSIE`. De vingerafdruk in
   `tests/herkomst.test.ts` valt om zodra dat nodig is; dat rood is een beslissing
   over de rijen die al in de database staan, geen toets om bij te werken.
+
+**Een pagina waarvan het pad een sleutel is, meet niets.** `/bestelling/<token>`
+draagt een capability-token met 120 dagen geldigheid in het pad. Die pagina zet
+`privaat={true}` op `Base.astro`, en dat schakelt GTM, de consentbanner én Vercel
+Analytics uit. Een veld anonimiseren is niet genoeg: de automatische
+paginaweergave van beide leveranciers pakt het pad zelf. Tokens in een query
+(`/checkout/success?t=`) worden door een script bovenaan de head van `Base.astro`
+uit de zichtbare URL gehaald en in `window.__vhOrderToken` gelegd, vóór GTM laadt.
+Dat script moet bóven het GTM-blok blijven staan; daaronder leest GTM
+`page_location` inclusief token. Gemeten 12 september 2026 door een externe
+audit: de pagina zette keurig `no-store` en `noindex` en gaf ondertussen zijn
+eigen sleutel door aan Google.
+
+**Een UPDATE raakt elke doelrij maar één keer.** `geef_verlopen_reserveringen_vrij`
+trok de voorraad af met `FROM order_items`, dus bij drie verlopen bestellingen op
+dezelfde maat ging er één stuk af en verdwenen de andere twee zonder melding,
+terwijl alle drie de orders wél gesloten werden. Die reservering kwam daarna
+nooit meer vrij. Tel in zo'n query eerst op per doelrij (`per_variant`) en trek
+dan één keer af. Gemeten 12 september 2026 tegen de echte functie op productie:
+1 order gaf reserved 0, 2 orders gaven 1, 3 orders gaven 2.
 
 **Een honeypot bestaat uit twee helften in twee bestanden.** De route die het
 veld uitleest is de helft die je ziet; het verborgen veld in de HTML is de helft

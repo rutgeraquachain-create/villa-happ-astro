@@ -166,7 +166,7 @@ import '../../styles/shop.css';
 </Base>
 
 <script>
-  import { getCart, cartSubtotal, shippingCostCents, cartHasDemo } from '../../lib/cart';
+  import { getCart, cartSubtotal, shippingCostCents, cartHasDemo, onCartChange } from '../../lib/cart';
   import { trackBeginCheckout } from '../../lib/analytics';
   import { herkomstVoorVerzending } from '../../lib/herkomst-client';
   import { onPageReady } from '../../lib/page';
@@ -228,6 +228,25 @@ import '../../styles/shop.css';
   }
 
   countrySel.addEventListener('change', renderSummary);
+
+  /**
+   * Ook opnieuw tekenen als het mandje verandert.
+   *
+   * GEMETEN 12 SEPTEMBER 2026, LIVE, DOOR EEN EXTERNE AUDIT. Het overzicht
+   * luisterde alleen naar een landwijziging. De headerdrawer staat op deze
+   * pagina óók, en daarin kun je het aantal aanpassen. Eén cap gaf € 27,95 plus
+   * € 8,95 verzending. In de drawer naar twee caps: de drawer toonde € 55,90,
+   * het checkoutoverzicht en de betaalknop bleven op € 36,90 staan. Bij
+   * indienen leest de code opnieuw `getCart()`, dus de klant had twee caps
+   * besteld en € 64,85 betaald na een knop die € 36,90 beloofde.
+   *
+   * De opzegger hoort erbij: zonder opruimen stapelen de luisteraars zich op
+   * bij elke navigatie van de ClientRouter, en dan tekent één wijziging het
+   * overzicht een groeiend aantal keren.
+   */
+  const stopCartLuisteraar = onCartChange(renderSummary);
+  document.addEventListener('astro:before-swap', () => stopCartLuisteraar(), { once: true });
+
   renderSummary();
 
   /* Stappenindicator (goal-gradient): vult zich terwijl je vordert */
@@ -278,11 +297,37 @@ import '../../styles/shop.css';
   const FORM_KEY = 'vh_checkout_form_v1';
   const formFields = ['email', 'first_name', 'last_name', 'street', 'house_number', 'postal_code', 'city', 'country'];
   const fieldEl = (name: string) => form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`);
+  /**
+   * Het land is een keuzelijst en heeft dus altijd al een waarde.
+   *
+   * GEMETEN 12 SEPTEMBER 2026, LIVE, DOOR EEN EXTERNE AUDIT. De herstelregel
+   * hieronder luidde `if (el && saved[name] && !el.value)`. Voor een tekstveld
+   * klopt dat: leeg betekent niet ingevuld. Een `<select>` met NL als standaard
+   * is nooit leeg, dus het opgeslagen land werd nooit teruggezet. België plus
+   * Antwerpen gaf € 12,50 verzending en € 40,45 totaal; na een refresh bleef
+   * Antwerpen staan en sprong het land terug naar Nederland, met € 8,95 en
+   * € 36,90. Dezelfde fout raakte Duitsland. Dat gebeurt ook bij de terugkeer
+   * van een afgebroken betaling, precies het moment waarop iemand het opnieuw
+   * probeert.
+   *
+   * Een keuzelijst herstel je dus op de opgeslagen waarde zelf, en alleen als
+   * die waarde in de lijst voorkomt: wat in de opslag staat komt van het
+   * apparaat van de bezoeker en is geen invoer om blind te vertrouwen.
+   */
+  const isKeuzelijst = (el: HTMLInputElement | HTMLSelectElement | null): el is HTMLSelectElement =>
+    el instanceof HTMLSelectElement;
+
   try {
     const saved = JSON.parse(sessionStorage.getItem(FORM_KEY) || '{}');
     formFields.forEach((name) => {
       const el = fieldEl(name);
-      if (el && saved[name] && !el.value) el.value = saved[name];
+      if (!el || !saved[name]) return;
+      if (isKeuzelijst(el)) {
+        const bestaat = [...el.options].some((o) => o.value === saved[name]);
+        if (bestaat) el.value = saved[name];
+        return;
+      }
+      if (!el.value) el.value = saved[name];
     });
     updateSteps();
     renderSummary();

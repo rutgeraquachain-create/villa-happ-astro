@@ -11,6 +11,14 @@
  * De pagina toont PII, dus: no-store, noindex, en niets in een CDN-cache.
  * Een ongeldig of verlopen token geeft geen foutmelding met details maar
  * een nette pagina die uitlegt wat je kunt doen.
+ *
+ * EN: `privaat`, dus geen enkele meting.
+ * Gemeten 12 september 2026 door een externe audit. Deze pagina deed alles goed
+ * aan de kant van de zoekmachines en gaf ondertussen via de gewone layout
+ * `location.pathname` door aan de dataLayer en aan Vercel Analytics. Dat pad is
+ * de sleutel zelf, 120 dagen geldig. De zorg voor `no-store` en `noindex` maakte
+ * het contrast alleen maar groter: de deur zat op slot en de sleutel ging met de
+ * post mee.
  */
 export const prerender = false;
 
@@ -61,6 +69,7 @@ const voornaam = (order?.customer_name || '').split(' ')[0];
   title={order ? `Bestelling ${order.order_number} · Villa Happ` : 'Bestelling · Villa Happ'}
   description="Volg de voortgang van je Villa Happ bestelling."
   noindex={true}
+  privaat={true}
 >
   <section class="vh-page">
     <div class="vh-page-inner kp">
