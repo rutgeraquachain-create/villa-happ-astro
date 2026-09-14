@@ -33,6 +33,21 @@ export interface Props {
   showHeader?: boolean;
   showFooter?: boolean;
   noindex?: boolean;
+  /**
+   * Geen enkele meting op deze pagina: geen GTM, geen Vercel Analytics, geen
+   * paginaweergave. Voor pagina's waar het PAD zelf een sleutel is.
+   *
+   * GEMETEN 12 SEPTEMBER 2026, UIT EEN EXTERNE AUDIT. `/bestelling/<token>`
+   * zette keurig `no-store` en `noindex` omdat de pagina persoonsgegevens
+   * toont, en gaf vervolgens via de gewone layout `location.pathname` door aan
+   * de dataLayer. Dat pad is een capability-token met 120 dagen geldigheid. Het
+   * ging dus als gewone paginaweergave naar Google en naar Vercel Analytics.
+   *
+   * Deze vlag is bewust grof. Een veld anonimiseren dekt de automatische
+   * paginaweergaves van de leveranciers niet, en op zo'n pagina is er niets te
+   * meten dat opweegt tegen het risico.
+   */
+  privaat?: boolean;
   /** LCP-beeld van deze pagina; wordt responsive gepreload */
   preloadImage?: string;
 }
@@ -46,6 +61,7 @@ const {
   showHeader = true,
   showFooter = true,
   noindex = false,
+  privaat = false,
   preloadImage,
 } = Astro.props;
 
@@ -73,7 +89,7 @@ const preview = isPreviewHost(canonicalURL.origin);
  *
  * Op previews bewust uit: die zouden anders meetellen in de rapportage.
  */
-const gtmId = !preview ? (import.meta.env.PUBLIC_GTM_ID || '') : '';
+const gtmId = (!preview && !privaat) ? (import.meta.env.PUBLIC_GTM_ID || '') : '';
 ---
 
 <!doctype html>
@@ -98,6 +114,38 @@ const gtmId = !preview ? (import.meta.env.PUBLIC_GTM_ID || '') : '';
     />
   )}
   <script is:inline>document.documentElement.classList.remove('no-js');</script>
+
+  {/**
+    * Het ordertoken uit de zichtbare URL halen, vóór welk meetscript dan ook.
+    *
+    * GEMETEN 12 SEPTEMBER 2026, UIT EEN EXTERNE AUDIT.
+    * `/checkout/success?t=<token>` draagt een ondertekend capability-token in de
+    * query. GTM geeft `{{Page URL}}` door als `page_location`, dus dat token
+    * belandde bij Google, in de browsergeschiedenis en in elke referrer die de
+    * pagina uitstuurt. Een token is geen identificatie maar een sleutel: wie hem
+    * heeft, ziet naam, adres en bestelling.
+    *
+    * Dit script staat bewust boven het GTM-blok hieronder. Het haalt `t` weg en
+    * legt hem in `window.__vhOrderToken`, zodat de bedanktpagina hem nog kan
+    * gebruiken om de status op te halen. De pagina zelf merkt er niets van; de
+    * adresbalk toont daarna een schone URL.
+    *
+    * De portaalpagina `/bestelling/<token>` draagt hem in het PAD en is daarmee
+    * niet te schonen zonder de pagina te breken. Die krijgt daarom `privaat` en
+    * laadt helemaal geen meting. Zie de Props hierboven.
+    */}
+  <script is:inline>
+    (function () {
+      try {
+        var u = new URL(location.href);
+        var t = u.searchParams.get('t');
+        if (!t) return;
+        window.__vhOrderToken = t;
+        u.searchParams.delete('t');
+        history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+      } catch (e) { /* oude browser: liever de pagina laten werken */ }
+    })();
+  </script>
 
   {gtmId && (
     <>
@@ -224,7 +272,9 @@ const gtmId = !preview ? (import.meta.env.PUBLIC_GTM_ID || '') : '';
     <CartDrawer />
   </div>
 
-  <Analytics />
+  {/* Ook Vercel Analytics gaat uit op een privépagina: die legt het pad vast,
+      en op /bestelling/<token> ís het pad de sleutel. */}
+  {!privaat && <Analytics />}
 
   {gtmId && <ConsentBanner />}
 
