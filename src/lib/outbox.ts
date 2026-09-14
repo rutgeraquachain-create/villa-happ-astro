@@ -185,13 +185,24 @@ async function probeerEen(
 export interface OutboxUitslag extends Achterstand {
   verzonden: number;
   mislukt: number;
+  /**
+   * Of de batch geclaimd kon worden. False betekent: deze run heeft niets
+   * geprobeerd, en `verzonden: 0` zegt dan niets over de wachtrij.
+   *
+   * GEMETEN 14 SEPTEMBER 2026. `claim_outbox_batch` kreeg op 11 september 19:00,
+   * 12 september 12:00 en 13 september 20:00 UTC een 504 van Supabase. Deze
+   * functie gaf dan nul verzonden en nul mislukt terug, zonder foutregel, en de
+   * cronroute antwoordde 200. Een run die niets deed, was niet te onderscheiden
+   * van een run waarin niets te doen was.
+   */
+  claimGelukt: boolean;
 }
 
 /** Verwerkt de wachtrij. Aangeroepen door de cron en door het beheerportaal. */
 export async function verwerkWachtrij(): Promise<OutboxUitslag> {
   const start = Date.now();
   const leeg: OutboxUitslag = {
-    verzonden: 0, mislukt: 0, ...NIET_GEMETEN,
+    verzonden: 0, mislukt: 0, ...NIET_GEMETEN, claimGelukt: false,
   };
 
   const sb = getSupabaseAdmin();
@@ -202,7 +213,10 @@ export async function verwerkWachtrij(): Promise<OutboxUitslag> {
   const achterstand = await leesAchterstand(sb);
 
   const { data: batch, error } = await sb.rpc('claim_outbox_batch', { p_limiet: BATCH });
-  if (error || !batch) return { ...leeg, ...achterstand };
+  if (error || !batch) {
+    console.error('[outbox] Batch claimen mislukte:', error?.message ?? 'geen data teruggekregen');
+    return { ...leeg, ...achterstand, claimGelukt: false };
+  }
 
   let verzonden = 0;
   let mislukt = 0;
@@ -219,7 +233,7 @@ export async function verwerkWachtrij(): Promise<OutboxUitslag> {
     ok ? verzonden++ : mislukt++;
   }
 
-  return { verzonden, mislukt, ...achterstand };
+  return { verzonden, mislukt, ...achterstand, claimGelukt: true };
 }
 
 /**

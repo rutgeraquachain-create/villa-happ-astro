@@ -358,8 +358,18 @@ sleutel: 401 op een aanroep zonder sleutel, en 200 op de cronruns van 16:15 en
 wachtrij, nul openstaande voorraadmeldingen.
 
 Controleer na elke wijziging aan de cron of aan de omgevingsvariabelen de
-runtime-logs van `/api/notify/run`, gegroepeerd op statuscode. Een planning in
-`vercel.json` zegt dat de route wordt aangeroepen, niet dat hij iets doet.
+runtime-logs van `/api/notify/run`, gegroepeerd op statuscode **en** op
+logniveau. Een planning in `vercel.json` zegt dat de route wordt aangeroepen,
+niet dat hij iets doet, en een 200 zei tot 14 september 2026 alleen dat de route
+tot het einde kwam: toen stonden er zeven foutregels onder 146 keer 200. Sinds
+die dag geeft de route 500 zodra één stap mislukt, en noemt het antwoord welke
+(`stappen` en `mislukt`). Vercel start een mislukte cronrun niet opnieuw, dus een
+500 kost geen extra run.
+
+Supabase is op het hele uur structureel trager: over 24 uur gemiddeld 794 ms per
+REST-verzoek op minuut 0, tegen 153 ms op minuut 15, en vijf van de zes 504's op
+minuut 0. Een 500 van deze route op :00 wijst dus eerst naar Supabase. Zie de
+projectnotitie in de vault voor de metingen.
 
 ---
 

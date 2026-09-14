@@ -23,13 +23,26 @@
  * JSON kent geen commentaar en Vercel weigert onbekende sleutels, waardoor
  * elke build faalde.)
  *
- * De taak is idempotent en doet niets als er niets klaarstaat, dus vaker
- * draaien kost een lege query per kwartier en verder niets.
+ * STATUSCODE: 200 ALLEEN ALS ELKE STAP SLAAGDE
+ * Een mislukte stap houdt de andere niet tegen, want als de mail hapert moet
+ * de voorraad nog steeds vrijkomen. Maar de route gaf daarna gewoon 200, en
+ * dat verborg op 13 en 14 september 2026 zeven foutregels achter 146 keer 200.
+ * Nu legt elke stap vast of hij slaagde, en `cronUitslag` (src/lib/cronstappen.ts)
+ * maakt er 500 van zodra er één mislukte. Het antwoord noemt welke.
+ *
+ * Een 500 levert geen extra run op: Vercel start een mislukte cronrun niet
+ * opnieuw. Vercel kan wel af en toe dezelfde geplande run twee keer afleveren,
+ * los van de status. Daarom moet elke stap een tweede keer veilig zijn:
+ *  - de wachtrij claimt met `FOR UPDATE SKIP LOCKED`, verzonden mail komt niet
+ *    terug in een batch;
+ *  - het vrijgeven van reserveringen sluit de orders die het vrijgeeft, dus een
+ *    tweede run vindt ze niet meer;
+ *  - een voorraadmelding krijgt `notified_at` ná het versturen. Mislukt dat
+ *    markeren, dan gaat de mail de volgende run nog eens. Dat was altijd zo,
+ *    alleen gaf het geen enkel signaal; nu telt het als mislukte stap.
  *
  * Draait via de Vercel-cron (zie vercel.json) of handmatig met
- * `Authorization: Bearer <CRON_SECRET>`. Loopt de open meldingen na,
- * mailt iedereen van wie de gevraagde maat weer beschikbaar is en zet
- * notified_at. Idempotent: een gemailde rij komt nooit opnieuw aan bod.
+ * `Authorization: Bearer <CRON_SECRET>`.
  *
  * Zonder CRON_SECRET is de route bewust dicht (503); zonder Resend-key
  * wordt er niets gemarkeerd, zodat geen melding verloren gaat.
@@ -41,6 +54,7 @@ import { dueNotifications, stockKey, type PendingNotification } from '../../../l
 import { sendBackInStock, isMailConfigured } from '../../../lib/mail';
 import { verwerkWachtrij } from '../../../lib/outbox';
 import { getSiteOrigin } from '../../../lib/site';
+import { cronUitslag, type Stappen } from '../../../lib/cronstappen';
 
 export const prerender = false;
 
@@ -56,6 +70,22 @@ export const GET: APIRoute = async ({ request }) => {
   const sb = getSupabaseAdmin();
   if (!sb) return new Response(JSON.stringify({ error: 'no-db' }), { status: 503 });
 
+  const stappen: Stappen = {};
+
+  /**
+   * Eén uitgang voor elk antwoord na dit punt, zodat geen enkel pad nog een
+   * eigen statuscode kan kiezen. Die vrijheid was precies hoe de route een
+   * mislukte stap met 200 kon afmelden.
+   */
+  const antwoord = (inhoud: Record<string, unknown>) => {
+    const { status, mislukt } = cronUitslag(stappen);
+    if (mislukt.length) console.error('[cron] Run niet volledig geslaagd, mislukte stappen:', mislukt.join(', '));
+    return new Response(JSON.stringify({ ...inhoud, stappen, mislukt }), {
+      status,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  };
+
   // 1. Eerst de mail-outbox legen.
   //
   // Dit is het vangnet voor transactionele mail. De outbox probeert bij het
@@ -67,6 +97,15 @@ export const GET: APIRoute = async ({ request }) => {
   // De snelle route blijft de directe poging bij het wegschrijven; deze cron
   // is het vangnet daaronder en draait elk kwartier (zie vercel.json).
   const outbox = await verwerkWachtrij();
+  stappen.wachtrij = outbox.claimGelukt
+    ? { ok: true }
+    : { ok: false, melding: 'claim_outbox_batch mislukte; deze run heeft geen mail geprobeerd' };
+  // Het meten van de achterstand is geen verzendwerk, maar het is wel de enige
+  // plek waar het beheerscherm zijn waarschuwing vandaan haalt. Een meting die
+  // niet lukte en toch groen meldt, is de fout uit les 0158.
+  stappen.wachtrijMeting = outbox.gemeten
+    ? { ok: true }
+    : { ok: false, melding: 'outbox_achterstand mislukte; het beheerscherm toont geen stand' };
 
   /**
    * 2. Blijven hangende reserveringen vrijgeven.
@@ -86,19 +125,18 @@ export const GET: APIRoute = async ({ request }) => {
    */
   const { data: opgeruimd, error: oErr } = await sb.rpc('geef_verlopen_reserveringen_vrij', { p_uren: 24 });
   if (oErr) console.error('[cron] vrijgeven van verlopen reserveringen faalde:', oErr);
+  stappen.reserveringen = oErr ? { ok: false, melding: oErr.message } : { ok: true };
   const reserveringen = {
     vrijgegeven: Array.isArray(opgeruimd) ? opgeruimd.length : 0,
     orders: Array.isArray(opgeruimd) ? opgeruimd.map((r: any) => r.order_number) : [],
   };
 
+  // 3. Voorraadmeldingen.
   if (!isMailConfigured()) {
-    // Zonder mailkanaal niets markeren: de wachtrij blijft intact
-    return new Response(JSON.stringify({
-      outbox,
-      reserveringen,
-      sent: 0,
-      skipped: 'mail niet geconfigureerd',
-    }), { status: 200 });
+    // Zonder mailkanaal niets markeren: de wachtrij blijft intact. Dat is een
+    // bewuste stand en geen fout, dus de stap slaagt met die reden erbij.
+    stappen.voorraadmeldingen = { ok: true, melding: 'overgeslagen: mail niet geconfigureerd' };
+    return antwoord({ outbox, reserveringen, sent: 0 });
   }
 
   const { data: pending, error: pErr } = await sb
@@ -108,8 +146,15 @@ export const GET: APIRoute = async ({ request }) => {
     .order('created_at', { ascending: true })
     .limit(200);
 
-  if (pErr) return new Response(JSON.stringify({ outbox, reserveringen, error: 'query failed' }), { status: 500 });
-  if (!pending?.length) return new Response(JSON.stringify({ outbox, reserveringen, sent: 0, pending: 0 }), { status: 200 });
+  if (pErr) {
+    console.error('[cron] Voorraadmeldingen ophalen faalde:', pErr.message);
+    stappen.voorraadmeldingen = { ok: false, melding: 'back_in_stock ophalen faalde' };
+    return antwoord({ outbox, reserveringen });
+  }
+  if (!pending?.length) {
+    stappen.voorraadmeldingen = { ok: true };
+    return antwoord({ outbox, reserveringen, sent: 0, pending: 0 });
+  }
 
   // Voorraad + productnaam per (slug, maat) in één query
   const slugs = [...new Set(pending.map((p: any) => p.product_slug))];
@@ -119,7 +164,11 @@ export const GET: APIRoute = async ({ request }) => {
     .in('slug', slugs)
     .eq('status', 'published');
 
-  if (prErr) return new Response(JSON.stringify({ outbox, reserveringen, error: 'query failed' }), { status: 500 });
+  if (prErr) {
+    console.error('[cron] Producten voor voorraadmeldingen ophalen faalde:', prErr.message);
+    stappen.voorraadmeldingen = { ok: false, melding: 'products ophalen faalde' };
+    return antwoord({ outbox, reserveringen });
+  }
 
   const availableByKey: Record<string, number> = {};
   const nameBySlug: Record<string, string> = {};
@@ -135,6 +184,8 @@ export const GET: APIRoute = async ({ request }) => {
   const due = dueNotifications(pending as PendingNotification[], availableByKey, MAILS_PER_RUN);
   const origin = getSiteOrigin();
   let sent = 0;
+  let nietVerstuurd = 0;
+  let nietGemarkeerd = 0;
 
   for (const row of due) {
     const ok = await sendBackInStock(
@@ -143,14 +194,27 @@ export const GET: APIRoute = async ({ request }) => {
       row.size || '',
       `${origin}/shop/${row.product_slug}`,
     );
-    if (ok) {
-      await sb.from('back_in_stock').update({ notified_at: new Date().toISOString() }).eq('id', row.id);
-      sent++;
+    if (!ok) {
+      nietVerstuurd++;
+      continue;
     }
+    /**
+     * Het markeren op fouten lezen. Hier stond een kale `await` op de update.
+     * Mislukt die, dan is de mail verstuurd maar staat `notified_at` nog leeg,
+     * en krijgt dezelfde klant de volgende run dezelfde mail. Dat blijft zo,
+     * want versturen en markeren zijn twee systemen, maar het is nu zichtbaar.
+     */
+    const { error: mErr } = await sb.from('back_in_stock').update({ notified_at: new Date().toISOString() }).eq('id', row.id);
+    if (mErr) {
+      console.error('[cron] Voorraadmelding verstuurd maar niet gemarkeerd, gaat opnieuw:', row.id, mErr.message);
+      nietGemarkeerd++;
+    }
+    sent++;
   }
 
-  return new Response(JSON.stringify({ outbox, reserveringen, pending: pending.length, due: due.length, sent }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  stappen.voorraadmeldingen = nietVerstuurd || nietGemarkeerd
+    ? { ok: false, melding: `${nietVerstuurd} niet verstuurd, ${nietGemarkeerd} verstuurd maar niet gemarkeerd` }
+    : { ok: true };
+
+  return antwoord({ outbox, reserveringen, pending: pending.length, due: due.length, sent });
 };
