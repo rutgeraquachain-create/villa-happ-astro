@@ -64,16 +64,25 @@ export const BRAND = {
   /**
    * Het merkverhaal in mensentaal, voor plekken waar een alinea past in
    * plaats van een definitie: het Google Business Profile, persmateriaal,
-   * een About-tekst. Bewust géén jaartal bij de Fashion Group — de
+   * een About-tekst. Bewust géén jaartal bij de Fashion Group: de
    * gepubliceerde tijdlijn dateert de grote groei niet eenduidig, en een
    * decennium dat de story-pagina tegenspreekt is een controleerbaar
    * onjuist feit. Babyparadijs hoort nadrukkelijk niet bij 1945: dat was
    * Gaillard Kuijsters, zie de toelichting bij `foundingYear`.
+   *
+   * HERSCHREVEN 14 SEPTEMBER 2026, NA EEN OPMERKING OVER AI-TICS OP /pers.
+   * De vorige versie had twee em-dashes, een losse slagzin als derde alinea
+   * ("Villa Happ — voor de dragers van toen."), en een zin die niets zei:
+   * collecties "die nostalgie verbinden met eigentijdse stijl, met respect
+   * voor de roots en het vakmanschap van drie generaties". "Na een stilte"
+   * verving een tijdlijn die gewoon bekend is. Die tijdlijn staat nu in de
+   * tekst, en elk feit erin komt uit `facts` hieronder: niets nieuws
+   * bedacht, niets weggelaten dat er stond. `tests/merktekst.test.ts` houdt de
+   * em-dash en de losse slagzin tegen.
    */
   narrative: [
-    'Villa Happ is sinds 1945 een familieverhaal dat begon in Tilburg. Wat Tony Kuijsters daar startte, groeide met Noud van Happen uit tot Babyparadijs en later tot de Van Happen Fashion Group: marktleider in kinderkleding, met tachtig Villa Happ-winkels door Europa.',
-    'Na een stilte is het merk terug — voor diezelfde dragers, nu (jong)volwassen. Vanuit Waalwijk ontwerpt de derde generatie collecties die nostalgie verbinden met eigentijdse stijl, met respect voor de roots en het vakmanschap van drie generaties Van Happen.',
-    'Villa Happ — voor de dragers van toen.',
+    'Het verhaal begon op 10 mei 1945 aan de Heuvelstraat in Tilburg, waar Tony Kuijsters met haar man Bas Gaillard een winkel opende. Midden jaren vijftig startte zij samen met Noud van Happen op datzelfde adres de kinderspeciaalzaak Babyparadijs. Daaruit groeide later de Van Happen Fashion Group: marktleider in kinderkleding, met tachtig Villa Happ-winkels door Europa.',
+    'Wie toen als kind Villa Happ droeg, is inmiddels volwassen. Voor die dragers van toen is het merk er weer. In 2021 haalde Rutger van Happen, kleinzoon van de oprichters, de merkrechten terug naar de familie. Vanaf 2024 verschenen de eerste nieuwe stukken, de Back-Cap en de Stap voor Stap-sokken. Sinds de relaunch in 2026 ontwerpt de derde generatie vanuit Waalwijk kleding van zwaar biologisch katoen.',
   ],
   /**
    * Alt-tekst bij het sitebrede deelbeeld. Staat hier en niet in Base.astro,
