@@ -322,9 +322,16 @@ hier groen.
 geslaagde run hebt gezien.** Dat geldt zodra je een cron aanmaakt, van
 frequentie verandert, een omgevingsvariabele raakt waar hij van afhangt, of in
 documentatie opschrijft wat hij doet. Groepeer na de deploy de runtime-logs van
-de route op statuscode over minstens twee runs, en roep hem één keer zonder
-sleutel aan om te zien welke weigering hij geeft. Pas bij een 2xx van het
-platform zelf schrijf je op wat de taak doet. Gemeten 11 september 2026:
+de route **op statuscode én op logniveau** over minstens twee runs, en roep hem
+één keer zonder sleutel aan om te zien welke weigering hij geeft. Pas bij een
+2xx van het platform zelf, zonder onverklaarde foutregels, schrijf je op wat de
+taak doet. Een route die fouten afvangt om door te kunnen gaan, zegt met een 2xx
+alleen dat hij tot het einde kwam. Gemeten 14 september 2026: `/api/notify/run`
+gaf 146 keer 200 in 36 uur terwijl er zeven foutregels onder stonden, twee
+daarvan op de functie die net vervangen was. Deze regel zei toen alleen "op
+statuscode" en liet dat dus door. Sindsdien geeft de route 500 zodra één stap
+mislukt (`src/lib/cronstappen.ts`), maar blijf op logniveau kijken: een nieuwe
+stap die zijn fout alleen logt, valt er weer doorheen. Les 0166. Gemeten 11 september 2026:
 `/api/notify/run` gaf zeven dagen lang 161 keer 503 omdat `CRON_SECRET`
 ontbrak, terwijl de planning goed stond, de toets op de planning groen was, en
 een PR beweerde dat mail nu hooguit een kwartier bleef liggen. Het viel niet op
