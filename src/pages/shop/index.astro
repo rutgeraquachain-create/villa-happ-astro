@@ -11,12 +11,19 @@ import '../../styles/shop.css';
 const products = await getCatalog();
 
 /**
- * Filterchips op de collectie uit de database: Kleding of Goods.
+ * Filterchips op merk: wat Villa Happ zelf maakt, en wat van andere merken
+ * komt (VH_APProved, met een eigen pagina onder /brands). Besloten door
+ * Geoffrey, 18 september 2026. Een eigen Villa Happ-product dat geen kleding
+ * is, valt dus onder "Villa Happ".
+ *
  * Hier werd de categorie eerder uit de productnaam geraden ("hoodie", "cap",
  * "sok"), waardoor elk nieuw soort product onder "Overig" viel.
  */
-const categoryOf = (p: (typeof products)[number]) => (p.collectie === 'goods' ? 'Goods' : 'Kleding');
-const categories = [...new Set(products.map(categoryOf))];
+const VILLA_HAPP = 'Villa Happ';
+const OTHER_BRANDS = 'Other Brands';
+const categoryOf = (p: (typeof products)[number]) => (p.merk ? OTHER_BRANDS : VILLA_HAPP);
+// Vaste volgorde, en alleen chips waar iets onder valt.
+const categories = [VILLA_HAPP, OTHER_BRANDS].filter((c) => products.some((p) => categoryOf(p) === c));
 
 type Product = (typeof products)[number];
 const stockOf = (p: Product) => p.variants.reduce((s, v) => s + v.stock, 0);
@@ -32,11 +39,11 @@ const siteOrigin = Astro.site?.origin || Astro.url.origin;
  * wijziging op één plek stil uit de pas gaat lopen met de andere.
  * "Genummerd" hoort bij de caps: de hoodies en sokken zijn dat niet.
  */
-const heeftGoods = products.some((p) => p.collectie === 'goods');
-// De vakmanschapszin hoort bij de eigen kleding. Goods staat er apart achter,
-// zodat de fles van VANN niet onder "ruim 80 jaar vakmanschap" valt.
-const shopDescription = `De Villa Happ collectie: heritage hoodies, sokken en genummerde caps, gemaakt met ruim ${BRAND.age} jaar vakmanschap.${heeftGoods ? ' Plus Goods van merken die wij goedkeuren.' : ''}`;
-const eigenStuks = products.filter((p) => p.collectie !== 'goods').length;
+const heeftMerken = products.some((p) => p.merk);
+// De vakmanschapszin hoort bij de eigen kleding. Andere merken staan er apart
+// achter, zodat de fles van VANN niet onder "ruim 80 jaar vakmanschap" valt.
+const shopDescription = `De Villa Happ collectie: heritage hoodies, sokken en genummerde caps, gemaakt met ruim ${BRAND.age} jaar vakmanschap.${heeftMerken ? ' Plus producten van andere merken die wij goedkeuren.' : ''}`;
+const eigenStuks = products.filter((p) => !p.merk).length;
 
 /**
  * De collectiepagina als expliciete entiteit. De `ItemList` verwijst alleen
@@ -86,7 +93,7 @@ const breadcrumbLd = {
         <h1 class="vh-page-title">Nu te <span class="vh-italic-accent">dragen</span></h1>
         <p class="vh-page-sub">
           {eigenStuks} stuks. Zwaar biologisch katoen, ontworpen in Waalwijk. De caps zijn genummerd.
-          {heeftGoods && <> Daarnaast <a href="/goods">Goods</a> van merken die wij goedkeuren.</>}
+          {heeftMerken && <> Daarnaast producten van <a href="/brands">andere merken</a> die wij goedkeuren.</>}
         </p>
       </header>
 

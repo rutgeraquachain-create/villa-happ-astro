@@ -49,20 +49,21 @@ interface DbProduct {
   category: string | null;
   collectie: string | null;
   merk: string | null;
-  merk_toelichting: string | null;
   product_variants: DbVariant[];
 }
 
 /**
- * De eigen collectie eerst, Goods erachter, en binnen elke groep de volgorde
- * uit de query (nieuwste eerst). Zonder dit zou elk nieuw Goods-product de
+ * Villa Happ eerst, andere merken erachter, en binnen elke groep de volgorde
+ * uit de query (nieuwste eerst). Zonder dit zou elk nieuw merkproduct de
  * grote openingstegel van /shop worden en de eerste suggestie op de 404.
+ *
+ * Op merk en niet op collectie, zodat het de indeling van het shopfilter
+ * volgt (Villa Happ tegenover Other Brands).
  */
 export function sorteerCollectie(producten: CatalogProduct[]): CatalogProduct[] {
   return producten
     .map((p, i) => ({ p, i }))
-    .sort((a, b) =>
-      (a.p.collectie === 'goods' ? 1 : 0) - (b.p.collectie === 'goods' ? 1 : 0) || a.i - b.i)
+    .sort((a, b) => (a.p.merk ? 1 : 0) - (b.p.merk ? 1 : 0) || a.i - b.i)
     .map(({ p }) => p);
 }
 
@@ -146,7 +147,6 @@ export function catalogusUitRijen(
       name: p.name,
       collectie: p.collectie === 'goods' ? 'goods' : 'kleding',
       merk: p.merk || undefined,
-      merkToelichting: p.merk_toelichting || undefined,
       // Bij een kleurkeuze heeft het product als geheel geen kleur; de
       // eerste variant zou er anders "Black" van maken, ook in de titel.
       color: perKleur ? '' : p.product_variants[0]?.color || '',
@@ -213,7 +213,7 @@ async function haalCatalogus(): Promise<CatalogProduct[]> {
   // Eén query met joins i.p.v. per product losse variant- en voorraadcalls
   const { data, error } = await sb
     .from('products')
-    .select('slug, name, price_cents, short_desc, description, image_url, gallery, details, note, edition, badge, featured, category, collectie, merk, merk_toelichting, product_variants(id, sku, size, color, color_hex, image_url, inventory(quantity, reserved))')
+    .select('slug, name, price_cents, short_desc, description, image_url, gallery, details, note, edition, badge, featured, category, collectie, merk, product_variants(id, sku, size, color, color_hex, image_url, inventory(quantity, reserved))')
     .eq('status', 'published')
     .order('created_at', { ascending: false });
 

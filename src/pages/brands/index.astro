@@ -1,0 +1,155 @@
+---
+export const prerender = true;
+
+import Base from '../../layouts/Base.astro';
+import { getCatalog } from '../../lib/catalog';
+import { merkenMetProduct, merkPad } from '../../lib/merken';
+import '../../styles/shop.css';
+
+/**
+ * Brands (VH_APProved): de merken die Villa Happ naast de eigen collectie
+ * verkoopt, als een wand van logo's. Elk logo gaat naar /brands/<slug>, waar
+ * de omschrijving en alle producten van dat merk staan.
+ *
+ * Een merk verschijnt hier pas als er een gepubliceerd product van is. Zo
+ * staat er nooit een logo dat naar een lege merkpagina leidt. Zonder merken
+ * valt de pagina terug op noindex en uit de sitemap (sitemap.xml.ts rekent
+ * met dezelfde voorwaarde).
+ *
+ * Tot 18 september 2026 heette dit menu-item Goods, met een eigen pagina
+ * /goods. Die verwijst nu permanent hierheen (vercel.json).
+ */
+
+const catalog = await getCatalog();
+const merken = merkenMetProduct(catalog);
+
+const siteOrigin = Astro.site?.origin || Astro.url.origin;
+const description =
+  'VH_APProved: de merken die Villa Happ naast de eigen kleding verkoopt. We kiezen ze zelf, en je bestelt ze gewoon bij ons.';
+
+const pageLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  '@id': `${siteOrigin}/brands#page`,
+  url: `${siteOrigin}/brands`,
+  name: 'Brands',
+  description,
+  inLanguage: 'nl-NL',
+  isPartOf: { '@id': `${siteOrigin}/#website` },
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: merken.length,
+    itemListElement: merken.map((m, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${siteOrigin}${merkPad(m)}`,
+      item: { '@type': 'Brand', name: m.naam, logo: `${siteOrigin}${m.logo}` },
+    })),
+  },
+};
+
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteOrigin}/` },
+    { '@type': 'ListItem', position: 2, name: 'Brands', item: `${siteOrigin}/brands` },
+  ],
+};
+---
+<Base title="Brands · VH_APProved · Villa Happ" description={description} noindex={merken.length === 0}>
+  <section class="vh-page">
+    <div class="vh-page-inner">
+
+      <header class="vh-page-head">
+        <p class="vh-page-label vh-mono">Brands · VH_APProved</p>
+        <h1 class="vh-page-title">Merken die wij <span class="vh-italic-accent">goedkeuren</span></h1>
+        <p class="vh-page-sub">
+          Naast onze eigen kleding verkopen we een kleine selectie van andere merken.
+          We kiezen ze zelf. Je bestelt en betaalt bij ons, en wij versturen het ook.
+        </p>
+      </header>
+
+      {merken.length === 0 ? (
+        <p class="vh-merken-leeg">De eerste merken zijn onderweg.</p>
+      ) : (
+        <ul class="vh-merkwand" role="list">
+          {merken.map((m) => (
+            <li>
+              <a href={merkPad(m)} class="vh-merktegel" aria-label={`${m.naam}: bekijk het merk en de producten`}>
+                <img
+                  src={m.logo}
+                  alt={m.naam}
+                  width={m.logoMaat.breedte}
+                  height={m.logoMaat.hoogte}
+                  loading="eager"
+                  class="vh-merktegel-logo"
+                />
+                <span class="vh-merktegel-link vh-mono">Bekijk {m.naam} →</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div class="vh-shop-intro">
+        <h2>Wat VH_APProved betekent</h2>
+        <p>
+          Villa Happ maakt kleding die lang meegaat. Merken die op dezelfde manier
+          werken, nemen we op onder de naam VH_APProved. Bestellen, betalen,
+          verzenden en retourneren gaat precies zoals bij onze eigen
+          <a href="/shop"> collectie</a>.
+        </p>
+        <p>
+          Maak je zelf iets wat hierbij past? We kijken naar kwaliteit, herkomst en
+          het verhaal erachter. Meld je merk aan via <a href="/voor-merken">voor merken</a>.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <script type="application/ld+json" set:html={JSON.stringify(pageLd)} is:inline></script>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} is:inline></script>
+</Base>
+<script>import '../../lib/cart';</script>
+
+<style>
+  .vh-merken-leeg { color: var(--vh-ink-soft); margin: 0 0 40px; }
+  .vh-merkwand {
+    list-style: none;
+    margin: 0 0 48px;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+    gap: 16px;
+  }
+  .vh-merktegel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    aspect-ratio: 4 / 3;
+    padding: 28px;
+    border: 1px solid var(--vh-ink-hairline);
+    border-radius: var(--vh-radius-md);
+    background: rgba(255, 255, 255, 0.45);
+    color: var(--vh-ink);
+    text-decoration: none;
+    transition: border-color 0.25s ease, background 0.25s ease, transform 0.4s var(--vh-ease-out);
+  }
+  .vh-merktegel:hover { border-color: var(--vh-ink); background: rgba(255, 255, 255, 0.7); }
+  .vh-merktegel:focus-visible { outline: 2px solid var(--vh-ink); outline-offset: 3px; }
+  .vh-merktegel-logo {
+    width: auto;
+    max-width: 62%;
+    height: auto;
+    max-height: 64px;
+  }
+  .vh-merktegel-link { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--vh-ink-soft); }
+  .vh-merktegel:hover .vh-merktegel-link { color: var(--vh-ink); text-decoration: underline; text-underline-offset: 3px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .vh-merktegel:hover { transform: translateY(-2px); }
+  }
+</style>

@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import { getCatalog } from '../lib/catalog';
+import { merkenMetProduct, merkPad } from '../lib/merken';
 import { getSiteOrigin } from '../lib/site';
 
 export const prerender = true;
@@ -14,10 +15,14 @@ export const prerender = true;
  *
  * `brands` (VH_APProved) volgt de catalogus: hij staat erin zodra er een
  * merkproduct gepubliceerd is, precies wanneer de pagina zelf zijn noindex
- * laat vallen. Twee plekken, één voorwaarde.
+ * laat vallen. Twee plekken, één voorwaarde. Hetzelfde voor de merkpagina's
+ * /brands/<slug>: alleen merken met een gepubliceerd product.
+ *
+ * `goods` staat er niet meer in: die verwijst sinds 18 september 2026 met een
+ * 301 naar /brands, en een redirect hoort niet in een sitemap.
  */
 const staticRoutes = [
-  '', 'shop', 'goods', 'story', 'het-atelier', 'journal', 'pers',
+  '', 'shop', 'story', 'het-atelier', 'journal', 'pers',
   'faq', 'verzending', 'retourneren', 'contact', 'voor-merken',
   'verkooppunt-worden',
   'privacy', 'algemene-voorwaarden', 'herroeping', 'cookies',
@@ -30,10 +35,11 @@ export const GET: APIRoute = async () => {
   const buildDate = new Date().toISOString().slice(0, 10);
   // Journal-artikelen krijgen hun eigen publicatiedatum als lastmod: een
   // echter signaal voor crawlers dan de generieke build-datum.
-  const heeftMerken = catalog.some((p) => p.merk);
+  const merken = merkenMetProduct(catalog);
   const urls: { loc: string; lastmod: string }[] = [
     ...staticRoutes.map((r) => ({ loc: `${site}/${r}`, lastmod: buildDate })),
-    ...(heeftMerken ? [{ loc: `${site}/brands`, lastmod: buildDate }] : []),
+    ...(merken.length ? [{ loc: `${site}/brands`, lastmod: buildDate }] : []),
+    ...merken.map((m) => ({ loc: `${site}${merkPad(m)}`, lastmod: buildDate })),
     ...catalog.map((p) => ({ loc: `${site}/shop/${p.slug}`, lastmod: buildDate })),
     ...posts.map((p) => ({ loc: `${site}/journal/${p.id}`, lastmod: p.data.date.toISOString().slice(0, 10) })),
   ];

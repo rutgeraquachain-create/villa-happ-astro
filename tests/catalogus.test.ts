@@ -80,7 +80,6 @@ describe('Goods en kleurvarianten', () => {
     name: 'Fles',
     collectie: 'goods',
     merk: 'VANN',
-    merk_toelichting: 'Waarom.',
     image_url: '/img/a.webp',
     gallery: ['/img/b.webp', '/img/c.webp'],
     // Bewust in een andere volgorde dan de galerij: PostgREST garandeert
@@ -96,7 +95,6 @@ describe('Goods en kleurvarianten', () => {
     const [fles] = catalogusUitRijen([FLES], null, true);
     expect(fles.collectie).toBe('goods');
     expect(fles.merk).toBe('VANN');
-    expect(fles.merkToelichting).toBe('Waarom.');
     // Geen productkleur: anders heette de fles "Fles Coral" in titel en schema.
     expect(fles.color).toBe('');
     expect(fles.variants.map((v) => v.color)).toEqual(['Black', 'Bay Blue', 'Coral']);
@@ -111,7 +109,7 @@ describe('Goods en kleurvarianten', () => {
     expect(hoodie.variants[0].color).toBeUndefined();
   });
 
-  it('zet de eigen kleding vóór Goods, ook als Goods nieuwer is', () => {
+  it('zet Villa Happ vóór andere merken, ook als het merkproduct nieuwer is', () => {
     // De query sorteert nieuwste eerst, dus de fles komt als eerste binnen.
     const uit = catalogusUitRijen([FLES, RIJ], null, true);
     expect(uit.map((p) => p.slug)).toEqual(['proefproduct', 'fles']);

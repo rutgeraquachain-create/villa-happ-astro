@@ -27,8 +27,11 @@ export interface CatalogVariant {
 }
 
 /**
- * Kleding is wat Villa Happ zelf maakt. Goods is alles daarbuiten, te beginnen
- * met de producten van VH_APProved-merken.
+ * Kleding of iets anders. Staat in de database als `products.collectie`.
+ *
+ * Let op: de site deelt de shop niet meer op collectie in maar op merk
+ * (Villa Happ tegenover Other Brands, zie `merk`). Dit veld blijft staan als
+ * productsoort, zodat een latere indeling op soort geen migratie vraagt.
  */
 export type Collectie = 'kleding' | 'goods';
 
@@ -38,12 +41,12 @@ export interface CatalogProduct {
   collectie: Collectie;
   /**
    * Het merk van de maker, alleen bij een product dat Villa Happ niet zelf
-   * maakt. Leeg betekent: eigen collectie. Dit stuurt het merk in het schema,
-   * de FAQ en het label op de pagina, dus zet het nooit op "Villa Happ".
+   * maakt. Leeg betekent: Villa Happ. Dit stuurt het shopfilter (Other
+   * Brands), het merk in het schema, de FAQ en de merkpagina, dus zet het nooit
+   * op "Villa Happ". Moet een vermelding hebben in src/lib/merken.ts; daar
+   * staan ook logo, omschrijving en waarom wij het goedkeuren.
    */
   merk?: string;
-  /** Waarom wij dit merk goedkeuren. Staat op de productpagina onder VH_APProved. */
-  merkToelichting?: string;
   color: string;
   price_cents: number;
   short_desc: string;
@@ -244,8 +247,6 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
     name: 'VANN Ultimate Bottle 650 ml',
     collectie: 'goods',
     merk: 'VANN',
-    merkToelichting:
-      'VANN is een Nederlands merk dat sinds 2020 herbruikbare drinkflessen van roestvrij staal maakt. De naam is Noors en betekent water. We nemen het op omdat het past bij hoe wij naar kleding kijken: iets goed maken, zodat je het jaren gebruikt.',
     color: '',
     price_cents: 3490,
     short_desc: 'Driewandige drinkfles van roestvrij staal. Houdt je drinken 24 uur koud of 12 uur warm.',

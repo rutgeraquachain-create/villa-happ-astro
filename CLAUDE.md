@@ -414,6 +414,7 @@ wat de code doet, voegt niets toe.
 | Merkentiteit en kernfeiten | `src/lib/entity.ts` |
 | Juridische zinnen, verzendtabel | `src/lib/legal.ts` |
 | Catalogus, Supabase met demo-fallback | `src/lib/catalog.ts` |
+| Andere merken (VH_APProved): logo, omschrijving, `/brands/<slug>` | `src/lib/merken.ts`, `docs/workflow.md` §6 |
 | Scroll- en pinanimaties | `src/lib/motion.ts` |
 | Tegoedbonnen | `src/lib/tegoedbon.ts` |
 | Campagnetellers in `/beheer` | `src/lib/campagnestand.ts` |
