@@ -1,15 +1,19 @@
 /**
- * Goods en VH_APProved: producten die Villa Happ verkoopt maar niet maakt.
+ * Andere merken (VH_APProved): producten die Villa Happ verkoopt maar niet
+ * maakt, met een merkpagina onder /brands.
  *
- * Twee dingen die makkelijk stil misgaan.
+ * Drie dingen die makkelijk stil misgaan.
  *
  * 1. Een merkproduct dat alsnog als Villa Happ-stuk wordt gepresenteerd. De
  *    productpagina had vaste zinnen ("ontworpen in Waalwijk, van zwaar
  *    biologisch katoen", merk Villa Happ in het schema) die voor een fles van
- *    VANN onwaar zijn. De pagina kiest die nu op `merk`; staat het merk niet
- *    goed in de data, dan komen ze terug.
+ *    VANN onwaar zijn. De pagina kiest die op `merk`.
  *
- * 2. Demo-data die afwijkt van de database. CI bouwt zonder sleutels en ziet
+ * 2. Een merk op een product zonder vermelding in src/lib/merken.ts. Dan is
+ *    er geen logo, geen merkpagina, en wijst het kruimelpad naar een 404. De
+ *    build breekt daar al op (`vindMerk`); deze toets vangt het eerder.
+ *
+ * 3. Demo-data die afwijkt van de database. CI bouwt zonder sleutels en ziet
  *    alleen demo-products.ts. Staat een beeldpad of SKU daar anders dan in de
  *    migratie, dan bewijst een groene build niets over de echte pagina. Dat
  *    is met de sokken al eens gebeurd (zie CLAUDE.md).
@@ -19,27 +23,60 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import { DEMO_PRODUCTS } from '../src/lib/demo-products';
 import { kiestOpKleur } from '../src/lib/keuze';
+import { MERKEN, merkenMetProduct, vindMerk, zoekMerk } from '../src/lib/merken';
 
-const goods = DEMO_PRODUCTS.filter((p) => p.collectie === 'goods');
+const merkproducten = DEMO_PRODUCTS.filter((p) => p.merk);
 const migratie = readFileSync(
   new URL('../supabase/migrations/20260918_goods_en_merken.sql', import.meta.url),
   'utf-8',
 );
 const bestaat = (pad: string) => existsSync(new URL(`../public${pad}`, import.meta.url));
 
-describe('Goods-producten', () => {
+describe('producten van andere merken', () => {
   it('er is er minstens één, anders toetst de rest niets', () => {
-    expect(goods.length).toBeGreaterThan(0);
+    expect(merkproducten.length).toBeGreaterThan(0);
   });
 
-  it.each(goods.map((p) => [p.slug, p] as const))('%s heeft een merk dat niet Villa Happ is', (_, p) => {
-    expect(p.merk, 'Een Goods-product zonder merk krijgt "Villa Happ" in het schema.').toBeTruthy();
+  it.each(merkproducten.map((p) => [p.slug, p] as const))('%s heeft een merk dat niet Villa Happ is', (_, p) => {
     expect(p.merk).not.toMatch(/villa\s*happ/i);
   });
 
-  it.each(goods.map((p) => [p.slug, p] as const))('%s claimt geen Villa Happ-maakwerk', (_, p) => {
+  it.each(merkproducten.map((p) => [p.slug, p] as const))('%s staat in merken.ts', (_, p) => {
+    expect(zoekMerk(p.merk), `Merk "${p.merk}" ontbreekt in src/lib/merken.ts.`).toBeTruthy();
+  });
+
+  it.each(merkproducten.map((p) => [p.slug, p] as const))('%s claimt geen Villa Happ-maakwerk', (_, p) => {
     const tekst = [p.short_desc, p.description, p.note, ...p.details].join(' ');
     expect(tekst).not.toMatch(/biologisch katoen|ontworpen in waalwijk|genummerd|oplage/i);
+  });
+});
+
+describe('merken.ts', () => {
+  it.each(MERKEN.map((m) => [m.naam, m] as const))('%s heeft een geldige slug en een logo dat bestaat', (_, m) => {
+    expect(m.slug).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+    expect(bestaat(m.logo), `Ontbreekt: public${m.logo}`).toBe(true);
+    expect(m.logoMaat.breedte).toBeGreaterThan(0);
+    expect(m.logoMaat.hoogte).toBeGreaterThan(0);
+  });
+
+  it('heeft geen dubbele slugs of namen', () => {
+    expect(new Set(MERKEN.map((m) => m.slug)).size).toBe(MERKEN.length);
+    expect(new Set(MERKEN.map((m) => m.naam.toLowerCase())).size).toBe(MERKEN.length);
+  });
+
+  it.each(MERKEN.map((m) => [m.naam, m] as const))('%s: teksten zonder em-dash', (_, m) => {
+    for (const tekst of [...m.omschrijving, m.waarom]) expect(tekst).not.toContain('—');
+  });
+
+  it('een onbekend merk breekt, een bekend merk niet, hoofdletters maken niet uit', () => {
+    expect(() => vindMerk('Bestaat Niet')).toThrow(/merken\.ts/);
+    expect(vindMerk('vann').slug).toBe('vann');
+  });
+
+  it('toont alleen merken waarvan een product in de catalogus staat', () => {
+    expect(merkenMetProduct([]).length).toBe(0);
+    expect(merkenMetProduct([{ merk: 'VANN' }]).map((m) => m.slug)).toEqual(['vann']);
+    expect(merkenMetProduct([{}, { merk: undefined }]).length).toBe(0);
   });
 });
 
@@ -52,7 +89,7 @@ describe('VANN-fles: demo-data, migratie en bestanden', () => {
   });
 
   it('voert dezelfde teksten als de migratie', () => {
-    for (const tekst of [fles.name, fles.short_desc, fles.description, fles.merkToelichting!, fles.meta, fles.note!, ...fles.details]) {
+    for (const tekst of [fles.name, fles.short_desc, fles.description, fles.meta, fles.note!, ...fles.details]) {
       expect(migratie, `Staat niet in de migratie: ${tekst}`).toContain(tekst.replace(/'/g, "''"));
     }
     expect(migratie).toContain(`${fles.price_cents},`);

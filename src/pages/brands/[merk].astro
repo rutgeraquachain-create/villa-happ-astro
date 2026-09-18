@@ -1,0 +1,189 @@
+---
+export const prerender = true;
+
+import Base from '../../layouts/Base.astro';
+import Pic from '../../components/Pic.astro';
+import { getCatalog, type CatalogProduct } from '../../lib/catalog';
+import { formatPrice } from '../../lib/commerce';
+import { merkenMetProduct, merkPad, vanMerk, vindMerk, type Merk } from '../../lib/merken';
+import '../../styles/shop.css';
+
+/**
+ * Merkpagina: /brands/<slug>. Wie het merk is, waarom wij het goedkeuren, en
+ * alle producten die we ervan verkopen.
+ *
+ * Alleen merken met een gepubliceerd product krijgen een pagina. Een merk in
+ * merken.ts zonder producten levert dus geen lege pagina op.
+ *
+ * De producten zelf blijven onder /shop/<slug> staan. Eén productpagina per
+ * product, dus één canonieke URL; deze pagina verwijst ernaar.
+ */
+
+export async function getStaticPaths() {
+  const catalog = await getCatalog();
+  // Een gepubliceerd product met een onbekend merk breekt hier de build.
+  for (const p of catalog) if (p.merk) vindMerk(p.merk);
+  return merkenMetProduct(catalog).map((merk) => ({
+    params: { merk: merk.slug },
+    props: { merk, producten: catalog.filter((p) => vanMerk(p, merk)) },
+  }));
+}
+
+interface Props { merk: Merk; producten: CatalogProduct[] }
+const { merk, producten } = Astro.props;
+
+const siteOrigin = Astro.site?.origin || Astro.url.origin;
+const paginaUrl = `${siteOrigin}${merkPad(merk)}`;
+// Eerste zin van de omschrijving: past binnen de ~155 tekens van een zoekresultaat.
+const eersteZin = merk.omschrijving[0].match(/^.*?[.!?](\s|$)/)?.[0].trim() ?? merk.omschrijving[0];
+const description = `${eersteZin} Verkrijgbaar bij Villa Happ.`;
+const voorraadVan = (p: CatalogProduct) => p.variants.reduce((s, v) => s + v.stock, 0);
+const kleurenVan = (p: CatalogProduct) => p.variants.filter((v) => v.colorHex);
+
+const pageLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  '@id': `${paginaUrl}#page`,
+  url: paginaUrl,
+  name: `${merk.naam} bij Villa Happ`,
+  description,
+  inLanguage: 'nl-NL',
+  isPartOf: { '@id': `${siteOrigin}/#website` },
+  about: { '@type': 'Brand', name: merk.naam, logo: `${siteOrigin}${merk.logo}` },
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: producten.length,
+    itemListElement: producten.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: p.name,
+      url: `${siteOrigin}/shop/${p.slug}`,
+    })),
+  },
+};
+
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteOrigin}/` },
+    { '@type': 'ListItem', position: 2, name: 'Brands', item: `${siteOrigin}/brands` },
+    { '@type': 'ListItem', position: 3, name: merk.naam, item: paginaUrl },
+  ],
+};
+---
+<Base title={`${merk.naam} · Brands · Villa Happ`} description={description} ogImage={producten[0]?.images[0]}>
+  <section class="vh-page">
+    <div class="vh-page-inner">
+
+      <nav class="vh-breadcrumb" aria-label="Kruimelpad">
+        <a href="/">Home</a> <span aria-hidden="true">/</span>
+        <a href="/brands">Brands</a> <span aria-hidden="true">/</span>
+        <span class="vh-breadcrumb-current">{merk.naam}</span>
+      </nav>
+
+      <header class="vh-merkkop">
+        <div class="vh-merkkop-tekst">
+          <p class="vh-page-label vh-mono">Brands · VH_APProved</p>
+          <h1 class="vh-merkkop-titel">
+            <img
+              src={merk.logo}
+              alt={merk.naam}
+              width={merk.logoMaat.breedte}
+              height={merk.logoMaat.hoogte}
+              loading="eager"
+              class="vh-merkkop-logo"
+            />
+          </h1>
+          {merk.omschrijving.map((alinea) => <p class="vh-merkkop-alinea">{alinea}</p>)}
+        </div>
+
+        <aside class="vh-cert vh-cert--approved vh-merkkop-cert" aria-label={`VH_APProved: waarom wij ${merk.naam} goedkeuren`}>
+          <span class="vh-cert-seal" aria-hidden="true">VH</span>
+          <div>
+            <p class="vh-cert-title">VH_APProved · {merk.naam}</p>
+            <p class="vh-cert-meta vh-mono">Gekozen en goedgekeurd door Villa Happ</p>
+            <p class="vh-cert-note">{merk.waarom}</p>
+          </div>
+        </aside>
+      </header>
+
+      <h2 class="vh-merk-kop-producten">
+        {producten.length === 1 ? 'Het product' : `Alle ${producten.length} producten`}
+        <span class="vh-mono"> van {merk.naam}</span>
+      </h2>
+
+      <div class="vh-listing">
+        {producten.map((p, i) => (
+          <a href={`/shop/${p.slug}`} class="vh-card">
+            <div class="vh-card-media" transition:name={`product-${p.slug}`}>
+              <span class="vh-card-num">{String(i + 1).padStart(2, '0')}</span>
+              <Pic src={p.images[0]} alt={p.name} class="vh-card-img main" width={600} height={750} loading={i < 3 ? 'eager' : 'lazy'} />
+              {p.images[1] && <Pic src={p.images[1]} alt="" class="vh-card-img alt" width={600} height={750} loading="lazy" aria-hidden="true" />}
+              {voorraadVan(p) === 0 && <span class="vh-stamp" aria-hidden="true">Uitverkocht</span>}
+            </div>
+            <div class="vh-card-info">
+              <p class="vh-card-name">{p.name}</p>
+              <p class="vh-card-price">{formatPrice(p.price_cents)}</p>
+            </div>
+            {kleurenVan(p).length > 1 ? (
+              <p class="vh-card-meta vh-merk-stalen" aria-label={`${kleurenVan(p).length} kleuren`}>
+                {kleurenVan(p).map((v) => <span class="vh-merk-staal" style={`--sw:${v.colorHex}`} title={v.color}></span>)}
+              </p>
+            ) : (
+              <p class="vh-card-meta vh-mono">{p.meta}</p>
+            )}
+          </a>
+        ))}
+      </div>
+
+      <div class="vh-shop-intro">
+        <p>
+          Je bestelt {merk.naam} gewoon bij Villa Happ. Bestellen, betalen,
+          verzenden en retourneren gaat precies zoals bij onze eigen
+          <a href="/shop"> collectie</a>. Bekijk ook de andere
+          <a href="/brands"> merken die wij goedkeuren</a>.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <script type="application/ld+json" set:html={JSON.stringify(pageLd)} is:inline></script>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} is:inline></script>
+</Base>
+<script>import '../../lib/cart';</script>
+
+<style>
+  .vh-merkkop {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+    margin: 12px 0 56px;
+  }
+  .vh-merkkop-titel { margin: 18px 0 26px; line-height: 0; }
+  .vh-merkkop-logo { width: auto; height: clamp(40px, 5vw, 64px); }
+  .vh-merkkop-alinea { font-size: 16px; line-height: 1.7; color: var(--vh-ink-soft); margin: 0 0 14px; max-width: 54ch; }
+  .vh-merkkop-cert { margin: 44px 0 0; }
+  .vh-merk-kop-producten {
+    font-family: var(--vh-font-serif);
+    font-weight: 400;
+    font-size: clamp(24px, 2.6vw, 32px);
+    margin: 0 0 22px;
+    padding-top: 28px;
+    border-top: 1px solid var(--vh-ink-hairline);
+  }
+  .vh-merk-kop-producten .vh-mono { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--vh-ink-soft); }
+  .vh-merk-stalen { display: flex; gap: 6px; }
+  .vh-merk-staal {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--sw);
+    box-shadow: inset 0 0 0 1px rgba(28, 24, 19, 0.16);
+  }
+  @media (max-width: 820px) {
+    .vh-merkkop { grid-template-columns: 1fr; gap: 8px; }
+    .vh-merkkop-cert { margin-top: 12px; }
+  }
+</style>

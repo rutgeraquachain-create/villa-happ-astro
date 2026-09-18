@@ -21,6 +21,11 @@
   ],
   "redirects": [
     {
+      "source": "/goods",
+      "destination": "/brands",
+      "permanent": true
+    },
+    {
       "source": "/p/villa-happ-cap",
       "destination": "/shop/villa-happ-back-cap",
       "permanent": true

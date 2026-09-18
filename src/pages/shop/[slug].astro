@@ -7,6 +7,7 @@ import { getCatalog, kiestOpKleur, type CatalogProduct } from '../../lib/catalog
 import { formatPrice } from '../../lib/commerce';
 import { optimizedSrc, srcsetFor } from '../../lib/img';
 import { BUSINESS } from '../../lib/business';
+import { vindMerk, merkPad } from '../../lib/merken';
 import {
   RETURN_SENTENCE, RETURN_SHORT, VAT_SENTENCE, DELIVERY_SENTENCE,
   SHIPPING_SENTENCE, SHIPPING_TABLE, FREE_SHIPPING_SHORT,
@@ -47,7 +48,9 @@ const editionPct = edition ? Math.min(100, Math.round((soldOfEdition / edition) 
  * onderdeelnummer van de fabrikant opgeeft.
  */
 const merk = product.merk;
-const isGoods = product.collectie === 'goods';
+// Breekt de build bij een merk zonder vermelding in src/lib/merken.ts; anders
+// zou de link naar de merkpagina op een 404 uitkomen.
+const merkInfo = merk ? vindMerk(merk) : undefined;
 const perKleur = kiestOpKleur(product.variants);
 const keuze: 'maat' | 'kleur' = perKleur ? 'kleur' : 'maat';
 const keuzeVan = (v: CatalogProduct['variants'][number]) => (perKleur ? v.color || v.size : v.size);
@@ -258,13 +261,20 @@ const productLd = {
 const breadcrumbLd = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteOrigin}/` },
-    isGoods
-      ? { '@type': 'ListItem', position: 2, name: 'Goods', item: `${siteOrigin}/goods` }
-      : { '@type': 'ListItem', position: 2, name: 'Shop', item: `${siteOrigin}/shop` },
-    { '@type': 'ListItem', position: 3, name: product.name, item: productUrl },
-  ],
+  // Een merkproduct hangt onder zijn merkpagina: Home / Brands / VANN / fles.
+  itemListElement: (merkInfo
+    ? [
+        { name: 'Home', item: `${siteOrigin}/` },
+        { name: 'Brands', item: `${siteOrigin}/brands` },
+        { name: merkInfo.naam, item: `${siteOrigin}${merkPad(merkInfo)}` },
+        { name: product.name, item: productUrl },
+      ]
+    : [
+        { name: 'Home', item: `${siteOrigin}/` },
+        { name: 'Shop', item: `${siteOrigin}/shop` },
+        { name: product.name, item: productUrl },
+      ]
+  ).map((stap, i) => ({ '@type': 'ListItem', position: i + 1, ...stap })),
 };
 
 const sizingAnswer =
@@ -358,7 +368,9 @@ const pdpData = {
 
       <nav class="vh-breadcrumb" aria-label="Kruimelpad">
         <a href="/">Home</a> <span aria-hidden="true">/</span>
-        {isGoods ? <a href="/goods">Goods</a> : <a href="/shop">Shop</a>} <span aria-hidden="true">/</span>
+        {merkInfo
+          ? <><a href="/brands">Brands</a> <span aria-hidden="true">/</span> <a href={merkPad(merkInfo)}>{merkInfo.naam}</a></>
+          : <a href="/shop">Shop</a>} <span aria-hidden="true">/</span>
         <span class="vh-breadcrumb-current">{product.name}</span>
       </nav>
 
@@ -443,9 +455,8 @@ const pdpData = {
         <!-- Info -->
         <div class="vh-pdp-info">
           <p class="vh-pdp-kicker vh-mono">
-            {merk
-              ? `Goods · VH_APProved · ${merk}`
-              : isGoods ? 'Goods'
+            {merkInfo
+              ? `VH_APProved · ${merkInfo.naam}`
               : edition ? 'Heritage collectie · Genummerde oplage' : 'Heritage collectie'}
           </p>
           <h1 class="vh-pdp-title">{product.name}</h1>
@@ -456,14 +467,14 @@ const pdpData = {
           </p>
           <p class="vh-pdp-short">{product.short_desc}</p>
 
-          {merk && (
-            <aside class="vh-cert vh-cert--approved" aria-label={`VH_APProved: waarom wij ${merk} goedkeuren`}>
+          {merkInfo && (
+            <aside class="vh-cert vh-cert--approved" aria-label={`VH_APProved: waarom wij ${merkInfo.naam} goedkeuren`}>
               <span class="vh-cert-seal" aria-hidden="true">VH</span>
               <div>
-                <p class="vh-cert-title">VH_APProved · {merk}</p>
+                <p class="vh-cert-title">VH_APProved · {merkInfo.naam}</p>
                 <p class="vh-cert-meta vh-mono">Gekozen en goedgekeurd door Villa Happ</p>
-                {product.merkToelichting && <p class="vh-cert-note">{product.merkToelichting}</p>}
-                <a href="/brands" class="vh-cert-link vh-mono">Over VH_APProved →</a>
+                <p class="vh-cert-note">{merkInfo.waarom}</p>
+                <a href={merkPad(merkInfo)} class="vh-cert-link vh-mono">Meer over {merkInfo.naam} →</a>
               </div>
             </aside>
           )}
@@ -600,7 +611,7 @@ const pdpData = {
       <section class="vh-reviews" id="vh-reviews" aria-label="Reviews">
         <div class="vh-reviews-head">
           <div>
-            <p class="vh-mono">{isGoods ? 'Wat kopers zeggen' : 'Wat dragers zeggen'}</p>
+            <p class="vh-mono">{merkInfo ? 'Wat kopers zeggen' : 'Wat dragers zeggen'}</p>
             <h2>Reviews</h2>
           </div>
           <div class="vh-reviews-agg" id="vh-reviews-agg"></div>

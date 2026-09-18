@@ -313,6 +313,41 @@ Werk daarna `seed.sql` bij, zodat een verse database dezelfde cijfers krijgt.
 `compare_at_cents` blijft leeg: de site verkoopt niet met korting. Zie
 `src/lib/catalog.ts`, dat de kolom niet uitleest en kortingsbadges wegfiltert.
 
+### Een product van een ander merk (VH_APProved)
+
+Villa Happ verkoopt ook producten van andere merken. In `/shop` staan die onder
+het filter "Other Brands", en elk merk heeft een pagina `/brands/<slug>` met
+logo, omschrijving en alle producten. Het eerste merk is VANN.
+
+Wat bij het merk hoort staat in `src/lib/merken.ts`: slug, naam, logo,
+omschrijving en waarom wij het goedkeuren. Wat bij het product hoort staat in
+Supabase, met `products.merk` gelijk aan de naam in `merken.ts`.
+
+Een nieuw merk of product live zetten:
+
+1. **Code, in één PR:** het merk in `merken.ts`, het logo in
+   `public/img/brands/`, de productfoto's in `public/img/products/`, de
+   mail-JPG's (`node scripts/mail-assets.mjs`) en het product in
+   `src/lib/demo-products.ts`. De toets `tests/merken.test.ts` bewaakt dat
+   die bij elkaar passen.
+2. **Database, vóór de merge:** het product als `draft` met voorraad 0, via een
+   migratie in `supabase/migrations/`.
+3. **Na de merge:** voorraad per variant invullen in `/beheer`, dan
+   `status = 'published'`, dan opnieuw bouwen.
+
+> **Een merk op een product dat niet in `merken.ts` staat, breekt de build.**
+> Dat is bewust: zonder vermelding is er geen merkpagina en wijst het
+> kruimelpad naar een 404. Zet het product terug op `draft` of voeg het merk toe.
+
+> **Opnieuw bouwen na het publiceren.** De Vercel CLI op de werkplek heeft geen
+> toegang tot het team `villa-happ-project`. Gebruik Redeploy in het dashboard
+> op de **nieuwste** productiedeployment (zie Valkuil 3 in §2), of laat de
+> volgende merge het doen.
+
+De kolom `products.merk_toelichting` wordt niet meer gelezen: die tekst staat
+sinds 18 september 2026 per merk in `merken.ts`. Hij mag weg zodra geen
+draaiende deployment hem nog selecteert.
+
 ### Database-migraties
 
 Draai een migratie **vóór** de deploy die hem nodig heeft, anders schrijft de
