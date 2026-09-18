@@ -13,12 +13,15 @@ const searchIndex = catalog.map((p) => ({
   meta: p.meta,
   price_cents: p.price_cents,
   image: optimizedSrc(p.images[0], 160),
-  terms: [p.name, p.color, p.meta, p.short_desc].filter(Boolean).join(' ').toLowerCase(),
+  // Merk en variantkleuren erbij: zoeken op "vann" of "coral" moet de fles vinden.
+  terms: [p.name, p.color, p.merk, p.meta, p.short_desc, ...p.variants.map((v) => v.color)]
+    .filter(Boolean).join(' ').toLowerCase(),
 }));
 
 const navLinks = [
   { label: 'Home', href: '/', preview: '/img/products/hoodie-olijfgroen-lifestyle.webp' },
   { label: 'Shop', href: '/shop', preview: '/img/products/hoodie-olijfgroen-front.webp' },
+  { label: 'Goods', href: '/goods', preview: '/img/products/vann-ultimate-650-highland-green.webp' },
   { label: 'Drops', href: '/drops', preview: '/img/products/hoodie-navy-front.webp' },
   { label: 'Atelier', href: '/het-atelier', preview: '/img/products/back-cap-front.webp' },
   { label: 'Story', href: '/story', preview: '/img/heritage/origin-babyparadijs.webp' },

@@ -10,15 +10,13 @@ import '../../styles/shop.css';
 
 const products = await getCatalog();
 
-// Categorie afleiden voor de filterchips (demo-data heeft geen categorieveld)
-function categoryOf(name: string): string {
-  const n = name.toLowerCase();
-  if (n.includes('hoodie')) return 'Hoodies';
-  if (n.includes('cap')) return 'Caps';
-  if (n.includes('sok')) return 'Sokken';
-  return 'Overig';
-}
-const categories = [...new Set(products.map((p) => categoryOf(p.name)))];
+/**
+ * Filterchips op de collectie uit de database: Kleding of Goods.
+ * Hier werd de categorie eerder uit de productnaam geraden ("hoodie", "cap",
+ * "sok"), waardoor elk nieuw soort product onder "Overig" viel.
+ */
+const categoryOf = (p: (typeof products)[number]) => (p.collectie === 'goods' ? 'Goods' : 'Kleding');
+const categories = [...new Set(products.map(categoryOf))];
 
 type Product = (typeof products)[number];
 const stockOf = (p: Product) => p.variants.reduce((s, v) => s + v.stock, 0);
@@ -34,7 +32,11 @@ const siteOrigin = Astro.site?.origin || Astro.url.origin;
  * wijziging op één plek stil uit de pas gaat lopen met de andere.
  * "Genummerd" hoort bij de caps: de hoodies en sokken zijn dat niet.
  */
-const shopDescription = `De Villa Happ collectie: heritage hoodies, sokken en genummerde caps, gemaakt met ruim ${BRAND.age} jaar vakmanschap.`;
+const heeftGoods = products.some((p) => p.collectie === 'goods');
+// De vakmanschapszin hoort bij de eigen kleding. Goods staat er apart achter,
+// zodat de fles van VANN niet onder "ruim 80 jaar vakmanschap" valt.
+const shopDescription = `De Villa Happ collectie: heritage hoodies, sokken en genummerde caps, gemaakt met ruim ${BRAND.age} jaar vakmanschap.${heeftGoods ? ' Plus Goods van merken die wij goedkeuren.' : ''}`;
+const eigenStuks = products.filter((p) => p.collectie !== 'goods').length;
 
 /**
  * De collectiepagina als expliciete entiteit. De `ItemList` verwijst alleen
@@ -82,7 +84,10 @@ const breadcrumbLd = {
       <header class="vh-page-head">
         <p class="vh-page-label vh-mono">De collectie · FW26</p>
         <h1 class="vh-page-title">Nu te <span class="vh-italic-accent">dragen</span></h1>
-        <p class="vh-page-sub">{products.length} stuks. Zwaar biologisch katoen, ontworpen in Waalwijk. De caps zijn genummerd.</p>
+        <p class="vh-page-sub">
+          {eigenStuks} stuks. Zwaar biologisch katoen, ontworpen in Waalwijk. De caps zijn genummerd.
+          {heeftGoods && <> Daarnaast <a href="/goods">Goods</a> van merken die wij goedkeuren.</>}
+        </p>
       </header>
 
       <div class="vh-shop-toolbar">
@@ -110,7 +115,7 @@ const breadcrumbLd = {
             class={`vh-card${i === 0 ? ' vh-card--feature' : ''}`}
             data-index={i}
             data-price={p.price_cents}
-            data-cat={categoryOf(p.name)}
+            data-cat={categoryOf(p)}
             data-search={`${p.name} ${p.color} ${p.meta}`.toLowerCase()}
           >
             <div class="vh-card-media" transition:name={`product-${p.slug}`}>

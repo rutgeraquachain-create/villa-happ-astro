@@ -3,9 +3,9 @@ export const prerender = true;
 
 import Base from '../../layouts/Base.astro';
 import Pic from '../../components/Pic.astro';
-import { getCatalog, type CatalogProduct } from '../../lib/catalog';
+import { getCatalog, kiestOpKleur, type CatalogProduct } from '../../lib/catalog';
 import { formatPrice } from '../../lib/commerce';
-import { optimizedSrc } from '../../lib/img';
+import { optimizedSrc, srcsetFor } from '../../lib/img';
 import { BUSINESS } from '../../lib/business';
 import {
   RETURN_SENTENCE, RETURN_SHORT, VAT_SENTENCE, DELIVERY_SENTENCE,
@@ -37,6 +37,21 @@ const edition = product.edition;
 const soldOfEdition = edition ? Math.max(0, edition - totalStock) : 0;
 const editionPct = edition ? Math.min(100, Math.round((soldOfEdition / edition) * 100)) : 0;
 
+/**
+ * Producten van een ander merk (VH_APProved) en producten waarbij de klant
+ * een kleur kiest in plaats van een maat. De VANN-fles is allebei.
+ *
+ * Een merkproduct mag nergens doen alsof Villa Happ het maakt: niet in het
+ * merk van het schema, niet in de FAQ ("ontworpen in Waalwijk, biologisch
+ * katoen") en niet in een mpn die ons eigen artikelnummer als
+ * onderdeelnummer van de fabrikant opgeeft.
+ */
+const merk = product.merk;
+const isGoods = product.collectie === 'goods';
+const perKleur = kiestOpKleur(product.variants);
+const keuze: 'maat' | 'kleur' = perKleur ? 'kleur' : 'maat';
+const keuzeVan = (v: CatalogProduct['variants'][number]) => (perKleur ? v.color || v.size : v.size);
+
 // Maatgids-type afgeleid uit de varianten
 const sizeList = product.variants.map((v) => v.size);
 const sizeType: 'apparel' | 'socks' | 'onesize' =
@@ -55,7 +70,18 @@ const apparelRows = [
 // SEO: structured data (Product + Breadcrumb + FAQ)
 const siteOrigin = Astro.site?.origin || Astro.url.origin;
 const productUrl = `${siteOrigin}/shop/${product.slug}`;
-const absImages = product.images.map((i) => (i.startsWith('http') ? i : siteOrigin + i));
+const absUrl = (i: string) => (i.startsWith('http') ? i : siteOrigin + i);
+const absImages = product.images.map(absUrl);
+
+/**
+ * Bij een kleurkeuze toont de galerij één tegel: de gekozen kleur. De zes
+ * kleuren staan al als stalen naast de koopknop, en zes vrijwel gelijke
+ * packshots onder elkaar zeggen niets extra's. Met alle zes als tegels zou
+ * een gekozen kleur bovendien twee keer in beeld staan.
+ */
+const galerij = perKleur ? product.images.slice(0, 1) : product.images;
+const frameLabel = merk ? 'VH_APProved' : 'Archief';
+const titelAlt = `${product.name} ${product.color}`.trim();
 
 // Merchant-velden (verzending, retour, prijsgeldigheid) maken het
 // aanbod compleet voor Google's productresultaten
@@ -201,27 +227,31 @@ const productLd = {
    * merk maken en is dus zelf de fabrikant, dus het eigen artikelnummer ís
    * het onderdeelnummer. Geen `gtin`: daar bestaan geen echte barcodes voor
    * en een verzonnen GTIN is erger dan geen.
+   *
+   * Bij een merkproduct geldt die redenering niet: de fabrikant is dan het
+   * andere merk, en ons artikelnummer is niet hun onderdeelnummer. Dan geen
+   * mpn tot we het echte nummer van de maker hebben.
    */
-  ...(product.variants[0]?.sku ? { mpn: product.variants[0].sku } : {}),
+  ...(!merk && product.variants[0]?.sku ? { mpn: product.variants[0].sku } : {}),
   ...(hasVariants
     ? {
         productGroupID: product.slug,
-        variesBy: ['https://schema.org/size'],
+        variesBy: [perKleur ? 'https://schema.org/color' : 'https://schema.org/size'],
         hasVariant: product.variants.map((v) => ({
           '@type': 'Product',
-          name: `${displayTitle} — maat ${v.size}`,
-          // Beeld en omschrijving van het product zelf. Er is geen foto per
-          // maat, en die hoeft ook niet: de variant verschilt alleen in maat.
-          image: absImages,
+          name: perKleur ? `${displayTitle}, ${v.color}` : `${displayTitle} — maat ${v.size}`,
+          // Bij een maat: beeld van het product zelf, want er is geen foto per
+          // maat. Bij een kleur heeft elke variant zijn eigen foto.
+          image: perKleur && v.image ? [absUrl(v.image)] : absImages,
           description: product.short_desc,
           sku: v.sku,
-          ...(v.sku ? { mpn: v.sku } : {}),
-          size: v.size,
+          ...(!merk && v.sku ? { mpn: v.sku } : {}),
+          ...(perKleur ? { color: v.color } : { size: v.size }),
           offers: offerLd(v.stock > 0 ? IN_STOCK : OUT_OF_STOCK),
         })),
       }
     : {}),
-  brand: { '@type': 'Brand', name: 'Villa Happ' },
+  brand: { '@type': 'Brand', name: merk || 'Villa Happ' },
   offers: offerLd(soldOut ? OUT_OF_STOCK : IN_STOCK),
 };
 
@@ -230,7 +260,9 @@ const breadcrumbLd = {
   '@type': 'BreadcrumbList',
   itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteOrigin}/` },
-    { '@type': 'ListItem', position: 2, name: 'Shop', item: `${siteOrigin}/shop` },
+    isGoods
+      ? { '@type': 'ListItem', position: 2, name: 'Goods', item: `${siteOrigin}/goods` }
+      : { '@type': 'ListItem', position: 2, name: 'Shop', item: `${siteOrigin}/shop` },
     { '@type': 'ListItem', position: 3, name: product.name, item: productUrl },
   ],
 };
@@ -242,17 +274,29 @@ const sizingAnswer =
       ? 'Kies je sokmaat op basis van je gewone schoenmaat: 36/41 of 42/46.'
       : 'One size, verstelbaar via de clipsluiting achter. Past comfortabel op een hoofdomtrek van circa 54 tot 61 cm.';
 
-const faqItems = [
-  { q: 'Hoe vallen de maten?', a: sizingAnswer },
-  { q: 'Wat zijn de levertijd en verzendkosten?', a: `${DELIVERY_SENTENCE} ${SHIPPING_SENTENCE}` },
-  { q: 'Kan ik retourneren?', a: RETURN_SENTENCE },
-  { q: 'Is dit een origineel Villa Happ stuk?', a: edition
-      ? `Ja. Dit komt uit een genummerde oplage van ${edition} stuks en wordt geleverd met een certificaat van echtheid.`
-      // Geen oplage: dan ook geen schaarstebelofte. Alleen de caps zijn
-      // genummerd en gelimiteerd; hoodies en sokken worden per serie gemaakt
-      // en kunnen terugkomen.
-      : 'Ja. Elk stuk wordt in Waalwijk ontworpen en met zorg gemaakt, van zwaar biologisch katoen.' },
-];
+/**
+ * Een merkproduct krijgt geen maatvraag en geen "origineel Villa Happ
+ * stuk?": dat antwoord zegt "in Waalwijk ontworpen, van zwaar biologisch
+ * katoen", en dat is voor een fles van VANN gewoon onwaar. In de plaats komt
+ * de vraag die een koper dan wél heeft: wie maakt dit, en bij wie koop ik.
+ */
+const faqItems = merk
+  ? [
+      { q: 'Wie maakt dit product?', a: `${merk} maakt het. Villa Happ heeft het merk gekozen en goedgekeurd (VH_APProved), en verkoopt en verstuurt het zelf. Je bestelt, betaalt en retourneert dus gewoon bij Villa Happ.` },
+      { q: 'Wat zijn de levertijd en verzendkosten?', a: `${DELIVERY_SENTENCE} ${SHIPPING_SENTENCE}` },
+      { q: 'Kan ik retourneren?', a: RETURN_SENTENCE },
+    ]
+  : [
+      { q: 'Hoe vallen de maten?', a: sizingAnswer },
+      { q: 'Wat zijn de levertijd en verzendkosten?', a: `${DELIVERY_SENTENCE} ${SHIPPING_SENTENCE}` },
+      { q: 'Kan ik retourneren?', a: RETURN_SENTENCE },
+      { q: 'Is dit een origineel Villa Happ stuk?', a: edition
+          ? `Ja. Dit komt uit een genummerde oplage van ${edition} stuks en wordt geleverd met een certificaat van echtheid.`
+          // Geen oplage: dan ook geen schaarstebelofte. Alleen de caps zijn
+          // genummerd en gelimiteerd; hoodies en sokken worden per serie gemaakt
+          // en kunnen terugkomen.
+          : 'Ja. Elk stuk wordt in Waalwijk ontworpen en met zorg gemaakt, van zwaar biologisch katoen.' },
+    ];
 
 const faqLd = {
   '@context': 'https://schema.org',
@@ -300,20 +344,21 @@ const pdpData = {
   variants: product.variants,
   model: product.model || null,
   edition: product.edition || null,
+  keuze,
 };
 ---
 <Base
   title={`${displayTitle} · Villa Happ`}
   description={metaDescription}
   ogImage={product.images[0]}
-  ogImageAlt={`${product.name} ${product.color}`}
+  ogImageAlt={titelAlt}
 >
   <section class="vh-page">
     <div class="vh-page-inner">
 
       <nav class="vh-breadcrumb" aria-label="Kruimelpad">
         <a href="/">Home</a> <span aria-hidden="true">/</span>
-        <a href="/shop">Shop</a> <span aria-hidden="true">/</span>
+        {isGoods ? <a href="/goods">Goods</a> : <a href="/shop">Shop</a>} <span aria-hidden="true">/</span>
         <span class="vh-breadcrumb-current">{product.name}</span>
       </nav>
 
@@ -331,7 +376,8 @@ const pdpData = {
               >
                 <Pic
                   src={product.images[0]}
-                  alt={`${product.name} ${product.color}`}
+                  alt={perKleur ? `${product.name}, ${keuzeVan(product.variants[0])}` : titelAlt}
+                  id="vh-pdp-hoofdbeeld"
                   width={900}
                   height={1125}
                   widths={[480, 640, 768, 1080]}
@@ -342,10 +388,10 @@ const pdpData = {
                 {soldOut && <span class="vh-stamp" aria-hidden="true">Uitverkocht</span>}
               </button>
               <figcaption class="vh-pdp-frame-tag">
-                Archief · {skuPrefix} · 01/{String(product.images.length).padStart(2, '0')}
+                {frameLabel} · {skuPrefix} · 01/{String(galerij.length).padStart(2, '0')}
               </figcaption>
             </figure>
-            {product.images.slice(1).map((img, i) => (
+            {galerij.slice(1).map((img, i) => (
               <figure class="vh-pdp-tile">
                 <button
                   type="button"
@@ -364,7 +410,7 @@ const pdpData = {
                   />
                 </button>
                 <figcaption class="vh-pdp-frame-tag">
-                  Archief · {skuPrefix} · {String(i + 2).padStart(2, '0')}/{String(product.images.length).padStart(2, '0')}
+                  {frameLabel} · {skuPrefix} · {String(i + 2).padStart(2, '0')}/{String(galerij.length).padStart(2, '0')}
                 </figcaption>
               </figure>
             ))}
@@ -397,7 +443,10 @@ const pdpData = {
         <!-- Info -->
         <div class="vh-pdp-info">
           <p class="vh-pdp-kicker vh-mono">
-            {edition ? 'Heritage collectie · Genummerde oplage' : 'Heritage collectie'}
+            {merk
+              ? `Goods · VH_APProved · ${merk}`
+              : isGoods ? 'Goods'
+              : edition ? 'Heritage collectie · Genummerde oplage' : 'Heritage collectie'}
           </p>
           <h1 class="vh-pdp-title">{product.name}</h1>
           {product.color && <p class="vh-pdp-color">{product.color}</p>}
@@ -406,6 +455,18 @@ const pdpData = {
             <span class="vh-pdp-price-now">{formatPrice(product.price_cents)}</span>
           </p>
           <p class="vh-pdp-short">{product.short_desc}</p>
+
+          {merk && (
+            <aside class="vh-cert vh-cert--approved" aria-label={`VH_APProved: waarom wij ${merk} goedkeuren`}>
+              <span class="vh-cert-seal" aria-hidden="true">VH</span>
+              <div>
+                <p class="vh-cert-title">VH_APProved · {merk}</p>
+                <p class="vh-cert-meta vh-mono">Gekozen en goedgekeurd door Villa Happ</p>
+                {product.merkToelichting && <p class="vh-cert-note">{product.merkToelichting}</p>}
+                <a href="/brands" class="vh-cert-link vh-mono">Over VH_APProved →</a>
+              </div>
+            </aside>
+          )}
 
           {edition && !soldOut && (
             <div class="vh-pdp-scarcity">
@@ -432,27 +493,45 @@ const pdpData = {
           )}
 
           <div class="vh-pdp-sizes-head">
-            <span>Maat</span>
-            <button type="button" class="vh-pdp-sizeguide-btn" id="vh-pdp-sizeguide-open">Maatgids ↗</button>
+            {perKleur
+              ? <span>Kleur <b class="vh-pdp-keuzenaam" id="vh-pdp-keuzenaam"></b></span>
+              : <span>Maat</span>}
+            {!perKleur && <button type="button" class="vh-pdp-sizeguide-btn" id="vh-pdp-sizeguide-open">Maatgids ↗</button>}
           </div>
-          <div class="vh-pdp-sizes" id="vh-pdp-sizes" role="radiogroup" aria-label="Kies je maat">
+          <div
+            class={`vh-pdp-sizes${perKleur ? ' vh-pdp-sizes--kleur' : ''}`}
+            id="vh-pdp-sizes"
+            role="radiogroup"
+            aria-label={perKleur ? 'Kies je kleur' : 'Kies je maat'}
+          >
             {product.variants.map((v) => (
               <button
                 type="button"
                 role="radio"
                 aria-checked="false"
-                class={`vh-size${v.stock === 0 ? ' is-out' : ''}`}
+                class={`vh-size${perKleur ? ' vh-size--kleur' : ''}${v.stock === 0 ? ' is-out' : ''}`}
                 data-variant={v.id}
-                data-size={v.size}
+                data-size={keuzeVan(v)}
                 data-stock={v.stock}
-              >{v.size}</button>
+                {...(perKleur && v.image
+                  ? {
+                      'data-image': v.image,
+                      'data-img-src': optimizedSrc(v.image, 900),
+                      'data-img-srcset': srcsetFor(v.image, [480, 640, 768, 1080]),
+                      'data-img-full': optimizedSrc(v.image, 1920),
+                    }
+                  : {})}
+                aria-label={perKleur ? `${v.color}${v.stock === 0 ? ', uitverkocht' : ''}` : undefined}
+                title={perKleur ? v.color : undefined}
+                style={perKleur && v.colorHex ? `--sw:${v.colorHex}` : undefined}
+              >{perKleur ? <span class="vh-swatch" aria-hidden="true"></span> : v.size}</button>
             ))}
           </div>
           <p class="vh-pdp-stockmsg" id="vh-pdp-stockmsg"></p>
 
-          <!-- Back-in-stock (Zeigarnik + loss aversion): verschijnt bij uitverkochte maat -->
+          <!-- Back-in-stock (Zeigarnik + loss aversion): verschijnt bij uitverkochte maat of kleur -->
           <div class="vh-pdp-notify" id="vh-pdp-notify" hidden>
-            <p class="vh-mono">Mail me als <b id="vh-pdp-notify-size">deze maat</b> terug is</p>
+            <p class="vh-mono">Mail me als <b id="vh-pdp-notify-size">deze {keuze}</b> terug is</p>
             <form id="vh-pdp-notify-form">
               <input type="email" required placeholder="jouw@email.nl" id="vh-pdp-notify-email" autocomplete="email" aria-label="E-mailadres voor voorraadmelding" />
               <div class="vh-hp" aria-hidden="true">
@@ -461,12 +540,12 @@ const pdpData = {
               </div>
               <button type="submit" class="vh-btn vh-btn--ghost"><span>Houd me op de hoogte</span></button>
             </form>
-            <p class="vh-pdp-notify-done" id="vh-pdp-notify-done" hidden>Top, we mailen je zodra deze maat er weer is.</p>
+            <p class="vh-pdp-notify-done" id="vh-pdp-notify-done" hidden>Top, we mailen je zodra deze {keuze} er weer is.</p>
           </div>
 
           <div class="vh-pdp-atc">
             <button type="button" class="vh-btn vh-btn--accent" id="vh-pdp-add" disabled={soldOut}>
-              <span id="vh-pdp-add-label">{soldOut ? 'Uitverkocht' : 'Kies je maat'}</span>
+              <span id="vh-pdp-add-label">{soldOut ? 'Uitverkocht' : `Kies je ${keuze}`}</span>
             </button>
             <button type="button" class="vh-pdp-wish" id="vh-pdp-wish" aria-pressed="false">
               <span class="vh-pdp-wish-ico" aria-hidden="true">♡</span>
@@ -521,7 +600,7 @@ const pdpData = {
       <section class="vh-reviews" id="vh-reviews" aria-label="Reviews">
         <div class="vh-reviews-head">
           <div>
-            <p class="vh-mono">Wat dragers zeggen</p>
+            <p class="vh-mono">{isGoods ? 'Wat kopers zeggen' : 'Wat dragers zeggen'}</p>
             <h2>Reviews</h2>
           </div>
           <div class="vh-reviews-agg" id="vh-reviews-agg"></div>
@@ -585,8 +664,8 @@ const pdpData = {
     </div>
   </section>
 
-  <!-- Maatgids modal -->
-  <div class="vh-modal" id="vh-sizeguide" hidden>
+  <!-- Maatgids modal (niet bij een kleurkeuze: daar is geen maat te kiezen) -->
+  {!perKleur && <div class="vh-modal" id="vh-sizeguide" hidden>
     <div class="vh-modal-backdrop" data-sizeguide-close></div>
     <div class="vh-modal-panel" role="dialog" aria-modal="true" aria-labelledby="vh-sizeguide-title">
       <button type="button" class="vh-modal-close" data-sizeguide-close aria-label="Sluiten">✕</button>
@@ -616,13 +695,13 @@ const pdpData = {
         <p class="vh-sizeguide-tip">One size, verstelbaar via de clipsluiting achter. Past comfortabel op een hoofdomtrek van circa 54 tot 61 cm.</p>
       )}
     </div>
-  </div>
+  </div>}
 
   <!-- Lightbox: hoofdbeeld op groot formaat, klik om in te zoomen -->
   <div class="vh-lightbox" id="vh-lightbox" hidden>
     <button type="button" class="vh-lightbox-close" id="vh-lightbox-close" aria-label="Sluiten">✕</button>
     <div class="vh-lightbox-stage" id="vh-lightbox-stage" role="dialog" aria-modal="true" aria-label={`${product.name} op groot formaat`}>
-      <img id="vh-lightbox-img" src="" alt={`${product.name} ${product.color}, groot formaat`} />
+      <img id="vh-lightbox-img" src="" alt={`${titelAlt}, groot formaat`} />
     </div>
     <p class="vh-lightbox-hint vh-mono">Klik op de foto om in te zoomen · Esc om te sluiten</p>
   </div>
@@ -790,14 +869,34 @@ const pdpData = {
     }, { signal: ac.signal });
   })();
 
-  /* Maatselectie + back-in-stock */
-  let selected: { id: string; size: string; stock: number } | null = null;
+  /* Maat- of kleurselectie + back-in-stock.
+     `keuze` is 'kleur' bij een product dat alleen in kleur verschilt (de
+     VANN-fles). `size` in `selected` is dan de kleurnaam; zo gaat hij ook
+     naar /api/notify, en de cron matcht daar op (voorraadPerKeuze). */
+  const keuze: 'maat' | 'kleur' = data.keuze === 'kleur' ? 'kleur' : 'maat';
+  let selected: { id: string; size: string; stock: number; image?: string } | null = null;
   const addBtn = document.getElementById('vh-pdp-add') as HTMLButtonElement;
   const addLabel = document.getElementById('vh-pdp-add-label')!;
   const stickyBtn = document.getElementById('vh-pdp-add-sticky') as HTMLButtonElement | null;
   const stockMsg = document.getElementById('vh-pdp-stockmsg')!;
   const notify = document.getElementById('vh-pdp-notify')!;
   const notifySize = document.getElementById('vh-pdp-notify-size')!;
+  const keuzeNaam = document.getElementById('vh-pdp-keuzenaam');
+  const hoofdbeeld = document.getElementById('vh-pdp-hoofdbeeld') as HTMLImageElement | null;
+  const keuzeTekst = (waarde: string) => (keuze === 'kleur' ? waarde : `maat ${waarde}`);
+
+  /* Bij een kleurkeuze wisselt de hoofdfoto mee. De srcset is op build-moment
+     per kleur uitgerekend en staat op de knop, zodat hier niets geraden wordt. */
+  function toonKleur(btn: HTMLButtonElement) {
+    if (keuze !== 'kleur') return;
+    if (keuzeNaam) keuzeNaam.textContent = btn.dataset.size || '';
+    if (!hoofdbeeld || !btn.dataset.imgSrc) return;
+    hoofdbeeld.srcset = btn.dataset.imgSrcset || '';
+    hoofdbeeld.src = btn.dataset.imgSrc;
+    hoofdbeeld.alt = `${data.name}, ${btn.dataset.size}`;
+    const tegel = hoofdbeeld.closest<HTMLButtonElement>('.vh-pdp-tile-btn');
+    if (tegel && btn.dataset.imgFull) tegel.dataset.full = btn.dataset.imgFull;
+  }
 
   document.querySelectorAll<HTMLButtonElement>('.vh-size').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -808,25 +907,39 @@ const pdpData = {
       });
       btn.classList.add('is-active');
       btn.setAttribute('aria-checked', 'true');
+      toonKleur(btn);
 
       if (isOut) {
-        // Uitverkochte maat: bied een voorraadmelding aan i.p.v. toevoegen
+        // Uitverkochte maat of kleur: bied een voorraadmelding aan i.p.v. toevoegen
         selected = null;
         addBtn.disabled = true;
-        addLabel.textContent = 'Uitverkocht in deze maat';
+        addLabel.textContent = `Uitverkocht in deze ${keuze}`;
         stockMsg.textContent = '';
-        notifySize.textContent = `maat ${btn.dataset.size}`;
+        notifySize.textContent = keuzeTekst(btn.dataset.size!);
         notify.removeAttribute('hidden');
         return;
       }
 
       notify.setAttribute('hidden', '');
-      selected = { id: btn.dataset.variant!, size: btn.dataset.size!, stock: parseInt(btn.dataset.stock!, 10) };
+      selected = {
+        id: btn.dataset.variant!,
+        size: btn.dataset.size!,
+        stock: parseInt(btn.dataset.stock!, 10),
+        image: btn.dataset.image,
+      };
       addBtn.disabled = false;
       addLabel.textContent = 'In winkelmandje';
-      stockMsg.textContent = selected.stock <= 3 ? `Nog ${selected.stock} op voorraad in deze maat` : '';
+      stockMsg.textContent = selected.stock <= 3 ? `Nog ${selected.stock} op voorraad in deze ${keuze}` : '';
     });
   });
+
+  /* Een kleur kies je op het oog, dus die staat al aan: de eerste die op
+     voorraad is. Een maat blijft een bewuste keuze van de klant; daar kiezen
+     we niets voor. */
+  if (keuze === 'kleur') {
+    const eerste = document.querySelector<HTMLButtonElement>('.vh-size:not(.is-out)');
+    eerste?.click();
+  }
 
   /* Pijltjestoetsen binnen de maat-radiogroup (verwacht gedrag bij role=radio) */
   const sizeGroup = document.getElementById('vh-pdp-sizes');
@@ -844,24 +957,28 @@ const pdpData = {
 
   function add(e?: Event) {
     if (!selected) {
-      stockMsg.textContent = 'Kies eerst een maat';
+      stockMsg.textContent = `Kies eerst een ${keuze}`;
       document.getElementById('vh-pdp-sizes')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
+    // Bij een kleurkeuze is de kleur zelf het label; `data.color` is dan leeg
+    // en gaf anders " / Black".
+    const label = keuze === 'kleur' ? selected.size : `${data.color} / ${selected.size}`;
+    const beeld = selected.image || data.image;
     addToCart({
       variant_id: selected.id,
       product_id: data.slug,
       quantity: 1,
       name: `${data.name}`,
-      variant_label: `${data.color} / ${selected.size}`,
+      variant_label: label,
       unit_price_cents: data.price_cents,
-      image_url: data.image,
+      image_url: beeld,
       slug: data.slug,
     });
     trackAddToCart({
       item_id: data.slug,
       item_name: data.name,
-      item_variant: `${data.color} / ${selected.size}`,
+      item_variant: label,
       price_cents: data.price_cents,
       quantity: 1,
     });
@@ -871,7 +988,7 @@ const pdpData = {
     btn.classList.add('is-stamped');
     setTimeout(() => btn.classList.remove('is-stamped'), 500);
     const r = btn.getBoundingClientRect();
-    flyToCart(data.image, r.left + r.width / 2, r.top + r.height / 2);
+    flyToCart(beeld, r.left + r.width / 2, r.top + r.height / 2);
     window.dispatchEvent(new CustomEvent('vh:toast', { detail: 'Toegevoegd aan je mandje ✦' }));
     setTimeout(() => openCart(), 520);
   }
@@ -926,7 +1043,9 @@ const pdpData = {
   notifyForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!notifyEmail.value || !/.+@.+\..+/.test(notifyEmail.value)) { notifyEmail.focus(); return; }
-    const size = (notifySize.textContent || '').replace(/^maat\s+/i, '');
+    const size = keuze === 'kleur'
+      ? (notifySize.textContent || '')
+      : (notifySize.textContent || '').replace(/^maat\s+/i, '');
     let saved = false;
     try {
       // Als formulier en niet als JSON; zie src/lib/formulierpost.ts.
@@ -994,7 +1113,7 @@ const pdpData = {
           document.querySelector<HTMLButtonElement>(`.vh-size[data-variant="${selected.id}"]`)?.click();
         } else {
           selected.stock = cur;
-          stockMsg.textContent = cur <= 3 ? `Nog ${cur} op voorraad in deze maat` : '';
+          stockMsg.textContent = cur <= 3 ? `Nog ${cur} op voorraad in deze ${keuze}` : '';
         }
       }
 
