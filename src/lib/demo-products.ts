@@ -259,7 +259,9 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
       'Met drie doppen, een rietje en een schoonmaakborstel',
       'Gemaakt door VANN, verstuurd door Villa Happ',
     ],
-    images: VANN_KLEUREN.map((k) => `/img/products/vann-ultimate-650-${k.slug}.webp`),
+    // -v2: op de warme Villa Happ-achtergrond (scripts/merkfoto-achtergrond.py). De
+    // versies op wit staan met een 301 in vercel.json.
+    images: VANN_KLEUREN.map((k) => `/img/products/vann-ultimate-650-${k.slug}-v2.webp`),
     meta: 'VH_APProved · 6 kleuren',
     note: 'Van VANN, goedgekeurd door Villa Happ.',
     variants: VANN_KLEUREN.map((k) => ({
@@ -269,7 +271,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
       sku: `VH-VANN-650-${k.code}`,
       color: k.naam,
       colorHex: k.hex,
-      image: `/img/products/vann-ultimate-650-${k.slug}.webp`,
+      image: `/img/products/vann-ultimate-650-${k.slug}-v2.webp`,
     })),
   },
 ];

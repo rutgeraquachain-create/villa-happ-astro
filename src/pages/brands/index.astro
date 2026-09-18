@@ -70,27 +70,32 @@ const breadcrumbLd = {
         </p>
       </header>
 
-      {merken.length === 0 ? (
-        <p class="vh-merken-leeg">De eerste merken zijn onderweg.</p>
-      ) : (
-        <ul class="vh-merkwand" role="list">
-          {merken.map((m) => (
-            <li>
-              <a href={merkPad(m)} class="vh-merktegel" aria-label={`${m.naam}: bekijk het merk en de producten`}>
-                <img
-                  src={m.logo}
-                  alt={m.naam}
-                  width={m.logoMaat.breedte}
-                  height={m.logoMaat.hoogte}
-                  loading="eager"
-                  class="vh-merktegel-logo"
-                />
-                <span class="vh-merktegel-link vh-mono">Bekijk {m.naam} →</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul class="vh-merkwand" role="list">
+        {merken.map((m) => (
+          <li>
+            <a href={merkPad(m)} class="vh-merktegel" aria-label={`${m.naam}: bekijk het merk en de producten`}>
+              <img
+                src={m.logo}
+                alt={m.naam}
+                width={m.logoMaat.breedte}
+                height={m.logoMaat.hoogte}
+                loading="eager"
+                class="vh-merktegel-logo"
+              />
+              <span class="vh-merktegel-link vh-mono">Bekijk {m.naam} →</span>
+            </a>
+          </li>
+        ))}
+        {/* Altijd de laatste tegel: de uitnodiging aan merken. Tekst in het
+            Engels op verzoek van Geoffrey (18 september 2026), net als het
+            menu-item Brands. */}
+        <li>
+          <a href="/voor-merken" class="vh-merktegel vh-merktegel--volgende">
+            <span class="vh-merktegel-vraag">Is your brand next?</span>
+            <span class="vh-merktegel-link vh-mono">Meld je merk aan →</span>
+          </a>
+        </li>
+      </ul>
 
       <div class="vh-shop-intro">
         <h2>Wat VH_APProved betekent</h2>
@@ -115,7 +120,21 @@ const breadcrumbLd = {
 <script>import '../../lib/cart';</script>
 
 <style>
-  .vh-merken-leeg { color: var(--vh-ink-soft); margin: 0 0 40px; }
+  /* De uitnodigingstegel: zelfde maat en rand, gestippeld zoals het
+     VH_APProved-zegel, zodat hij leest als een open plek in de wand. */
+  /* Dubbele klasse: de basisregel .vh-merktegel staat verderop en won anders. */
+  .vh-merktegel.vh-merktegel--volgende {
+    border-style: dashed;
+    border-color: var(--vh-ink-muted);
+    background: transparent;
+  }
+  .vh-merktegel-vraag {
+    font-family: var(--vh-font-serif);
+    font-style: italic;
+    font-size: clamp(26px, 2.4vw, 32px);
+    line-height: 1.15;
+    text-align: center;
+  }
   .vh-merkwand {
     list-style: none;
     margin: 0 0 48px;
