@@ -30,6 +30,10 @@ const migratie = readFileSync(
   new URL('../supabase/migrations/20260918_goods_en_merken.sql', import.meta.url),
   'utf-8',
 );
+const migratieV2 = readFileSync(
+  new URL('../supabase/migrations/20260918_vann_beelden_v2.sql', import.meta.url),
+  'utf-8',
+);
 const bestaat = (pad: string) => existsSync(new URL(`../public${pad}`, import.meta.url));
 
 describe('producten van andere merken', () => {
@@ -95,14 +99,43 @@ describe('VANN-fles: demo-data, migratie en bestanden', () => {
     expect(migratie).toContain(`${fles.price_cents},`);
   });
 
-  it('voert dezelfde SKU-nummers, kleuren en beelden als de migratie', () => {
+  /**
+   * De eerste migratie zette de beelden op wit neer; 20260918_vann_beelden_v2.sql
+   * maakt van elk pad `<naam>-v2.webp`. De demo-data moet op de uitkomst van die
+   * twee samen staan, dus: elk demo-pad is een pad uit de eerste migratie met -v2.
+   */
+  const naV2 = (pad: string) => pad.replace(/-v2\.webp$/, '.webp');
+
+  it('voert dezelfde SKU-nummers, kleuren en beelden als de migraties', () => {
     for (const v of fles.variants) {
       expect(migratie).toContain(`'${v.sku}'`);
       expect(migratie).toContain(`'${v.color}'`);
       expect(migratie).toContain(`'${v.colorHex}'`);
-      expect(migratie).toContain(`'${v.image}'`);
+      expect(v.image).toMatch(/-v2\.webp$/);
+      expect(migratie).toContain(`'${naV2(v.image!)}'`);
     }
-    for (const beeld of fles.images) expect(migratie).toContain(beeld);
+    for (const beeld of fles.images) {
+      expect(beeld).toMatch(/-v2\.webp$/);
+      expect(migratie).toContain(naV2(beeld));
+    }
+    expect(migratieV2).toMatch(/replace\(image_url, '\.webp', '-v2\.webp'\)/);
+  });
+
+  /**
+   * Een beeld vervang je nooit op hetzelfde pad (CLAUDE.md): de oude paden
+   * staan een jaar in caches en misschien in Google Afbeeldingen. Elk oud pad
+   * hoort met een 301 naar zijn -v2-versie te gaan.
+   */
+  it('stuurt elk oud beeldpad met een 301 door naar de -v2-versie', () => {
+    const redirects: { source: string; destination: string; permanent?: boolean }[] =
+      JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf-8')).redirects;
+    for (const beeld of fles.images) {
+      const regel = redirects.find((r) => r.source === naV2(beeld));
+      expect(regel, `Geen redirect voor ${naV2(beeld)}`).toBeTruthy();
+      expect(regel!.destination).toBe(beeld);
+      expect(regel!.permanent).toBe(true);
+      expect(bestaat(naV2(beeld)), `${naV2(beeld)} staat er nog; de 301 kan dan niet werken`).toBe(false);
+    }
   });
 
   /**

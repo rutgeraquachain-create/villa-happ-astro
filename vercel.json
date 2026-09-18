@@ -214,6 +214,36 @@
       "source": "/img/products/back-cap-side-v2.webp",
       "destination": "/img/products/back-cap-side.webp",
       "permanent": true
+    },
+    {
+      "source": "/img/products/vann-ultimate-650-black.webp",
+      "destination": "/img/products/vann-ultimate-650-black-v2.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/vann-ultimate-650-highland-green.webp",
+      "destination": "/img/products/vann-ultimate-650-highland-green-v2.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/vann-ultimate-650-bay-blue.webp",
+      "destination": "/img/products/vann-ultimate-650-bay-blue-v2.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/vann-ultimate-650-oatmeal.webp",
+      "destination": "/img/products/vann-ultimate-650-oatmeal-v2.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/vann-ultimate-650-coral.webp",
+      "destination": "/img/products/vann-ultimate-650-coral-v2.webp",
+      "permanent": true
+    },
+    {
+      "source": "/img/products/vann-ultimate-650-himalayan-salt.webp",
+      "destination": "/img/products/vann-ultimate-650-himalayan-salt-v2.webp",
+      "permanent": true
     }
   ],
   "headers": [
