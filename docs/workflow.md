@@ -427,7 +427,7 @@ Werk ze bij wanneer ze veranderen; dit is de enige plek waar ze staan.
 | 🔴 | **Heet de hoodie "Olijfgroen"?** De foto is saliegroen (gemeten `#828875`), niet olijf. Het kleurstaal is met de foto gelijkgetrokken; de naam is een keuze: hernoemen of opnieuw fotograferen. | Kleurverwachting versus levering is dé retouroorzaak in fashion |
 | 🔴 | **Blijven de sokken in de shop?** Ze hebben nu het logo als productfoto, 256×256 uitgerekt in een 600×750 kader. | Twee van de vijf producten hebben geen echte foto |
 | 🟠 | **Klopt "Vercel Web Analytics gebruikt geen cookies"?** Zo staat het in het cookiebeleid, omdat het product cookieloos is. | Klopt het niet, dan is er wél een cookiebanner nodig |
-| 🟠 | **Worden `/drops` en `/brands` gevuld, of eruit?** Beide staan op `noindex` en buiten de sitemap. `/brands` is bovendien uit de navigatie gehaald. | Lege pagina's in de nav kosten vertrouwen |
+| 🟠 | **Wordt `/drops` gevuld, of eruit?** Staat op `noindex` en buiten de sitemap. (`/brands` is sinds september 2026 gevuld als VH_APProved, met VANN als eerste merk; hij volgt de catalogus en gaat vanzelf op noindex als er geen merkproduct meer is.) | Lege pagina's in de nav kosten vertrouwen |
 | 🟢 | **Dubbele opt-in op de nieuwsbrief?** Nu enkele opt-in met een expliciete toestemmingscheckbox. | Dubbele opt-in is bewijsbaarder bij een AVG-klacht |
 
 ### Bekende grenzen

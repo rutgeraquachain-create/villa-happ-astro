@@ -72,6 +72,52 @@ describe('een lege of mislukte uitkomst', () => {
   });
 });
 
+describe('Goods en kleurvarianten', () => {
+  /** De VANN-fles zoals Supabase hem geeft: zes kleuren, alle 650 ml. */
+  const FLES = {
+    ...RIJ,
+    slug: 'fles',
+    name: 'Fles',
+    collectie: 'goods',
+    merk: 'VANN',
+    merk_toelichting: 'Waarom.',
+    image_url: '/img/a.webp',
+    gallery: ['/img/b.webp', '/img/c.webp'],
+    // Bewust in een andere volgorde dan de galerij: PostgREST garandeert
+    // geen volgorde voor geneste rijen.
+    product_variants: [
+      { id: 'c', sku: 'C', size: '650 ml', color: 'Coral', color_hex: '#f00', image_url: '/img/c.webp', inventory: null },
+      { id: 'a', sku: 'A', size: '650 ml', color: 'Black', color_hex: '#000', image_url: '/img/a.webp', inventory: { quantity: 4, reserved: 0 } },
+      { id: 'b', sku: 'B', size: '650 ml', color: 'Bay Blue', color_hex: '#00f', image_url: '/img/b.webp', inventory: null },
+    ],
+  };
+
+  it('neemt collectie, merk en de kleur per variant over', () => {
+    const [fles] = catalogusUitRijen([FLES], null, true);
+    expect(fles.collectie).toBe('goods');
+    expect(fles.merk).toBe('VANN');
+    expect(fles.merkToelichting).toBe('Waarom.');
+    // Geen productkleur: anders heette de fles "Fles Coral" in titel en schema.
+    expect(fles.color).toBe('');
+    expect(fles.variants.map((v) => v.color)).toEqual(['Black', 'Bay Blue', 'Coral']);
+    expect(fles.variants[0]).toMatchObject({ colorHex: '#000', image: '/img/a.webp', stock: 4 });
+  });
+
+  it('laat een product met één kleur per product ongemoeid', () => {
+    const [hoodie] = catalogusUitRijen([RIJ], null, true);
+    expect(hoodie.collectie).toBe('kleding');
+    expect(hoodie.merk).toBeUndefined();
+    expect(hoodie.color).toBe('zwart');
+    expect(hoodie.variants[0].color).toBeUndefined();
+  });
+
+  it('zet de eigen kleding vóór Goods, ook als Goods nieuwer is', () => {
+    // De query sorteert nieuwste eerst, dus de fles komt als eerste binnen.
+    const uit = catalogusUitRijen([FLES, RIJ], null, true);
+    expect(uit.map((p) => p.slug)).toEqual(['proefproduct', 'fles']);
+  });
+});
+
 describe('de catalogus wordt onthouden', () => {
   /**
    * Gemeten 8 september 2026 in de Supabase-logs: 74 identieke queries per

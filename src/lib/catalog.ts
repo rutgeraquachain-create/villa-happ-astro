@@ -16,9 +16,12 @@
  */
 
 import { getSupabase } from './supabase';
-import { DEMO_PRODUCTS, type CatalogProduct } from './demo-products';
+import { DEMO_PRODUCTS, type CatalogProduct, type CatalogVariant } from './demo-products';
 
-export type { CatalogProduct, CatalogVariant } from './demo-products';
+import { kiestOpKleur } from './keuze';
+
+export type { CatalogProduct, CatalogVariant, Collectie } from './demo-products';
+export { kiestOpKleur };
 
 interface DbInventory { quantity: number | null; reserved: number | null }
 interface DbVariant {
@@ -26,6 +29,8 @@ interface DbVariant {
   sku: string;
   size: string | null;
   color: string | null;
+  color_hex: string | null;
+  image_url: string | null;
   inventory: DbInventory | DbInventory[] | null;
 }
 interface DbProduct {
@@ -42,7 +47,23 @@ interface DbProduct {
   badge: string | null;
   featured: boolean | null;
   category: string | null;
+  collectie: string | null;
+  merk: string | null;
+  merk_toelichting: string | null;
   product_variants: DbVariant[];
+}
+
+/**
+ * De eigen collectie eerst, Goods erachter, en binnen elke groep de volgorde
+ * uit de query (nieuwste eerst). Zonder dit zou elk nieuw Goods-product de
+ * grote openingstegel van /shop worden en de eerste suggestie op de 404.
+ */
+export function sorteerCollectie(producten: CatalogProduct[]): CatalogProduct[] {
+  return producten
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) =>
+      (a.p.collectie === 'goods' ? 1 : 0) - (b.p.collectie === 'goods' ? 1 : 0) || a.i - b.i)
+    .map(({ p }) => p);
 }
 
 /**
@@ -108,25 +129,50 @@ export function catalogusUitRijen(
     return DEMO_PRODUCTS;
   }
 
-  return (data as unknown as DbProduct[]).map((p) => ({
-    slug: p.slug,
-    name: p.name,
-    color: p.product_variants[0]?.color || '',
-    price_cents: p.price_cents,
-    short_desc: p.short_desc || '',
-    description: p.description || '',
-    details: p.details || [],
-    images: [p.image_url, ...(p.gallery || [])].filter(Boolean) as string[],
-    badge: cleanBadge(p.badge) || (p.featured ? 'Featured' : undefined),
-    meta: p.category || '',
-    edition: p.edition || undefined,
-    note: p.note || undefined,
-    variants: p.product_variants.map((v) => ({
-      id: v.id,
-      size: v.size || 'One size',
-      stock: variantStock(v),
-      sku: v.sku,
-    })),
+  return sorteerCollectie((data as unknown as DbProduct[]).map((p) => {
+    const perKleur = kiestOpKleur(p.product_variants);
+    const images = [p.image_url, ...(p.gallery || [])].filter(Boolean) as string[];
+    // Geneste rijen komen zonder vaste volgorde uit PostgREST. Bij een
+    // kleurkeuze volgen de kleuren daarom de galerij, die wél vastligt.
+    const plek = (v: DbVariant) => {
+      const i = v.image_url ? images.indexOf(v.image_url) : -1;
+      return i === -1 ? images.length : i;
+    };
+    const varianten = perKleur
+      ? [...p.product_variants].sort((a, b) => plek(a) - plek(b))
+      : p.product_variants;
+    return {
+      slug: p.slug,
+      name: p.name,
+      collectie: p.collectie === 'goods' ? 'goods' : 'kleding',
+      merk: p.merk || undefined,
+      merkToelichting: p.merk_toelichting || undefined,
+      // Bij een kleurkeuze heeft het product als geheel geen kleur; de
+      // eerste variant zou er anders "Black" van maken, ook in de titel.
+      color: perKleur ? '' : p.product_variants[0]?.color || '',
+      price_cents: p.price_cents,
+      short_desc: p.short_desc || '',
+      description: p.description || '',
+      details: p.details || [],
+      images,
+      badge: cleanBadge(p.badge) || (p.featured ? 'Featured' : undefined),
+      meta: p.category || '',
+      edition: p.edition || undefined,
+      note: p.note || undefined,
+      variants: varianten.map((v): CatalogVariant => ({
+        id: v.id,
+        size: v.size || 'One size',
+        stock: variantStock(v),
+        sku: v.sku,
+        ...(perKleur
+          ? {
+              color: v.color || undefined,
+              colorHex: v.color_hex || undefined,
+              image: v.image_url || undefined,
+            }
+          : {}),
+      })),
+    };
   }));
 }
 
@@ -167,7 +213,7 @@ async function haalCatalogus(): Promise<CatalogProduct[]> {
   // Eén query met joins i.p.v. per product losse variant- en voorraadcalls
   const { data, error } = await sb
     .from('products')
-    .select('slug, name, price_cents, short_desc, description, image_url, gallery, details, note, edition, badge, featured, category, product_variants(id, sku, size, color, inventory(quantity, reserved))')
+    .select('slug, name, price_cents, short_desc, description, image_url, gallery, details, note, edition, badge, featured, category, collectie, merk, merk_toelichting, product_variants(id, sku, size, color, color_hex, image_url, inventory(quantity, reserved))')
     .eq('status', 'published')
     .order('created_at', { ascending: false });
 

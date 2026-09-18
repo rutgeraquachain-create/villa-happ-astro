@@ -2,13 +2,130 @@
 export const prerender = true;
 
 import Base from '../layouts/Base.astro';
-import Placeholder from '../components/Placeholder.astro';
+import Pic from '../components/Pic.astro';
+import { getCatalog } from '../lib/catalog';
+import '../styles/shop.css';
+
+/**
+ * VH_APProved: de merken die Villa Happ naast de eigen collectie verkoopt.
+ *
+ * Deze pagina stond op noindex als placeholder ("binnenkort te ontdekken").
+ * Sinds VANN het eerste merk is, is hij gevuld en staat hij in de sitemap.
+ * De merken komen uit de catalogus zelf (het veld `merk`), dus een merk
+ * verschijnt hier pas als er een gepubliceerd product van is. Geen
+ * aangekondigde merken die nergens te koop zijn. Zonder merken valt de pagina
+ * vanzelf terug op noindex.
+ *
+ * Geen merklogo's: het logogebruik van een partner is een afspraak per merk.
+ * Naam, onze toelichting en de producten zijn genoeg.
+ */
+
+const catalog = await getCatalog();
+const merken = [...new Set(catalog.map((p) => p.merk).filter(Boolean))] as string[];
+const perMerk = merken.map((merk) => {
+  const producten = catalog.filter((p) => p.merk === merk);
+  return {
+    merk,
+    toelichting: producten.find((p) => p.merkToelichting)?.merkToelichting,
+    producten,
+  };
+});
+
+const siteOrigin = Astro.site?.origin || Astro.url.origin;
+const description =
+  'VH_APProved: merken die Villa Happ kiest en goedkeurt, en naast de eigen kleding verkoopt onder Goods.';
+
+const pageLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  '@id': `${siteOrigin}/brands#page`,
+  url: `${siteOrigin}/brands`,
+  name: 'VH_APProved',
+  description,
+  inLanguage: 'nl-NL',
+  isPartOf: { '@id': `${siteOrigin}/#website` },
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: merken.length,
+    itemListElement: merken.map((m, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: { '@type': 'Brand', name: m },
+    })),
+  },
+};
 ---
-<Base
-  title="Brands · Villa Happ"
-  description="H_APProved: een gecureerde selectie merken die wij dragen en goedkeuren. Binnenkort te ontdekken."
-  noindex={true}
->
-  <Placeholder eyebrow="H_APProved" title="Brands" text="Een gecureerde selectie merken die wij dragen en goedkeuren. Binnenkort te ontdekken." />
+<Base title="VH_APProved · Merken bij Villa Happ" description={description} noindex={merken.length === 0}>
+  <section class="vh-page">
+    <div class="vh-page-inner">
+
+      <header class="vh-page-head">
+        <p class="vh-page-label vh-mono">VH_APProved</p>
+        <h1 class="vh-page-title">Merken die wij <span class="vh-italic-accent">goedkeuren</span></h1>
+        <p class="vh-page-sub">
+          Naast onze eigen kleding verkopen we een kleine selectie van andere merken.
+          Die staan onder <a href="/goods">Goods</a>. We kiezen ze zelf, en we verkopen alleen
+          wat we zouden gebruiken.
+        </p>
+      </header>
+
+      {perMerk.length === 0 && (
+        <p class="vh-brands-leeg">De eerste merken zijn onderweg.</p>
+      )}
+
+      {perMerk.map(({ merk, toelichting, producten }) => (
+        <article class="vh-brand-blok">
+          <div class="vh-brand-tekst">
+            <p class="vh-mono vh-brand-kicker">VH_APProved · {merk}</p>
+            <h2 class="vh-brand-naam">{merk}</h2>
+            {toelichting && <p class="vh-brand-toelichting">{toelichting}</p>}
+          </div>
+          <div class="vh-listing">
+            {producten.map((p) => (
+              <a href={`/shop/${p.slug}`} class="vh-card">
+                <div class="vh-card-media">
+                  <Pic src={p.images[0]} alt={p.name} class="vh-card-img main" width={600} height={750} loading="lazy" />
+                  {p.images[1] && <Pic src={p.images[1]} alt="" class="vh-card-img alt" width={600} height={750} loading="lazy" aria-hidden="true" />}
+                </div>
+                <div class="vh-card-info">
+                  <p class="vh-card-name">{p.name}</p>
+                </div>
+                <p class="vh-card-meta vh-mono">{p.meta}</p>
+              </a>
+            ))}
+          </div>
+        </article>
+      ))}
+
+      <div class="vh-shop-intro">
+        <h2>Maak je zelf iets wat hierbij past?</h2>
+        <p>
+          We kijken naar kwaliteit, herkomst en het verhaal erachter.
+          Meld je merk aan via <a href="/voor-merken">voor merken</a>.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <script type="application/ld+json" set:html={JSON.stringify(pageLd)} is:inline></script>
 </Base>
 <script>import '../lib/cart';</script>
+
+<style>
+  .vh-brands-leeg { color: var(--vh-ink-soft); margin: 0 0 40px; }
+  .vh-brand-blok {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: 40px;
+    padding: 32px 0;
+    border-top: 1px solid var(--vh-ink-hairline);
+    margin-bottom: 24px;
+  }
+  .vh-brand-kicker { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--vh-ink-soft); margin: 0 0 10px; }
+  .vh-brand-naam { font-family: var(--vh-font-serif); font-weight: 400; font-size: clamp(30px, 3.4vw, 44px); margin: 0 0 14px; }
+  .vh-brand-toelichting { line-height: 1.7; color: var(--vh-ink-soft); margin: 0; max-width: 46ch; }
+  @media (max-width: 820px) {
+    .vh-brand-blok { grid-template-columns: 1fr; gap: 22px; }
+  }
+</style>

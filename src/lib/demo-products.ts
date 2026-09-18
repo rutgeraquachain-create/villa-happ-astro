@@ -15,11 +15,35 @@ export interface CatalogVariant {
   size: string;
   stock: number;
   sku: string;
+  /**
+   * Alleen gevuld bij een product dat per kleur verschilt, zoals de VANN-fles.
+   * Een hoodie heeft één kleur per product en varieert in maat; daar blijft
+   * dit leeg en staat de kleur op het product.
+   */
+  color?: string;
+  colorHex?: string;
+  /** Foto van precies deze variant, voor de kleurkeuze en het mandje. */
+  image?: string;
 }
+
+/**
+ * Kleding is wat Villa Happ zelf maakt. Goods is alles daarbuiten, te beginnen
+ * met de producten van VH_APProved-merken.
+ */
+export type Collectie = 'kleding' | 'goods';
 
 export interface CatalogProduct {
   slug: string;
   name: string;
+  collectie: Collectie;
+  /**
+   * Het merk van de maker, alleen bij een product dat Villa Happ niet zelf
+   * maakt. Leeg betekent: eigen collectie. Dit stuurt het merk in het schema,
+   * de FAQ en het label op de pagina, dus zet het nooit op "Villa Happ".
+   */
+  merk?: string;
+  /** Waarom wij dit merk goedkeuren. Staat op de productpagina onder VH_APProved. */
+  merkToelichting?: string;
   color: string;
   price_cents: number;
   short_desc: string;
@@ -37,10 +61,26 @@ export interface CatalogProduct {
   variants: CatalogVariant[];
 }
 
+/**
+ * De kleuren van de VANN-fles, in de volgorde waarin ze op de pagina staan.
+ * Zwart eerst, omdat Aqua Chain die ook voert. Daarna de tinten die naast de
+ * eigen collectie staan: groen bij de olijfgroene hoodie, blauw bij navy.
+ * De hexwaarden zijn gemeten op de productfoto's van VANN.
+ */
+const VANN_KLEUREN = [
+  { naam: 'Black', slug: 'black', code: 'BLK', hex: '#24292A' },
+  { naam: 'Highland Green', slug: 'highland-green', code: 'HGR', hex: '#6D875A' },
+  { naam: 'Bay Blue', slug: 'bay-blue', code: 'BBL', hex: '#96B4CA' },
+  { naam: 'Oatmeal', slug: 'oatmeal', code: 'OAT', hex: '#E7DCC9' },
+  { naam: 'Coral', slug: 'coral', code: 'COR', hex: '#FDB49B' },
+  { naam: 'Himalayan Salt', slug: 'himalayan-salt', code: 'HSA', hex: '#ECE2E5' },
+];
+
 export const DEMO_PRODUCTS: CatalogProduct[] = [
   {
     slug: 'organic-cotton-hoodie-olijfgroen',
     name: 'Organic Cotton Hoodie',
+    collectie: 'kleding',
     color: 'Olijfgroen',
     price_cents: 7495,
     short_desc: 'Unisex hoodie van biologisch katoen en gerecycled polyester, in olijfgroen.',
@@ -71,6 +111,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
   {
     slug: 'organic-cotton-hoodie-navy',
     name: 'Organic Cotton Hoodie',
+    collectie: 'kleding',
     color: 'Navy',
     price_cents: 7495,
     short_desc: 'Dezelfde hoodie van biologisch katoen, in diep navy.',
@@ -99,6 +140,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
   {
     slug: 'villa-happ-back-cap',
     name: 'Villa Happ Back-Cap',
+    collectie: 'kleding',
     color: 'Limited Edition',
     price_cents: 2795,
     short_desc: 'Genummerde oplage van 500 stuks, met uniek code-label en certificaat van echtheid.',
@@ -132,6 +174,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
   {
     slug: 'stap-voor-stap-sokken',
     name: 'Stap voor Stap sokken',
+    collectie: 'kleding',
     color: 'Villa Happ',
     price_cents: 895,
     short_desc: 'De sokken waarmee de comeback begon. Want zo gaat dit verhaal verder: stap voor stap.',
@@ -161,6 +204,7 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
   {
     slug: 'stap-voor-stap-sokken-5-pack',
     name: 'Stap voor Stap sokken · 5-pack',
+    collectie: 'kleding',
     color: 'Villa Happ',
     price_cents: 3995,
     short_desc: 'Vijf paar Stap voor Stap sokken in één pack.',
@@ -183,6 +227,49 @@ export const DEMO_PRODUCTS: CatalogProduct[] = [
       { id: 'demo-sok5-3641', size: '36/41', stock: 18, sku: 'VH-SOK5-3641' },
       { id: 'demo-sok5-4246', size: '42/46', stock: 18, sku: 'VH-SOK5-4246' },
     ],
+  },
+  /**
+   * Het eerste VH_APProved-product. Moet dezelfde tekst, beelden en SKU's
+   * voeren als de rij in Supabase (supabase/migrations/20260918_goods_en_merken.sql),
+   * anders bewijst een build zonder sleutels niets over de echte pagina.
+   *
+   * Productfeiten komen uit de afspraken met VANN en hun eigen productbeeld:
+   * 650 ml, driewandig RVS, 24 uur koud en 12 uur warm, lekvrij, BPA-vrij, en
+   * de complete set met drie doppen, rietje en borsteltje. Het e-book dat VANN
+   * in hun eigen beeld als bonus noemt staat hier bewust niet: dat levert Villa
+   * Happ niet, en een belofte in onze productpagina moeten wij waarmaken.
+   */
+  {
+    slug: 'vann-ultimate-bottle-650',
+    name: 'VANN Ultimate Bottle 650 ml',
+    collectie: 'goods',
+    merk: 'VANN',
+    merkToelichting:
+      'VANN is een Nederlands merk dat sinds 2020 herbruikbare drinkflessen van roestvrij staal maakt. De naam is Noors en betekent water. We nemen het op omdat het past bij hoe wij naar kleding kijken: iets goed maken, zodat je het jaren gebruikt.',
+    color: '',
+    price_cents: 3490,
+    short_desc: 'Driewandige drinkfles van roestvrij staal. Houdt je drinken 24 uur koud of 12 uur warm.',
+    description:
+      'De Ultimate Bottle is de drinkfles van VANN. Drie wanden roestvrij staal houden water een hele dag koud en thee twaalf uur warm, en ijsblokjes blijven 24 uur heel. De fles is lekvrij, bevat geen BPA en past in een bekerhouder. Je krijgt er drie doppen bij, zodat je zelf kiest of je uit een rietje, een tuit of de schroefopening drinkt.',
+    details: [
+      'Roestvrij staal, driewandig geïsoleerd',
+      '24 uur koud, 12 uur warm',
+      '650 ml, lekvrij en BPA-vrij',
+      'Met drie doppen, een rietje en een schoonmaakborstel',
+      'Gemaakt door VANN, verstuurd door Villa Happ',
+    ],
+    images: VANN_KLEUREN.map((k) => `/img/products/vann-ultimate-650-${k.slug}.webp`),
+    meta: 'VH_APProved · 6 kleuren',
+    note: 'Van VANN, goedgekeurd door Villa Happ.',
+    variants: VANN_KLEUREN.map((k) => ({
+      id: `demo-vann-${k.slug}`,
+      size: '650 ml',
+      stock: 12,
+      sku: `VH-VANN-650-${k.code}`,
+      color: k.naam,
+      colorHex: k.hex,
+      image: `/img/products/vann-ultimate-650-${k.slug}.webp`,
+    })),
   },
 ];
 

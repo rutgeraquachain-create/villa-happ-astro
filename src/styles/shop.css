@@ -473,6 +473,61 @@
 	text-decoration: line-through;
 }
 .vh-size.is-out:hover { border-color: var(--vh-ink-faint); }
+
+/* Kleurkeuze (VANN-fles): ronde stalen in plaats van maatknoppen. De naam van
+   de gekozen kleur staat in de kop erboven, niet in de knop. */
+.vh-pdp-keuzenaam {
+	font-weight: 400;
+	color: var(--vh-ink);
+	letter-spacing: 0.06em;
+	margin-left: 6px;
+}
+.vh-pdp-sizes--kleur { gap: 10px; }
+.vh-size--kleur {
+	min-width: 0;
+	width: 44px; height: 44px;
+	padding: 4px;
+	border-radius: 50%;
+	display: inline-flex; align-items: center; justify-content: center;
+	position: relative;
+}
+.vh-size--kleur .vh-swatch {
+	display: block;
+	width: 100%; height: 100%;
+	border-radius: 50%;
+	background: var(--sw, var(--vh-paper-deep));
+	/* Lichte tinten (Oatmeal, Himalayan Salt) verdwijnen anders tegen papier */
+	box-shadow: inset 0 0 0 1px rgba(28, 24, 19, 0.14);
+}
+.vh-size--kleur.is-active {
+	background: transparent;
+	border-color: var(--vh-ink);
+	box-shadow: 0 0 0 1px var(--vh-ink);
+}
+.vh-size--kleur.is-out { text-decoration: none; }
+.vh-size--kleur.is-out .vh-swatch { opacity: 0.35; }
+.vh-size--kleur.is-out::after {
+	content: '';
+	position: absolute;
+	left: 8px; right: 8px; top: 50%;
+	height: 1px;
+	background: var(--vh-ink-muted);
+	transform: rotate(-45deg);
+}
+.vh-size--kleur:focus-visible { outline: 2px solid var(--vh-ink); outline-offset: 2px; }
+
+/* VH_APProved: zelfde vorm als het certificaat, want het is dezelfde soort
+   belofte (wij staan hiervoor in), alleen over een ander merk. */
+.vh-cert--approved { align-items: flex-start; margin: 4px 0 22px; }
+.vh-cert--approved .vh-cert-seal { margin-top: 2px; }
+.vh-cert-link {
+	display: inline-block;
+	margin-top: 8px;
+	font-size: 11px;
+	color: var(--vh-ink);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
 .vh-pdp-stockmsg {
 	min-height: 18px;
 	font-family: var(--vh-font-mono); font-size: 10px;
@@ -732,6 +787,9 @@
 		aspect-ratio: 4/5;
 		scroll-snap-align: center;
 	}
+	/* Eén foto (kleurkeuze): geen volgende tegel om naar te swipen, dus de
+	   hele breedte in plaats van 86% met een lege strook ernaast. */
+	.vh-pdp-tile:only-child { flex-basis: 100%; }
 	.vh-pdp-tile-btn { height: 100%; }
 	.vh-pdp-tile img { height: 100%; object-fit: cover; }
 	.vh-pdp-dots {

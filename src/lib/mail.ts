@@ -344,8 +344,17 @@ export async function verstuurDirect(
  * ooit wel doen, dan moet het oplagegegeven van het product mee de functie in;
  * in een vaste tekst is het per definitie fout voor de helft van de catalogus.
  */
-export function renderBackInStock(productName: string, size: string, productUrl: string): { subject: string; html: string } {
-  const sizeLabel = size && size !== 'One size' ? ` in maat ${escapeHtml(size)}` : '';
+export function renderBackInStock(
+  productName: string,
+  size: string,
+  productUrl: string,
+  // Bij de VANN-fles is `size` de gekozen kleur; zie voorraadPerKeuze().
+  keuze: 'maat' | 'kleur' = 'maat',
+): { subject: string; html: string } {
+  const heeftKeuze = !!size && size !== 'One size';
+  const sizeLabel = heeftKeuze
+    ? keuze === 'kleur' ? ` in de kleur ${escapeHtml(size)}` : ` in maat ${escapeHtml(size)}`
+    : '';
   const inhoud = `
     ${titel('Terug op voorraad', 'Hij is er weer.')}
     ${alinea(`Je vroeg ons je te mailen zodra <b>${escapeHtml(productName)}</b>${sizeLabel} terug op voorraad is. Dat moment is nu, zolang de voorraad strekt.`)}
@@ -357,15 +366,21 @@ export function renderBackInStock(productName: string, size: string, productUrl:
     voet: 'Je ontvangt deze mail eenmalig omdat je een voorraadmelding aanvroeg. Was je hem al vergeten? Dan is dit je teken.',
     origin: getSiteOrigin(),
   });
-  return { subject: `Terug op voorraad: ${productName}${size && size !== 'One size' ? ` (maat ${size})` : ''}`, html };
+  return { subject: `Terug op voorraad: ${productName}${heeftKeuze ? ` (${keuze === 'kleur' ? size : `maat ${size}`})` : ''}`, html };
 }
 
-export async function sendBackInStock(to: string, productName: string, size: string, productUrl: string): Promise<boolean> {
+export async function sendBackInStock(
+  to: string,
+  productName: string,
+  size: string,
+  productUrl: string,
+  keuze: 'maat' | 'kleur' = 'maat',
+): Promise<boolean> {
   if (!isMailConfigured()) {
     console.info('[mail] RESEND_API_KEY niet gezet; back-in-stock-mail overgeslagen voor', to);
     return false;
   }
-  const { subject, html } = renderBackInStock(productName, size, productUrl);
+  const { subject, html } = renderBackInStock(productName, size, productUrl, keuze);
   return (await verstuurDirect(to, subject, html)).ok;
 }
 

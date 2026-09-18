@@ -50,7 +50,7 @@
 
 import type { APIRoute } from 'astro';
 import { getSupabaseAdmin } from '../../../lib/supabase';
-import { dueNotifications, stockKey, type PendingNotification } from '../../../lib/backinstock';
+import { dueNotifications, stockKey, voorraadPerKeuze, type PendingNotification } from '../../../lib/backinstock';
 import { sendBackInStock, isMailConfigured } from '../../../lib/mail';
 import { verwerkWachtrij } from '../../../lib/outbox';
 import { getSiteOrigin } from '../../../lib/site';
@@ -160,7 +160,7 @@ export const GET: APIRoute = async ({ request }) => {
   const slugs = [...new Set(pending.map((p: any) => p.product_slug))];
   const { data: products, error: prErr } = await sb
     .from('products')
-    .select('slug, name, product_variants(size, inventory(quantity, reserved))')
+    .select('slug, name, product_variants(size, color, inventory(quantity, reserved))')
     .in('slug', slugs)
     .eq('status', 'published');
 
@@ -170,16 +170,9 @@ export const GET: APIRoute = async ({ request }) => {
     return antwoord({ outbox, reserveringen });
   }
 
-  const availableByKey: Record<string, number> = {};
   const nameBySlug: Record<string, string> = {};
-  for (const p of (products as any[]) || []) {
-    nameBySlug[p.slug] = p.name;
-    for (const v of p.product_variants || []) {
-      const inv = Array.isArray(v.inventory) ? v.inventory[0] : v.inventory;
-      const available = inv ? Math.max(0, (inv.quantity || 0) - (inv.reserved || 0)) : 0;
-      availableByKey[stockKey(p.slug, v.size)] = available;
-    }
-  }
+  for (const p of (products as any[]) || []) nameBySlug[p.slug] = p.name;
+  const { beschikbaar: availableByKey, soort } = voorraadPerKeuze((products as any[]) || []);
 
   const due = dueNotifications(pending as PendingNotification[], availableByKey, MAILS_PER_RUN);
   const origin = getSiteOrigin();
@@ -193,6 +186,7 @@ export const GET: APIRoute = async ({ request }) => {
       nameBySlug[row.product_slug] || row.product_slug,
       row.size || '',
       `${origin}/shop/${row.product_slug}`,
+      soort[stockKey(row.product_slug, row.size)] || 'maat',
     );
     if (!ok) {
       nietVerstuurd++;
