@@ -81,13 +81,20 @@ export function campagneVenster(nu: Date = new Date()): boolean {
  * mails per uur in plaats van honderden. De echte poorten ervóór zijn de
  * formuliercontrole en BotID; dit is de bodem daaronder.
  *
- * Na `CAMPAGNE_TOT` hoort dit terug naar twaalf. `tests/aanmeldrem.test.ts`
- * valt om zodra die datum voorbij is en dit getal nog op de campagnestand staat.
+ * TERUG OP TWAALF, OP 27 NOVEMBER 2026
+ * De actie sloot op 11 oktober 2026 en `CAMPAGNE_TOT` lag een dag later. Sinds
+ * die datum stond `tests/campagnestand.test.ts` rood, zoals bedoeld, en dit
+ * getal stond nog zes weken op zestig. Het is nu afgeleid van
+ * `RUSTSTAND_PER_UUR`, zodat twaalf op één plek staat.
+ *
+ * Komt er een nieuwe campagne, zet dan eerst `CAMPAGNE_TOT` op de nieuwe
+ * einddatum en verhoog daarna dit getal. Verhoog je het getal terwijl de oude
+ * datum nog staat, dan valt de sluitvoorwaarde in `tests/campagnestand.test.ts`
+ * om.
  */
-export const MAX_BEVESTIGINGEN_PER_UUR = 60;
-
-/** De stand van vóór de campagne, waar we na `CAMPAGNE_TOT` naar terug gaan. */
 export const RUSTSTAND_PER_UUR = 12;
+
+export const MAX_BEVESTIGINGEN_PER_UUR = RUSTSTAND_PER_UUR;
 
 /**
  * Adressen waar dit merk niets te zoeken heeft.
@@ -185,9 +192,10 @@ export async function magBevestigingVersturen(sb: SupabaseClient): Promise<boole
  * inzending stuurde er twee. Stond op twaalf, en gaat mee omhoog met
  * `MAX_BEVESTIGINGEN_PER_UUR` om dezelfde reden: dit is de mail die een
  * deelnemer zijn inzendnummer geeft, en zonder dat nummer weet hij niet of zijn
- * inzending is aangekomen. Zie de toelichting daar.
+ * inzending is aangekomen. Zie de toelichting daar. Sinds 27 november 2026 weer
+ * op de ruststand, net als `MAX_BEVESTIGINGEN_PER_UUR`.
  */
-export const MAX_INZENDINGEN_PER_UUR = 60;
+export const MAX_INZENDINGEN_PER_UUR = RUSTSTAND_PER_UUR;
 
 export async function magInzendbevestigingVersturen(sb: SupabaseClient): Promise<boolean> {
   return magSoortVersturen(sb, 'herinnering-ontvangen', MAX_INZENDINGEN_PER_UUR);

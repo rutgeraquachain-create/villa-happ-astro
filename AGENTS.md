@@ -265,11 +265,13 @@ grens op 7 september 2026 van 5 naar 4 MB ging, bleef de melding op 5 MB staan e
 kreeg een foto van 4,5 MB een weigering met een tekst die zei dat hij mocht. Zet
 zo'n getal nooit twee keer neer.
 
-**De remmen in `src/lib/aanmeldrem.ts` staan tijdelijk hoger, met een
+**De remmen in `src/lib/aanmeldrem.ts` gaan alleen tijdelijk omhoog, met een
 sluitvoorwaarde.** Ze gingen op 9 september 2026 van 12 naar 60 per uur voor de
-campagne, en `tests/campagnestand.test.ts` valt om zodra `CAMPAGNE_TOT` voorbij
-is en ze nog verhoogd staan. Dat rood is het signaal om ze op
-`RUSTSTAND_PER_UUR` terug te zetten, niet een toets om aan te passen. Loopt een
+campagne en staan sinds 27 november 2026 weer op `RUSTSTAND_PER_UUR`.
+`tests/campagnestand.test.ts` valt om zodra `CAMPAGNE_TOT` voorbij is en ze nog
+verhoogd staan. Dat rood is het signaal om ze terug te zetten, niet een toets om
+aan te passen. Bij een nieuwe campagne zet je eerst `CAMPAGNE_TOT` op de nieuwe
+einddatum en verhoog je daarna de remmen. Loopt een
 rem vol, dan krijgt de bezoeker `MELDING_REM` en niet het gewone antwoord: een
 verzendkant die zichzelf geslaagd verklaart is de fout die deze site vijf keer op
 één dag maakte.
