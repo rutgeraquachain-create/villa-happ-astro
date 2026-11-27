@@ -49,7 +49,13 @@ describe('de fotogrens zegt wat de code doet', () => {
 });
 
 describe('de remmen tijdens de campagne', () => {
-  it('staan hoger dan de ruststand', () => {
+  /**
+   * Geldt alleen zolang de campagne loopt. Daarna eist de toets hieronder het
+   * omgekeerde, en zonder deze voorwaarde konden de twee nooit samen groen
+   * zijn: de remmen terugzetten liet deze omvallen.
+   */
+  it('staan hoger dan de ruststand zolang de campagne loopt', () => {
+    if (!campagneVenster()) return;
     expect(MAX_BEVESTIGINGEN_PER_UUR).toBeGreaterThan(RUSTSTAND_PER_UUR);
     expect(MAX_INZENDINGEN_PER_UUR).toBeGreaterThan(RUSTSTAND_PER_UUR);
   });
